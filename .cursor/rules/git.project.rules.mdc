@@ -41,32 +41,54 @@ git checkout -b exercise-crud
 git checkout -b routine-scheduler
 ```
 
-### Git Flow
+### GitHub Flow
 
-- El proyecto utiliza **Git Flow** como estrategia de branching.
-- Git Flow define un modelo de ramas estricto diseñado para proyectos con ciclos de lanzamiento.
+- El proyecto utiliza **GitHub Flow** como estrategia de branching.
+- GitHub Flow es un modelo de branching simple y ligero diseñado para despliegues continuos.
 
-**Estructura de ramas en Git Flow:**
-- `main`: Código de producción estable
-- `develop`: Rama de desarrollo principal
-- `feature/<nombre>`: Nuevas funcionalidades
-- `release/<version>`: Preparación de nuevas versiones
-- `hotfix/<nombre>`: Correcciones urgentes en producción
+**Principios de GitHub Flow:**
+- `main` siempre está lista para producción y debe estar desplegada en todo momento.
+- Las ramas de funcionalidades se crean desde `main` con nombres descriptivos.
+- Se trabaja en la rama de funcionalidad y se hacen commits regularmente.
+- Se abre un Pull Request (PR) cuando la funcionalidad está lista.
+- Después de la revisión y aprobación, se fusiona a `main`.
+- Se despliega inmediatamente desde `main` después del merge.
 
-**Comandos básicos de Git Flow:**
+**Estructura de ramas en GitHub Flow:**
+- `main`: Código de producción estable (siempre desplegable)
+- `<feature-slug>`: Ramas de funcionalidades (se crean desde `main` y se fusionan de vuelta)
+
+**Flujo de trabajo con GitHub Flow:**
 ```bash
-# Iniciar una nueva funcionalidad
-git flow feature start <nombre-funcionalidad>
+# 1. Crear una nueva rama de funcionalidad desde main
+git checkout main
+git pull origin main
+git checkout -b <feature-slug>
 
-# Finalizar una funcionalidad
-git flow feature finish <nombre-funcionalidad>
+# 2. Trabajar en la funcionalidad y hacer commits
+git add .
+git commit -m "feat: añadir nueva funcionalidad"
 
-# Iniciar un hotfix
-git flow hotfix start <nombre-hotfix>
+# 3. Hacer push de la rama al remoto
+git push origin <feature-slug>
 
-# Finalizar un hotfix
-git flow hotfix finish <nombre-hotfix>
+# 4. Abrir un Pull Request en GitHub
+# (Se hace desde la interfaz web de GitHub)
+
+# 5. Después del merge, actualizar main local
+git checkout main
+git pull origin main
+
+# 6. Eliminar la rama local (opcional)
+git branch -d <feature-slug>
 ```
+
+**Ventajas de GitHub Flow:**
+- Simple y fácil de entender
+- Ideal para despliegues continuos
+- Permite iteración rápida
+- Reduce la complejidad del modelo de branching
+- Facilita la colaboración mediante Pull Requests
 
 ## Mensajes de Commit
 
