@@ -1,0 +1,439 @@
+---
+globs: *.py
+alwaysApply: true
+---
+
+# Reglas de Desarrollo API con Python, Django y Django REST Framework
+
+## Configuración de Python
+
+### Sistema de Módulos
+- Usa sintaxis de imports absolutos cuando sea posible
+- Organiza los imports en el orden: estándar, terceros, locales
+- Usa `from __future__ import annotations` para type hints más limpios
+- Evita imports circulares usando imports locales dentro de funciones cuando sea necesario
+
+**Ejemplo:**
+```python
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from rest_framework.response import Response
+from rest_framework import status
+
+from apps.feature.services import run_feature_service
+from apps.feature.serializers import FeatureSerializer
+
+if TYPE_CHECKING:
+    from rest_framework.request import Request
+```
+
+### Sistema de Tipos
+- Define tipos explícitos para variables, parámetros y valores de retorno usando `typing`
+- Usa `typing.Optional` para valores que pueden ser `None`
+- Usa `typing.Union` para múltiples tipos posibles
+- Prefiere `typing.Protocol` para interfaces estructurales
+- Evita `Any` excepto como último recurso
+- Usa `typing.TYPE_CHECKING` para imports de tipos que solo se usan en type hints
+
+### Convenciones de Nomenclatura
+- Variables, funciones, métodos: `snake_case`
+- Clases: `PascalCase`
+- Constantes: `UPPER_SNAKE_CASE`
+- Archivos: `snake_case.py`
+- Módulos Django: `snake_case.py` (models.py, views.py, serializers.py)
+
+## Arquitectura de Tres Capas
+
+### Estructura de Capas
+```
+Request → View → Service → Repository → Data Source
+Response ← View ← Service ← Repository ← Data Source
+```
+
+### Reglas de Dependencias
+- Las vistas dependen de servicios
+- Los servicios dependen de repositorios
+- Nunca inviertas la dirección de dependencias
+- Solo un nivel de dependencias (no hables con extraños)
+
+### Organización de Archivos
+Cada funcionalidad tiene su propia carpeta en `apps/{feature}/`:
+- `views.py` - Manejo de peticiones y respuestas HTTP
+- `serializers.py` - Validación y transformación de datos
+- `services.py` - Lógica de negocio y orquestación
+- `repositories.py` - Capa de acceso a datos
+- `models.py` - Modelos de Django ORM
+- `urls.py` - Enrutamiento de URLs
+
+## Patrones de Capas
+
+### Patrón View
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.request import Request
+
+from apps.feature.services import run_feature_service
+from apps.feature.serializers import FeatureSerializer
+
+
+class FeatureAPIView(APIView):
+    def get(self, request: Request, pk: int) -> Response:
+        try:
+            # Extraer y validar entrada
+            feature_id = pk
+            query_params = request.query_params
+
+            # Llamar a lógica de negocio
+            data = run_feature_service(feature_id=feature_id, query_params=query_params)
+
+            # Retornar respuesta estructurada
+            return Response(
+                {
+                    "data": FeatureSerializer(data).data,
+                    "request": {
+                        "method": request.method,
+                        "path": request.path,
+                        "host": request.get_host(),
+                    },
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as error:
+            return Response(
+                {
+                    "error": "Internal server error",
+                    "message": str(error),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+```
+
+### Patrón Service
+```python
+from typing import Optional, Dict, Any
+from datetime import datetime
+
+from apps.feature.repositories import get_feature_repository
+
+
+def run_feature_service(
+    feature_id: Optional[int] = None,
+    query_params: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    # Retorno temprano para validación
+    if not feature_id:
+        raise ValueError("feature_id es requerido")
+
+    if feature_id < 1:
+        raise ValueError("feature_id debe ser mayor que 0")
+
+    # Llamar a repositorio
+    result = get_feature_repository(feature_id=feature_id, query_params=query_params)
+
+    # Transformar y retornar datos de negocio
+    return {
+        "result": result,
+        "timestamp": datetime.now().isoformat(),
+        "processed": True,
+    }
+```
+
+### Patrón Repository
+```python
+from typing import Optional, Dict, Any
+
+from apps.feature.models import Feature
+
+
+def get_feature_repository(
+    feature_id: Optional[int] = None,
+    query_params: Optional[Dict[str, Any]] = None,
+) -> Optional[Feature]:
+    # Lógica de acceso a datos
+    # Consultas a base de datos, llamadas a APIs externas, operaciones de archivos
+    
+    try:
+        feature = Feature.objects.get(id=feature_id)
+        return feature
+    except Feature.DoesNotExist:
+        return None
+```
+
+## Estándares de Respuesta
+
+### Estructura de Respuesta Exitosa
+```python
+{
+    "data": any,                    # Datos principales de la respuesta
+    "request": {                    # Metadatos opcionales de la petición
+        "method": str,
+        "path": str,
+        "host": str
+    },
+    "message": str                  # Mensaje de éxito opcional
+}
+```
+
+### Estructura de Respuesta de Error
+```python
+{
+    "error": str,                   # Tipo/categoría de error
+    "message": str,                 # Mensaje de error legible
+    "request": {                    # Contexto opcional de la petición
+        "method": str,
+        "path": str,
+        "host": str
+    }
+}
+```
+
+## Principios de Código Limpio
+
+### Diseño de Funciones
+- Mantén las funciones pequeñas y enfocadas (responsabilidad única)
+- Usa retornos tempranos para validación y casos de error
+- Separa funciones puras de efectos secundarios
+- Minimiza parámetros usando objetos para datos complejos
+- Usa nombres descriptivos que comiencen con verbos
+
+### Manejo de Errores
+- Usa `try-except` a nivel de vista para errores HTTP
+- Usa `try-except` en servicios solo cuando añada valor
+- Lanza errores descriptivos en capas de servicio y repositorio
+- Registra errores para depuración, retorna mensajes genéricos a clientes
+- Usa excepciones de DRF (`ValidationError`, `NotFound`, `PermissionDenied`)
+
+### Organización del Código
+- Coloca código relacionado junto (alta cohesión)
+- Oculta detalles de implementación (bajo acoplamiento)
+- Extrae lógica condicional compleja a funciones separadas
+- Usa constantes para números mágicos y cadenas de texto
+
+## Preferencias de Funciones
+
+### Estilo de Declaración
+- Prefiere funciones con `def` sobre lambdas para funciones complejas
+- Usa lambdas solo para callbacks y operaciones simples
+- Usa `async`/`await` para operaciones asíncronas
+- Usa type hints en todas las funciones públicas
+
+### Operaciones con Listas
+- Prefiere métodos de lista (`map`, `filter`, `list comprehensions`) sobre bucles `for`
+- Usa `for...in` cuando necesites `break`/`continue`
+- Usa bucles `for` tradicionales solo para flujo de control complejo
+
+### Patrones Asíncronos
+```python
+# Bueno: async/await con manejo de errores
+async def get_user_service(user_id: int) -> Dict[str, Any]:
+    try:
+        user = await get_user_repository(user_id=user_id)
+        return format_user_data(user)
+    except Exception as error:
+        raise ValueError(f"Error al obtener usuario: {str(error)}")
+
+# Bueno: Operaciones concurrentes
+async def get_users_with_posts_service() -> Dict[str, Any]:
+    users, posts = await asyncio.gather(
+        get_users_repository(),
+        get_posts_repository()
+    )
+    
+    return combine_users_and_posts(users, posts)
+```
+
+## Principios de Desarrollo
+
+### Principios SOLID
+- **Responsabilidad Única**: Cada función/clase tiene una razón para cambiar
+- **Abierto/Cerrado**: Abierto para extensión, cerrado para modificación
+- **Sustitución de Liskov**: Los subtipos deben ser sustituibles por tipos base
+- **Segregación de Interfaces**: Los clientes no deben depender de interfaces no usadas
+- **Inversión de Dependencias**: Depende de abstracciones, no de concreciones
+
+### Directrices Generales
+- **YAGNI**: No lo vas a necesitar (haz lo mínimo)
+- **KISS**: Manténlo simple (la solución más simple que funcione)
+- **DRY**: No te repitas (reutiliza código, evita duplicación)
+
+## Estructura del Proyecto
+
+### Bootstrap de API
+- Configura el servidor en `settings.py`
+- Registra URLs en `urls.py` principal y en `apps/{feature}/urls.py`
+- Configura middleware para aspectos transversales
+
+### Uso de Middleware
+- Usa middleware para logging, autenticación, validación
+- Coloca middleware personalizado en `apps/common/middleware/`
+- Registra middleware en `settings.MIDDLEWARE` en el orden correcto
+
+### Utilidades Compartidas
+- Coloca utilidades comunes en `apps/common/utils/`
+- Crea funciones reutilizables para manejo de peticiones
+- Exporta funciones auxiliares para transformación de datos
+
+## Patrones de Django REST Framework
+
+### ViewSets
+- Usa `ViewSet` o `ModelViewSet` para operaciones CRUD estándar
+- Personaliza acciones con el decorador `@action`
+- Establece clases de permisos apropiadas
+- Usa anotaciones/optimizaciones de queryset cuando sea necesario
+
+**Ejemplo:**
+```python
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from apps.feature.models import Feature
+from apps.feature.serializers import FeatureSerializer
+from apps.feature.services import activate_feature_service
+
+
+class FeatureViewSet(viewsets.ModelViewSet):
+    queryset = Feature.objects.all()
+    serializer_class = FeatureSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=["post"])
+    def activate(self, request, pk=None):
+        feature = self.get_object()
+        data = activate_feature_service(feature_id=feature.id)
+        return Response({"data": FeatureSerializer(data).data})
+```
+
+### Serializers
+- Usa `ModelSerializer` para modelos Django
+- Define `Meta.fields` explícitamente, evita `__all__`
+- Implementa validación personalizada con métodos `validate_<campo>`
+- Usa `SerializerMethodField` para campos calculados
+
+**Ejemplo:**
+```python
+from rest_framework import serializers
+
+from apps.feature.models import Feature
+
+
+class FeatureSerializer(serializers.ModelSerializer):
+    custom_field = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Feature
+        fields = ["id", "name", "description", "custom_field", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+    def get_custom_field(self, obj: Feature) -> str:
+        return f"Custom: {obj.name}"
+
+    def validate_name(self, value: str) -> str:
+        if len(value) < 3:
+            raise serializers.ValidationError("El nombre debe tener al menos 3 caracteres")
+        return value
+```
+
+### Permisos
+- Usa clases de permisos de DRF para control de acceso
+- Crea permisos personalizados cuando sea necesario
+- Combina permisos usando `&` (AND) o `|` (OR)
+
+**Ejemplo:**
+```python
+from rest_framework.permissions import BasePermission
+
+
+class IsOwnerOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return True
+        return obj.created_by == request.user
+```
+
+## Optimización de Consultas
+
+### QuerySet Optimization
+- Usa `select_related()` para relaciones ForeignKey
+- Usa `prefetch_related()` para relaciones ManyToMany o ForeignKey inverso
+- Usa `only()` o `defer()` para limitar campos cuando sea necesario
+- Añade índices de base de datos para campos consultados frecuentemente
+
+**Ejemplo:**
+```python
+# En ViewSet o Repository
+queryset = Feature.objects.select_related("category").prefetch_related("tags")
+```
+
+### Paginación
+- Usa clases de paginación de DRF para endpoints de lista
+- Configura en `settings.py` o por vista
+- Retorna estructura de respuesta paginada consistente
+
+**Ejemplo en settings.py:**
+```python
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+```
+
+## Estrategia de Testing
+
+### Testing Unitario
+- Prueba funciones de servicio de forma independiente
+- Mockea dependencias de repositorio
+- Prueba escenarios de error y casos límite
+- Usa nombres de test descriptivos
+- Usa `pytest` o `unittest` de Django
+
+**Ejemplo:**
+```python
+from django.test import TestCase
+from unittest.mock import patch
+
+from apps.feature.services import run_feature_service
+
+
+class FeatureServiceTestCase(TestCase):
+    @patch("apps.feature.services.get_feature_repository")
+    def test_run_feature_service_success(self, mock_repo):
+        mock_repo.return_value = {"id": 1, "name": "Test"}
+        result = run_feature_service(feature_id=1)
+        self.assertIn("result", result)
+        self.assertTrue(result["processed"])
+```
+
+### Testing de Integración
+- Prueba ciclos completos de petición-respuesta
+- Prueba con conexiones de base de datos reales
+- Verifica comportamiento de middleware
+- Prueba manejo de errores end-to-end
+- Usa `APIClient` de DRF para pruebas de API
+
+**Ejemplo:**
+```python
+from rest_framework.test import APIClient
+from django.test import TestCase
+
+from apps.feature.models import Feature
+
+
+class FeatureAPITestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.feature = Feature.objects.create(name="Test Feature")
+
+    def test_get_feature(self):
+        response = self.client.get(f"/api/features/{self.feature.id}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("data", response.data)
+```
+
+---
+
+Este archivo consolida todas las reglas para desarrollo con Python, Django y Django REST Framework en una arquitectura de tres capas, eliminando duplicación y proporcionando guía clara para desarrollo de API consistente.

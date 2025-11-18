@@ -1,0 +1,252 @@
+---
+alwaysApply: true
+---
+
+# Reglas de Git para el Proyecto
+
+Este documento establece las convenciones y mejores prácticas para el uso de Git en el proyecto.
+
+## Estado del Repositorio
+
+### Antes de Generar Código
+
+- **Limpia el repositorio Git** antes de generar cualquier código nuevo.
+- Añade y confirma todos los cambios pendientes con `git add` y `git commit`.
+- Asegúrate de que el repositorio esté en un estado limpio y sin cambios sin confirmar.
+
+**Ejemplo:**
+```bash
+git add .
+git commit -m "chore: actualizar configuración"
+```
+
+## Estrategia de Ramas (Branching)
+
+### Rama Principal
+
+- **`main`** es la rama por defecto y principal del proyecto.
+- Esta rama debe mantenerse estable y lista para producción.
+- Solo se fusionan cambios que han pasado todas las pruebas y revisiones.
+
+### Ramas de Funcionalidades (Feature Branches)
+
+- Usa **ramas de funcionalidades** para cada nueva característica o mejora.
+- Nombra las ramas usando el formato: `<feature-slug>` (slug en minúsculas con guiones).
+- Las ramas de funcionalidades se crean desde `main` y se fusionan de vuelta a `main` cuando están completas.
+
+**Ejemplos de nombres de ramas:**
+```bash
+git checkout -b user-authentication
+git checkout -b exercise-crud
+git checkout -b routine-scheduler
+```
+
+### Git Flow
+
+- El proyecto utiliza **Git Flow** como estrategia de branching.
+- Git Flow define un modelo de ramas estricto diseñado para proyectos con ciclos de lanzamiento.
+
+**Estructura de ramas en Git Flow:**
+- `main`: Código de producción estable
+- `develop`: Rama de desarrollo principal
+- `feature/<nombre>`: Nuevas funcionalidades
+- `release/<version>`: Preparación de nuevas versiones
+- `hotfix/<nombre>`: Correcciones urgentes en producción
+
+**Comandos básicos de Git Flow:**
+```bash
+# Iniciar una nueva funcionalidad
+git flow feature start <nombre-funcionalidad>
+
+# Finalizar una funcionalidad
+git flow feature finish <nombre-funcionalidad>
+
+# Iniciar un hotfix
+git flow hotfix start <nombre-hotfix>
+
+# Finalizar un hotfix
+git flow hotfix finish <nombre-hotfix>
+```
+
+## Mensajes de Commit
+
+### Formato de Commits
+
+- Usa **Conventional Commits** para todos los mensajes de commit.
+- Los mensajes deben seguir estrictamente la [especificación oficial de Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification).
+
+### Estructura del Mensaje
+
+El formato básico es:
+```
+<tipo>[ámbito opcional]: <descripción>
+
+[cuerpo opcional]
+
+[pie opcional]
+```
+
+**Componentes:**
+- **Tipo**: Tipo de cambio (obligatorio)
+- **Ámbito**: Área del proyecto afectada (opcional)
+- **Descripción**: Descripción breve del cambio (obligatorio)
+- **Cuerpo**: Explicación detallada (opcional)
+- **Pie**: Referencias a issues, breaking changes, etc. (opcional)
+
+### Tipos de Commit
+
+Los tipos permitidos según Conventional Commits son:
+
+- **`feat`**: Nueva funcionalidad
+- **`fix`**: Corrección de un bug
+- **`docs`**: Cambios en la documentación
+- **`style`**: Cambios de formato (espacios, comas, etc.) que no afectan el código
+- **`refactor`**: Refactorización de código sin cambiar funcionalidad
+- **`perf`**: Mejoras de rendimiento
+- **`test`**: Añadir o modificar tests
+- **`chore`**: Tareas de mantenimiento, actualización de dependencias, etc.
+- **`build`**: Cambios en el sistema de construcción o dependencias externas
+- **`ci`**: Cambios en la configuración de CI/CD
+- **`revert`**: Revertir un commit anterior
+
+### Ejemplos de Commits
+
+**Commits simples:**
+```bash
+git commit -m "feat: añadir autenticación de usuarios"
+git commit -m "fix: corregir error en cálculo de progreso"
+git commit -m "docs: actualizar guía de instalación"
+git commit -m "refactor: simplificar lógica de validación"
+git commit -m "test: añadir tests para servicio de ejercicios"
+git commit -m "chore: actualizar dependencias de Django"
+git commit -m "style: corregir formato de código"
+git commit -m "perf: optimizar consultas a base de datos"
+```
+
+**Commits con ámbito:**
+```bash
+git commit -m "feat(users): añadir endpoint de registro"
+git commit -m "fix(exercises): corregir validación de duración"
+git commit -m "docs(api): actualizar documentación de endpoints"
+```
+
+**Commits con cuerpo y pie:**
+```bash
+git commit -m "feat: añadir sistema de notificaciones
+
+Implementa sistema completo de notificaciones push para usuarios.
+Incluye integración con servicios externos y gestión de preferencias.
+
+Closes #123"
+```
+
+**Commits con breaking changes:**
+```bash
+git commit -m "feat(api): cambiar formato de respuesta
+
+BREAKING CHANGE: El formato de respuesta de la API ha cambiado.
+Los clientes deben actualizar su código para usar el nuevo formato."
+```
+
+**Commits con referencias a issues de GitHub:**
+```bash
+# Referencia simple con palabra clave que cierra la issue automáticamente
+git commit -m "feat: añadir autenticación de usuarios
+
+Implementa sistema de autenticación JWT para usuarios.
+
+Closes #123"
+
+# Referencia múltiple a issues
+git commit -m "fix: corregir errores de validación
+
+Corrige problemas de validación en formularios de registro y login.
+
+Fixes #45
+Refs #67"
+
+# Referencia con enlace completo al final
+git commit -m "feat(exercises): añadir endpoint de listado
+
+Implementa endpoint GET /api/exercises/ con paginación y filtros.
+
+https://github.com/usuario/repo/issues/123"
+
+# Referencia combinada: palabra clave + enlace
+git commit -m "fix(users): corregir error en actualización de perfil
+
+Corrige bug que impedía actualizar el email del usuario.
+
+Resolves #89
+https://github.com/usuario/repo/issues/89"
+```
+
+### Referenciar Issues de GitHub
+
+- **Incluye referencias a issues de GitHub** al final del mensaje de commit cuando corresponda.
+- Usa **palabras clave especiales** para cerrar issues automáticamente al hacer merge:
+  - `Closes #123` o `Closes usuario/repo#123` - Cierra la issue automáticamente
+  - `Fixes #123` - Similar a Closes, indica que corrige un bug
+  - `Resolves #123` - Similar a Closes, indica que resuelve un problema
+  - `Refs #123` o `Relates to #123` - Solo referencia la issue sin cerrarla
+- Puedes incluir el **enlace completo** de la issue (`https://github.com/usuario/repo/issues/123`) para facilitar el acceso directo.
+- Si quieres solo **referenciar sin cerrar**, usa `Refs #123` o simplemente el número `#123`.
+- Para issues de otros repositorios, usa el formato `usuario/repo#123`.
+
+## Buenas Prácticas
+
+### Frecuencia de Commits
+
+- Haz commits frecuentes y pequeños en lugar de commits grandes e infrecuentes.
+- Cada commit debe representar un cambio lógico y completo.
+- Evita commits que mezclen múltiples cambios no relacionados.
+
+### Mensajes Descriptivos
+
+- Escribe mensajes de commit claros y descriptivos.
+- Usa el modo imperativo en la descripción ("añadir" en lugar de "añadido" o "añade").
+- Sé específico sobre qué cambió y por qué (en el cuerpo si es necesario).
+
+### Revisión de Cambios
+
+- Revisa los cambios antes de hacer commit usando `git diff`.
+- Asegúrate de que solo se incluyan los archivos relevantes.
+- Usa `git status` para verificar el estado del repositorio.
+
+### Sincronización
+
+- Mantén tu rama local actualizada con la rama remota.
+- Haz `git pull` regularmente para obtener los últimos cambios.
+- Resuelve conflictos antes de hacer push.
+
+## Comandos Útiles
+
+### Verificar Estado
+```bash
+git status
+git log --oneline
+git diff
+```
+
+### Gestión de Ramas
+```bash
+git branch                    # Listar ramas locales
+git branch -a                 # Listar todas las ramas
+git checkout -b <nombre>      # Crear y cambiar a nueva rama
+git branch -d <nombre>        # Eliminar rama local
+```
+
+### Gestión de Cambios
+```bash
+git add <archivo>             # Añadir archivo al staging
+git add .                     # Añadir todos los cambios
+git commit -m "<mensaje>"     # Confirmar cambios
+git push origin <rama>        # Enviar cambios al remoto
+```
+
+### Sincronización
+```bash
+git pull origin main          # Obtener y fusionar cambios
+git fetch origin              # Obtener cambios sin fusionar
+git merge <rama>              # Fusionar rama
+```

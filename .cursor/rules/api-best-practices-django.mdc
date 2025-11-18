@@ -1,0 +1,179 @@
+---
+alwaysApply: true
+---
+
+# Mejores Prácticas API (Python, Django & DRF)
+
+## Principios de Código Limpio
+
+### Nombres intencionales
+- Vistas: `{recurso}View` o `{Recurso}{Action}APIView` (ej. `UserDetailAPIView`)
+- Servicios/Lógica: `def run_{acción}_{recurso}()` o clases `UseCase`
+- Serializadores: `{Recurso}Serializer`, `{Recurso}{Acción}Serializer`
+- Tests: `Test{Recurso}{Caso}`
+- Constantes en `UPPER_SNAKE_CASE`, módulos en `snake_case`
+
+### Diseño de funciones
+- Mantén funciones cortas, enfocadas y con argumentos tipados (`typing`)
+- Extrae validaciones y transformaciones a funciones auxiliares
+- Aplica early-return para casos inválidos
+- Separa código puro (serializadores, services) de side-effects (ORM, requests)
+
+### Manejo de errores
+```python
+class UserDetailAPIView(APIView):
+    def get(self, request, pk: int) -> Response:
+        user = get_object_or_404(User, pk=pk)
+        data = UserSerializer(user).data
+        return Response({"data": data})
+```
+- Lanza `ValidationError`, `NotFound`, `PermissionDenied` según corresponda
+- Envuelve errores inesperados en `APIException` o deja que DRF los convierta
+- Registra errores detallados, responde mensajes genéricos
+
+## Arquitectura
+
+### Capas recomendadas
+```
+Request → View/APIView → Service/UseCase → Repository/ORM → DB
+Response ← View/APIView ← Service/UseCase ← Repository/ORM ← DB
+```
+
+### Organización de carpetas
+- `apps/<feature>/views.py`: controladores HTTP (DRF Views/ViewSets)
+- `apps/<feature>/serializers.py`: validación/transformación
+- `apps/<feature>/services/*.py`: lógica de negocio reutilizable
+- `apps/<feature>/repositories.py`: consultas complejas o acceso externo
+- `apps/<feature>/urls.py`: enrutar por feature
+- Configuración global en `settings.py`, utilidades compartidas en `common/`
+
+### Dependencias
+- Las vistas dependen de serializadores y servicios
+- Servicios dependen de repositorios/ORM
+- Evita importar vistas entre sí
+- Usa inyección de dependencias simple (parámetros explícitos) para testear
+
+## Patrones DRF
+
+### APIView / ViewSet
+```python
+class OrderViewSet(ModelViewSet):
+    queryset = Order.objects.select_related("customer")
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer: OrderSerializer) -> None:
+        serializer.save(created_by=self.request.user)
+```
+- Prefiere `ViewSet`/`ModelViewSet` para CRUD estándar
+- Usa `GenericAPIView` + mixins para personalizar
+- Centraliza filtros/orden en `filter_backends`
+
+### Serializadores
+- Define `Meta.fields` explícitos, evita `__all__`
+- Usa validaciones declarativas (`validate_<campo>`, `validators`)
+- Implementa `create`/`update` para side-effects
+- Serializadores de salida separados cuando cambie el esquema
+
+### Respuestas
+```python
+return Response(
+    {
+        "data": OrderSerializer(order).data,
+        "message": "Orden creada",
+        "request": {
+            "method": request.method,
+            "path": request.path,
+            "user": request.user.pk,
+        },
+    },
+    status=status.HTTP_201_CREATED,
+)
+```
+- Respuesta uniforme: `data`, `message`, `request`, `error` cuando aplique
+- Devuelve `status` HTTP correcto (`HTTP_200_OK`, etc.)
+
+## Seguridad
+
+### Autenticación y permisos
+- Configura `REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"]`
+- Usa permisos específicos (`IsOwner`, `DjangoModelPermissions`)
+- No expongas datos sensibles en serializadores
+
+### Validación de entrada
+- Valida en serializadores y modelos (`clean`)
+- Usa `forms`/`validators` para entradas complejas
+- Sanitiza HTML/markdown antes de almacenarlo
+
+### Protección
+- Activa CSRF en vistas tradicionales
+- Usa throttling (`UserRateThrottle`, `AnonRateThrottle`)
+- Registra auditoría (quién hizo qué y cuándo)
+
+## Rendimiento
+
+### Consultas
+- Usa `select_related`, `prefetch_related`
+- Limita columnas con `values()`/`only()` cuando sea razonable
+- Pagina con `LimitOffsetPagination` o `PageNumberPagination`
+- Añade caché (Redis/Memcached) para listados pesados
+
+### Serialización
+- Evita lógica pesada en `to_representation`
+- Usa `SerializerMethodField` sólo cuando sea necesario
+- Considera `drf-spectacular`/`ninja` para esquemas ligeros
+
+## Pruebas
+
+### Unitarias
+- Testea servicios y serializadores en aislamiento
+- Mockea integraciones externas (HTTP, colas)
+- Usa `pytest` + `pytest-django` o `unittest`
+- Nombra test cases con `test_<condición>_<resultado>`
+
+### Integración
+- Cubre flujo completo con `APIClient`/`APIRequestFactory`
+- Verifica permisos, paginación, filtros y respuestas de error
+- Prueba señales, tareas Celery y websockets cuando existan
+
+## Documentación
+
+### Código
+- Docstrings en funciones públicas y servicios
+- Explica decisiones no obvias o reglas de negocio
+- Mantén `README` y diagramas al día
+
+### API
+- Genera OpenAPI/Swagger (`drf-spectacular`, `drf-yasg`)
+- Incluye ejemplos de requests/responses y códigos de error
+- Versiona documentación junto con el código
+
+## Middleware & Configuración
+
+### Orden recomendado (`settings.MIDDLEWARE`)
+1. Seguridad (SecurityMiddleware, CORS, CSP)
+2. Sesiones y autenticación
+3. CSRF
+4. Mensajes / CommonMiddleware
+5. Logging / Observabilidad
+6. Middleware de negocio (auditoría, tenant)
+
+### Config DRF
+- `DEFAULT_RENDERER_CLASSES`: JSON por defecto, otros bajo demanda
+- `DEFAULT_PARSER_CLASSES`: JSON + multipart si subes archivos
+- `DEFAULT_FILTER_BACKENDS`: DjangoFilterBackend + SearchFilter
+- Define `EXCEPTION_HANDLER` custom para respuestas coherentes
+
+## Observabilidad y Operación
+
+- Expone healthcheck (`/health/`) ligero
+- Centraliza logging estructurado (`structlog`, JSON)
+- Métricas con Prometheus/StatsD (requests, latencia, errores)
+- Alertas sobre colas, errores 5xx y tiempos de consulta
+
+## Escalabilidad futura
+
+- Configura workers WSGI/ASGI (Gunicorn + Uvicorn) según carga
+- Mantén servicios idempotentes para reintentos
+- Desacopla tareas largas a Celery/RQ
+- Diseña modelos para partición horizontal (UUID, timestamps)

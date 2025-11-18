@@ -1,0 +1,223 @@
+---
+alwaysApply: true
+---
+# Patrones de Código API (Python, Django & DRF)
+
+## Patrón View
+Las vistas deben:
+- Gestionar peticiones y respuestas HTTP
+- Extraer y validar datos de entrada usando serializadores
+- Llamar a servicios de lógica de negocio
+- Devolver respuestas JSON estructuradas
+- Incluir metadatos de la petición cuando sea relevante
+
+**Ejemplo:**
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from apps.health.services import run_health_check
+
+class HealthAPIView(APIView):
+    def get(self, request) -> Response:
+        data = run_health_check()
+        return Response({
+            "data": data,
+            "request": {
+                "method": request.method,
+                "path": request.path,
+                "host": request.get_host(),
+            }
+        }, status=status.HTTP_200_OK)
+```
+
+## Patrón Service
+Los servicios deben:
+- Contener lógica de negocio pura
+- Orquestar operaciones entre repositorios
+- Devolver objetos de datos estructurados o instancias de modelo
+- Gestionar reglas de negocio y validaciones
+- Ser testeables y reutilizables
+
+**Ejemplo:**
+```python
+from datetime import datetime
+from apps.health.repositories import get_health_status
+
+def run_health_check() -> dict:
+    message = get_health_status()
+    return {
+        "message": message,
+        "timestamp": datetime.now().isoformat(),
+    }
+```
+
+## Patrón Repository
+Los repositorios deben:
+- Gestionar el acceso a datos e integraciones externas
+- Devolver instancias de modelo, QuerySets o estructuras de datos simples
+- Ser la única capa que conozca las fuentes de datos (ORM, APIs externas)
+- Gestionar la transformación de datos si es necesario
+
+**Ejemplo:**
+```python
+def get_health_status() -> str:
+    # Lógica de acceso a datos
+    # Consultas a base de datos, llamadas a APIs externas, operaciones de archivos
+    return "Everything is OK"
+```
+
+## Estructura de Respuesta
+Todas las respuestas de la API deben seguir esta estructura:
+```python
+{
+    "data": any,           # Datos principales de la respuesta
+    "message": str,        # Mensaje de éxito opcional
+    "request": {           # Metadatos de la petición opcionales
+        "method": str,
+        "path": str,
+        "host": str,
+    },
+    "error": str           # Solo en respuestas de error
+}
+```
+
+## Manejo de Errores
+- Usar excepciones de DRF (`ValidationError`, `NotFound`, `PermissionDenied`) en vistas y servicios
+- Usar bloques try-except en vistas para errores inesperados
+- Devolver códigos de estado HTTP apropiados usando constantes `status.HTTP_*`
+- Proporcionar mensajes de error significativos
+- Registrar errores de forma apropiada
+
+**Ejemplo:**
+```python
+from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.response import Response
+from rest_framework import status
+
+class UserDetailAPIView(APIView):
+    def get(self, request, pk: int) -> Response:
+        try:
+            user = get_user_service(pk=pk)
+            return Response({"data": UserSerializer(user).data})
+        except NotFound:
+            return Response(
+                {"error": "Not found", "message": "User does not exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+```
+
+## Patrón Serializer
+Los serializadores deben:
+- Validar datos de entrada
+- Transformar datos entre representaciones de API y modelo
+- Usar definiciones de campos explícitas (evitar `fields = "__all__"`)
+- Implementar validación personalizada con métodos `validate_<campo>`
+- Gestionar serialización anidada cuando sea necesario
+
+**Ejemplo:**
+```python
+from rest_framework import serializers
+from apps.users.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
+    
+    class Meta:
+        model = User
+        fields = ["id", "email", "username", "created_at"]
+        read_only_fields = ["id", "created_at"]
+    
+    def validate_email(self, value: str) -> str:
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already exists")
+        return value
+```
+
+## Patrón ViewSet (para operaciones CRUD)
+Los ViewSets deben:
+- Usar `ModelViewSet` para operaciones CRUD estándar
+- Personalizar acciones con el decorador `@action`
+- Establecer clases de permisos apropiadas
+- Usar anotaciones/optimizaciones de queryset cuando sea necesario
+
+**Ejemplo:**
+```python
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from apps.exercises.models import Exercise
+from apps.exercises.serializers import ExerciseSerializer
+
+class ExerciseViewSet(viewsets.ModelViewSet):
+    queryset = Exercise.objects.select_related("category")
+    serializer_class = ExerciseSerializer
+    permission_classes = [IsAuthenticated]
+    
+    @action(detail=True, methods=["post"])
+    def activate(self, request, pk=None):
+        exercise = self.get_object()
+        exercise.is_active = True
+        exercise.save()
+        return Response({"data": ExerciseSerializer(exercise).data})
+```
+
+## Uso de Middleware
+- Usar middleware de Django para aspectos transversales (logging, autenticación, CORS)
+- Colocar middleware personalizado en `apps/common/middleware/`
+- Registrar middleware en `settings.MIDDLEWARE` en el orden correcto
+- Usar middleware/throttling de DRF para aspectos específicos de la API
+
+**Ejemplo de registro de middleware en settings.py:**
+```python
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.common.middleware.logging.RequestLoggingMiddleware",
+]
+```
+
+## Optimización de QuerySet
+- Usar `select_related()` para relaciones ForeignKey
+- Usar `prefetch_related()` para ManyToMany o ForeignKey inverso
+- Usar `only()` o `defer()` para limitar campos cuando sea necesario
+- Añadir índices de base de datos para campos consultados frecuentemente
+
+**Ejemplo:**
+```python
+# En ViewSet o Repository
+queryset = Exercise.objects.select_related("category").prefetch_related("tags")
+```
+
+## Pagination Pattern
+- Use DRF pagination classes for list endpoints
+- Configure in `settings.py` or per-view
+- Return consistent paginated response structure
+
+**Example in settings.py:**
+```python
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+```
+
+## Permission Pattern
+- Use DRF permission classes for access control
+- Create custom permissions when needed
+- Combine permissions using `&` (AND) or `|` (OR)
+
+**Example:**
+```python
+from rest_framework.permissions import BasePermission
+
+class IsOwnerOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return True
+        return obj.created_by == request.user
+```

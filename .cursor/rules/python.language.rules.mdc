@@ -1,0 +1,122 @@
+---
+globs: *.py
+alwaysApply: false
+---
+# Reglas del Lenguaje Python
+
+## Convenciones de Nomenclatura
+- Las variables, funciones y métodos utilizan `snake_case`.
+- Las clases utilizan `PascalCase`.
+- Las constantes utilizan `UPPER_SNAKE_CASE`.
+- Los módulos y paquetes utilizan `snake_case`.
+- Los nombres privados comienzan con un guion bajo `_`.
+- Los nombres que deben ser privados al módulo comienzan con doble guion bajo `__`.
+
+## Tipos
+- Define tipos explícitos para variables, parámetros de función y valores de retorno usando `typing`.
+- Usa `typing.Optional` para valores que pueden ser `None`.
+- Usa `typing.Union` para múltiples tipos posibles.
+- Prefiere `typing.Protocol` para interfaces estructurales.
+- Evita `typing.Any` excepto como último recurso.
+- Usa `typing.TYPE_CHECKING` para imports de tipos que solo se usan en type hints.
+
+### Declaraciones de Tipos
+- Evita la obsesión por primitivos y define alias de tipos en su propio archivo `*.type.py` o en un módulo `types.py`.
+- Aprovecha los genéricos para componentes reutilizables.
+- Usa `typing.TypeAlias` para alias de tipos complejos.
+- Usa `typing.Literal` para valores literales específicos cuando sea apropiado.
+- Usa `==` y `!=` para comparaciones de igualdad.
+- Define funciones de lógica para validación y formateo en tiempo de ejecución.
+
+### Manejo de Valores Desconocidos u Opcionales
+- Usa `typing.Any` solo como último recurso para valores completamente desconocidos.
+- Usa `typing.Union` o `typing.Optional` para valores que pueden ser de múltiples tipos.
+- Usa `None` para representar la ausencia de valor (no uses `null`).
+- Declara una constante con valores por defecto para evitar comprobaciones de `None`.
+- Acepta `None` para valores opcionales cuando el valor puede no existir en absoluto.
+- Usa `typing.Union[Type, None]` o `typing.Optional[Type]` para valores opcionales.
+
+## Módulos
+- En este contexto, un módulo es un archivo Python que exporta funcionalidad.
+
+### Exportación
+- Exporta funciones y clases directamente, no dentro de objetos para mejor legibilidad.
+- Usa `__all__` para definir explícitamente qué se exporta del módulo.
+- Exporta solo un componente principal por archivo cuando sea posible.
+
+### Nomenclatura
+- El objeto exportado tiene un nombre `<intención><artefacto>` en `snake_case`.
+- Cada archivo tiene un nombre `<intención>_<artefacto>.py` en `snake_case`.
+- Las intenciones son características o especificaciones. Ej: `auth`, `user`, `payment`, `order`...
+- Los artefactos son bloques arquitectónicos. Ej: `service`, `controller`, `repository`...
+
+### Importación
+- Usa la sintaxis de imports absolutos cuando sea posible.
+- Organiza los imports en el orden: estándar, terceros, locales.
+- Usa `from __future__ import annotations` para type hints más limpios.
+- Evita imports circulares usando imports locales dentro de funciones cuando sea necesario.
+- Importa tipos específicamente del módulo cuando sea necesario (ej: `from typing import Optional`).
+- Usa `if TYPE_CHECKING:` para imports de tipos que solo se usan en type hints.
+
+## Funciones y Métodos
+- Nombra funciones y métodos con un verbo y opcionalmente añade un sustantivo.
+- Usa un solo nivel de abstracción.
+
+### Funciones Puras sobre Efectos Secundarios
+- Prefiere funciones puras sobre efectos secundarios.
+- Mantén los efectos secundarios en funciones separadas fáciles de identificar y mockear.
+
+### Declaraciones sobre Expresiones
+- Prefiere declaraciones `def` sobre funciones lambda para funciones complejas.
+- Usa funciones lambda solo para callbacks y operaciones simples.
+- Usa `async`/`await` para operaciones asíncronas.
+
+### Métodos de Lista
+- Prefiere métodos de lista (`map`, `filter`, `reduce`, `find`, etc.) sobre bucles `for` tradicionales.
+- Usa list comprehensions para transformaciones simples y legibles.
+- Usa unpacking y spreading para manipulaciones de listas más limpias.
+- Implementa retornos tempranos en callbacks de lista para mejor rendimiento.
+- Considera la composición de funciones para transformaciones complejas.
+- Usa bucles `for...in` cuando necesites `break` o `continue` en iteraciones.
+- Recurre a bucles `for` tradicionales solo para flujo de control complejo o secciones críticas de rendimiento.
+
+### Asíncrono
+- Usa `async`/`await` para código asíncrono.
+- Marca funciones que devuelven coroutines como `async`.
+- Usa `await` para operaciones asíncronas.
+- Usa `try-except` para manejo de errores.
+- Usa `asyncio.gather()` o `asyncio.create_task()` para operaciones concurrentes.
+
+## Clases
+- Prefiere módulos funcionales sobre clases.
+- Usa clases cuando los datos y el comportamiento estén fuertemente acoplados o para ciertos patrones de diseño.
+- Sé explícito para miembros `public`, `private` (con `_`) o `protected` (con `__`).
+- Usa `@property` para propiedades calculadas.
+- Declara y usa `typing.Protocol` o `abc.ABC` para la API pública cuando sea apropiado.
+
+## Manejo de Errores
+- Usa `try-except` en el nivel superior de la aplicación.
+- En otros casos, usa `try-except` solo si añade valor (ej: corregir algo o añadir contexto).
+- Define y usa un logger para el manejo de errores.
+- Usa excepciones específicas en lugar de `Exception` genérico cuando sea posible.
+- Lanza excepciones descriptivas con mensajes claros.
+- Usa `raise ... from ...` para encadenar excepciones cuando sea apropiado.
+
+## Estructuras de Datos
+- Prefiere `list` sobre arrays cuando necesites una secuencia mutable.
+- Usa `tuple` para secuencias inmutables.
+- Usa `dict` para mapeos clave-valor.
+- Usa `set` para colecciones únicas.
+- Usa `collections.namedtuple` o `dataclasses.dataclass` para estructuras de datos simples.
+- Prefiere `dataclasses.dataclass` sobre clases simples cuando sea posible.
+
+## Documentación
+- Usa docstrings en estilo Google o NumPy para funciones, clases y módulos públicos.
+- Documenta parámetros, valores de retorno y excepciones lanzadas.
+- Mantén los docstrings actualizados con el código.
+
+## Formateo y Estilo
+- Sigue PEP 8 para el estilo de código.
+- Usa `black` o `autopep8` para formateo automático.
+- Mantén las líneas a un máximo de 88-100 caracteres (según tu herramienta de formateo).
+- Usa 4 espacios para indentación, nunca tabs.

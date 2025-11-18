@@ -1,0 +1,201 @@
+---
+alwaysApply: true
+---
+# Guía de Estructura de API (Django & DRF)
+
+## Visión General de la Arquitectura
+La API sigue un patrón de **arquitectura en capas** con una clara separación de responsabilidades:
+
+- **Views (Vistas)**: Gestionan peticiones/respuestas HTTP y validación de entrada
+- **Services (Servicios)**: Contienen la lógica de negocio y orquestan operaciones
+- **Repositories (Repositorios)**: Gestionan el acceso a datos e integraciones externas
+- **Serializers (Serializadores)**: Validan y transforman datos entre API y modelos
+- **Models (Modelos)**: Definen la estructura de datos y reglas de negocio a nivel de base de datos
+- **Middleware**: Aspectos transversales como logging, autenticación, CORS, etc.
+- **Common (Común)**: Utilidades compartidas y tipos comunes
+
+## Organización de Archivos
+
+### Archivos Principales del Proyecto
+- `manage.py` - Script de gestión de Django
+- `settings.py` - Configuración del proyecto Django
+- `urls.py` - Configuración de URLs principal
+- `wsgi.py` / `asgi.py` - Puntos de entrada WSGI/ASGI
+
+### Estructura de Apps
+Cada funcionalidad tiene su propia app Django en `apps/{app-name}/` conteniendo:
+- `models.py` - Modelos de datos
+- `views.py` - Vistas/ViewSets de la API
+- `serializers.py` - Serializadores DRF
+- `services.py` - Lógica de negocio
+- `repositories.py` - Acceso a datos
+- `urls.py` - Rutas específicas de la app
+- `admin.py` - Configuración del admin de Django
+- `tests.py` - Pruebas unitarias
+
+**Estructura de ejemplo para una app `exercises`:**
+```
+apps/exercises/
+├── __init__.py
+├── models.py
+├── views.py
+├── serializers.py
+├── services.py
+├── repositories.py
+├── urls.py
+├── admin.py
+└── tests.py
+```
+
+### Apps Actuales
+- [health/](mdc:apps/health/) - Endpoints de verificación de salud del sistema
+- [users/](mdc:apps/users/) - Gestión de usuarios y autenticación
+- [exercises/](mdc:apps/exercises/) - Biblioteca de ejercicios
+- [routines/](mdc:apps/routines/) - Rutinas de entrenamiento
+- [sessions/](mdc:apps/sessions/) - Sesiones de entrenamiento registradas
+- [progress/](mdc:apps/progress/) - Seguimiento de progreso
+- [statistics/](mdc:apps/statistics/) - Estadísticas y análisis
+
+### Middleware
+- [logging.py](mdc:apps/common/middleware/logging.py) - Registro de peticiones
+- [authentication.py](mdc:apps/common/middleware/authentication.py) - Autenticación personalizada
+- [cors.py](mdc:apps/common/middleware/cors.py) - Configuración CORS
+
+### Utilidades Compartidas
+- [exceptions.py](mdc:apps/common/exceptions.py) - Excepciones personalizadas
+- [permissions.py](mdc:apps/common/permissions.py) - Clases de permisos personalizadas
+- [utils.py](mdc:apps/common/utils.py) - Funciones auxiliares comunes
+- [pagination.py](mdc:apps/common/pagination.py) - Clases de paginación personalizadas
+
+## Crear una Nueva App
+
+### 1. Crear la App Django
+Usa el comando de Django para crear la estructura base:
+```bash
+python manage.py startapp {app-name} apps/{app-name}
+```
+
+### 2. Organizar los Archivos
+Asegúrate de que la app tenga la siguiente estructura:
+- `models.py` - Define los modelos de datos
+- `views.py` - Implementa las vistas/ViewSets
+- `serializers.py` - Define los serializadores
+- `services.py` - Contiene la lógica de negocio
+- `repositories.py` - Gestiona el acceso a datos
+- `urls.py` - Define las rutas de la app
+- `admin.py` - Configura el admin si es necesario
+- `tests.py` - Escribe las pruebas
+
+**Ejemplo de estructura para una nueva app `workouts`:**
+```
+apps/workouts/
+├── __init__.py
+├── models.py          # Modelo Workout, WorkoutExercise, etc.
+├── views.py           # WorkoutViewSet, WorkoutDetailAPIView
+├── serializers.py     # WorkoutSerializer, WorkoutCreateSerializer
+├── services.py        # create_workout_service(), update_workout_service()
+├── repositories.py    # get_workout_repository(), list_workouts_repository()
+├── urls.py            # Router y rutas específicas
+├── admin.py           # Registro en admin
+└── tests.py           # Tests unitarios e integración
+```
+
+### 3. Seguir Convenciones de Nomenclatura
+- Usar `snake_case` para nombres de archivos y funciones
+- Usar `PascalCase` para nombres de clases (Views, Serializers, Models)
+- Usar nombres descriptivos que indiquen la intención
+- Prefijos para vistas: `{Modelo}ViewSet`, `{Modelo}DetailAPIView`, `{Modelo}ListAPIView`
+- Prefijos para servicios: `{acción}_{recurso}_service()` (ej: `create_workout_service()`)
+- Prefijos para repositorios: `{acción}_{recurso}_repository()` (ej: `get_workout_repository()`)
+
+### 4. Registrar la App
+Añade la app a `INSTALLED_APPS` en `settings.py`:
+```python
+INSTALLED_APPS = [
+    # ... otras apps ...
+    "apps.workouts",
+]
+```
+
+### 5. Registrar las Rutas
+Añade las URLs de la app al archivo principal `urls.py`:
+```python
+from django.urls import path, include
+
+urlpatterns = [
+    # ... otras rutas ...
+    path("api/workouts/", include("apps.workouts.urls")),
+]
+```
+
+### 6. Configurar el Router (si usas ViewSets)
+En `apps/{app-name}/urls.py`:
+```python
+from rest_framework.routers import DefaultRouter
+from apps.workouts.views import WorkoutViewSet
+
+router = DefaultRouter()
+router.register(r"workouts", WorkoutViewSet, basename="workout")
+
+urlpatterns = router.urls
+```
+
+## Flujo de Datos
+
+### Petición HTTP → Respuesta
+```
+Request → URL Router → View/ViewSet → Serializer (validación)
+    ↓
+Service (lógica de negocio)
+    ↓
+Repository (acceso a datos)
+    ↓
+Model (ORM/Database)
+    ↓
+Repository → Service → View → Serializer (transformación) → Response
+```
+
+### Ejemplo Completo
+1. **URL**: `/api/exercises/` → `apps/exercises/urls.py`
+2. **View**: `ExerciseViewSet.list()` → `apps/exercises/views.py`
+3. **Serializer**: `ExerciseSerializer` → `apps/exercises/serializers.py`
+4. **Service**: `list_exercises_service()` → `apps/exercises/services.py`
+5. **Repository**: `list_exercises_repository()` → `apps/exercises/repositories.py`
+6. **Model**: `Exercise.objects.all()` → `apps/exercises/models.py`
+7. **Response**: JSON estructurado con datos serializados
+
+## Principios de Arquitectura
+
+- **Responsabilidad Única**: Cada capa tiene un propósito claro y definido
+- **Dirección de Dependencias**: Views → Services → Repositories → Models
+- **Separación de Responsabilidades**: HTTP, lógica de negocio y acceso a datos están separados
+- **Reutilización**: Utilidades compartidas para operaciones comunes
+- **Testabilidad**: Cada capa puede probarse de forma independiente
+- **Mantenibilidad**: Código organizado y fácil de entender
+
+## Convenciones Adicionales
+
+### Estructura de Respuestas
+Todas las respuestas deben seguir el formato estándar:
+```python
+{
+    "data": {...},           # Datos principales
+    "message": "...",        # Mensaje opcional
+    "request": {             # Metadatos opcionales
+        "method": "GET",
+        "path": "/api/exercises/",
+        "host": "example.com"
+    }
+}
+```
+
+### Manejo de Errores
+- Usar excepciones de DRF (`ValidationError`, `NotFound`, `PermissionDenied`)
+- Devolver códigos de estado HTTP apropiados
+- Proporcionar mensajes de error claros y descriptivos
+
+### Optimización de Consultas
+- Usar `select_related()` para relaciones ForeignKey
+- Usar `prefetch_related()` para relaciones ManyToMany
+- Limitar campos con `only()` o `defer()` cuando sea necesario
+- Añadir índices en modelos para campos consultados frecuentemente

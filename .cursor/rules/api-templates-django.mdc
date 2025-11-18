@@ -1,0 +1,460 @@
+---
+alwaysApply: true
+---
+# Plantillas de API para Django y Django REST Framework
+
+## Plantillas de Inicio Rápido
+
+### 1. Plantilla de Vista (View)
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from apps.{app_name}.services import run_{resource_name}_service
+from apps.{app_name}.serializers import {ResourceName}Serializer
+
+class {ResourceName}APIView(APIView):
+    def get(self, request, pk: int = None) -> Response:
+        try:
+            # Extraer y validar parámetros
+            query_params = request.query_params
+            resource_id = pk or query_params.get("id")
+            
+            # Llamar a la lógica de negocio
+            data = run_{resource_name}_service(resource_id=resource_id)
+            
+            # Serializar datos
+            serializer = {ResourceName}Serializer(data)
+            
+            # Devolver respuesta estructurada
+            return Response({
+                "data": serializer.data,
+                "request": {
+                    "method": request.method,
+                    "path": request.path,
+                    "host": request.get_host(),
+                }
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": "Internal server error",
+                "message": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+```
+
+### 2. Plantilla de Serializador (Serializer)
+```python
+from rest_framework import serializers
+from apps.{app_name}.models import {ResourceName}
+
+class {ResourceName}Serializer(serializers.ModelSerializer):
+    # Campos personalizados si es necesario
+    custom_field = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = {ResourceName}
+        fields = ["id", "name", "description", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+    
+    def get_custom_field(self, obj) -> str:
+        # Lógica para campos calculados
+        return f"Custom value for {obj.id}"
+    
+    def validate_name(self, value: str) -> str:
+        # Validación personalizada
+        if len(value) < 3:
+            raise serializers.ValidationError("El nombre debe tener al menos 3 caracteres")
+        return value
+```
+
+### 3. Plantilla de Servicio (Service)
+```python
+from typing import Optional, Dict, Any
+from apps.{app_name}.repositories import get_{resource_name}_repository
+from rest_framework.exceptions import NotFound, ValidationError
+
+def run_{resource_name}_service(
+    resource_id: Optional[int] = None,
+    filters: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Lógica de negocio para {resource_name}.
+    
+    Args:
+        resource_id: Identificador del recurso (opcional)
+        filters: Filtros adicionales para la consulta
+        
+    Returns:
+        Diccionario con los datos procesados
+        
+    Raises:
+        NotFound: Si el recurso no existe
+        ValidationError: Si los datos no son válidos
+    """
+    # Validación de negocio
+    if resource_id and resource_id < 1:
+        raise ValidationError("El ID debe ser un número positivo")
+    
+    # Llamar al repositorio
+    result = get_{resource_name}_repository(resource_id=resource_id, filters=filters)
+    
+    if not result:
+        raise NotFound("Recurso no encontrado")
+    
+    # Transformar y devolver datos
+    return {
+        "result": result,
+        "processed": True,
+    }
+```
+
+### 4. Plantilla de Repositorio (Repository)
+```python
+from typing import Optional, Dict, Any, List
+from apps.{app_name}.models import {ResourceName}
+from django.db.models import QuerySet
+
+def get_{resource_name}_repository(
+    resource_id: Optional[int] = None,
+    filters: Optional[Dict[str, Any]] = None
+) -> Optional[{ResourceName}]:
+    """
+    Acceso a datos para {resource_name}.
+    
+    Args:
+        resource_id: Identificador del recurso
+        filters: Filtros adicionales para la consulta
+        
+    Returns:
+        Instancia del modelo o None si no se encuentra
+    """
+    # Lógica de acceso a datos
+    # Consultas a base de datos, llamadas a APIs externas, etc.
+    
+    queryset = {ResourceName}.objects.all()
+    
+    if resource_id:
+        queryset = queryset.filter(id=resource_id)
+    
+    if filters:
+        queryset = queryset.filter(**filters)
+    
+    # Optimización de consultas
+    queryset = queryset.select_related("related_field").prefetch_related("many_related_field")
+    
+    return queryset.first() if resource_id else queryset
+```
+
+### 5. Plantilla de Registro de URL
+Añadir a `apps/{app_name}/urls.py`:
+```python
+from django.urls import path
+from apps.{app_name}.views import {ResourceName}APIView
+
+app_name = "{app_name}"
+
+urlpatterns = [
+    path("{resource-name}/", {ResourceName}APIView.as_view(), name="{resource-name}-list"),
+    path("{resource-name}/<int:pk>/", {ResourceName}APIView.as_view(), name="{resource-name}-detail"),
+]
+```
+
+Y registrar en `{project_name}/urls.py`:
+```python
+from django.urls import path, include
+
+urlpatterns = [
+    path("api/v1/", include("apps.{app_name}.urls")),
+]
+```
+
+## Plantillas para Métodos HTTP
+
+### Endpoint GET (Lista)
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from apps.{app_name}.services import get_{resource_name}_list_service
+from apps.{app_name}.serializers import {ResourceName}Serializer
+
+class {ResourceName}ListAPIView(APIView):
+    def get(self, request) -> Response:
+        data = get_{resource_name}_list_service()
+        serializer = {ResourceName}Serializer(data, many=True)
+        return Response({
+            "data": serializer.data,
+            "request": {
+                "method": request.method,
+                "path": request.path,
+            }
+        }, status=status.HTTP_200_OK)
+```
+
+### Endpoint GET (Detalle)
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import NotFound
+from apps.{app_name}.services import get_{resource_name}_detail_service
+from apps.{app_name}.serializers import {ResourceName}Serializer
+
+class {ResourceName}DetailAPIView(APIView):
+    def get(self, request, pk: int) -> Response:
+        try:
+            data = get_{resource_name}_detail_service(resource_id=pk)
+            serializer = {ResourceName}Serializer(data)
+            return Response({
+                "data": serializer.data,
+                "request": {
+                    "method": request.method,
+                    "path": request.path,
+                }
+            }, status=status.HTTP_200_OK)
+        except NotFound:
+            return Response({
+                "error": "Not found",
+                "message": "El recurso solicitado no existe"
+            }, status=status.HTTP_404_NOT_FOUND)
+```
+
+### Endpoint POST (Crear)
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from apps.{app_name}.services import create_{resource_name}_service
+from apps.{app_name}.serializers import {ResourceName}CreateSerializer
+
+class {ResourceName}CreateAPIView(APIView):
+    def post(self, request) -> Response:
+        serializer = {ResourceName}CreateSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response({
+                "error": "Validation error",
+                "message": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            data = create_{resource_name}_service(validated_data=serializer.validated_data)
+            return Response({
+                "data": {ResourceName}Serializer(data).data,
+                "message": "Recurso creado correctamente",
+                "request": {
+                    "method": request.method,
+                    "path": request.path,
+                }
+            }, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response({
+                "error": "Validation error",
+                "message": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+```
+
+### Endpoint PUT (Actualizar)
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import NotFound, ValidationError
+from apps.{app_name}.services import update_{resource_name}_service
+from apps.{app_name}.serializers import {ResourceName}UpdateSerializer
+
+class {ResourceName}UpdateAPIView(APIView):
+    def put(self, request, pk: int) -> Response:
+        serializer = {ResourceName}UpdateSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response({
+                "error": "Validation error",
+                "message": serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            data = update_{resource_name}_service(
+                resource_id=pk,
+                validated_data=serializer.validated_data
+            )
+            return Response({
+                "data": {ResourceName}Serializer(data).data,
+                "message": "Recurso actualizado correctamente",
+                "request": {
+                    "method": request.method,
+                    "path": request.path,
+                }
+            }, status=status.HTTP_200_OK)
+        except NotFound:
+            return Response({
+                "error": "Not found",
+                "message": "El recurso solicitado no existe"
+            }, status=status.HTTP_404_NOT_FOUND)
+        except ValidationError as e:
+            return Response({
+                "error": "Validation error",
+                "message": str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+```
+
+### Endpoint DELETE (Eliminar)
+```python
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import NotFound
+from apps.{app_name}.services import delete_{resource_name}_service
+
+class {ResourceName}DeleteAPIView(APIView):
+    def delete(self, request, pk: int) -> Response:
+        try:
+            delete_{resource_name}_service(resource_id=pk)
+            return Response({
+                "message": "Recurso eliminado correctamente",
+                "request": {
+                    "method": request.method,
+                    "path": request.path,
+                }
+            }, status=status.HTTP_204_NO_CONTENT)
+        except NotFound:
+            return Response({
+                "error": "Not found",
+                "message": "El recurso solicitado no existe"
+            }, status=status.HTTP_404_NOT_FOUND)
+```
+
+## Plantilla de ViewSet (CRUD Completo)
+
+### ViewSet con ModelViewSet
+```python
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from apps.{app_name}.models import {ResourceName}
+from apps.{app_name}.serializers import {ResourceName}Serializer, {ResourceName}CreateSerializer
+from apps.{app_name}.services import (
+    create_{resource_name}_service,
+    update_{resource_name}_service,
+    delete_{resource_name}_service
+)
+
+class {ResourceName}ViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar operaciones CRUD de {ResourceName}.
+    """
+    queryset = {ResourceName}.objects.select_related("related_field").prefetch_related("many_related_field")
+    serializer_class = {ResourceName}Serializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_serializer_class(self):
+        """Devuelve el serializador apropiado según la acción."""
+        if self.action == "create":
+            return {ResourceName}CreateSerializer
+        return {ResourceName}Serializer
+    
+    def create(self, request, *args, **kwargs) -> Response:
+        """Crear un nuevo recurso."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        data = create_{resource_name}_service(
+            validated_data=serializer.validated_data,
+            user=request.user
+        )
+        
+        return Response({
+            "data": {ResourceName}Serializer(data).data,
+            "message": "Recurso creado correctamente"
+        }, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs) -> Response:
+        """Actualizar un recurso existente."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        data = update_{resource_name}_service(
+            resource_id=instance.id,
+            validated_data=serializer.validated_data,
+            user=request.user
+        )
+        
+        return Response({
+            "data": {ResourceName}Serializer(data).data,
+            "message": "Recurso actualizado correctamente"
+        }, status=status.HTTP_200_OK)
+    
+    def destroy(self, request, *args, **kwargs) -> Response:
+        """Eliminar un recurso."""
+        instance = self.get_object()
+        delete_{resource_name}_service(resource_id=instance.id, user=request.user)
+        
+        return Response({
+            "message": "Recurso eliminado correctamente"
+        }, status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=True, methods=["post"])
+    def activate(self, request, pk=None) -> Response:
+        """Acción personalizada para activar un recurso."""
+        instance = self.get_object()
+        # Lógica de activación
+        instance.is_active = True
+        instance.save()
+        
+        return Response({
+            "data": {ResourceName}Serializer(instance).data,
+            "message": "Recurso activado correctamente"
+        }, status=status.HTTP_200_OK)
+```
+
+### Registro de ViewSet en URLs
+```python
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from apps.{app_name}.views import {ResourceName}ViewSet
+
+router = DefaultRouter()
+router.register(r"{resource-name}", {ResourceName}ViewSet, basename="{resource-name}")
+
+app_name = "{app_name}"
+
+urlpatterns = [
+    path("", include(router.urls)),
+]
+```
+
+## Convenciones de Nombres de Archivos
+
+- **Vistas**: `apps/{app_name}/views.py` o `apps/{app_name}/views/{resource_name}_views.py`
+- **Serializadores**: `apps/{app_name}/serializers.py` o `apps/{app_name}/serializers/{resource_name}_serializers.py`
+- **Servicios**: `apps/{app_name}/services.py` o `apps/{app_name}/services/{resource_name}_services.py`
+- **Repositorios**: `apps/{app_name}/repositories.py` o `apps/{app_name}/repositories/{resource_name}_repositories.py`
+- **Modelos**: `apps/{app_name}/models.py`
+- **URLs**: `apps/{app_name}/urls.py`
+- **Ruta de API**: `/api/v1/{resource-name}/`
+
+## Instrucciones de Uso
+
+1. **Copia la plantilla apropiada** según el tipo de endpoint que necesites
+2. **Reemplaza los placeholders**:
+   - `{app_name}` → Nombre de tu aplicación Django (ej: `users`, `exercises`)
+   - `{resource_name}` → Nombre del recurso en snake_case (ej: `user_profile`, `exercise`)
+   - `{ResourceName}` → Nombre del recurso en PascalCase (ej: `UserProfile`, `Exercise`)
+   - `{resource-name}` → Nombre del recurso en kebab-case para URLs (ej: `user-profile`, `exercise`)
+3. **Implementa la lógica específica** de negocio en los servicios
+4. **Define los modelos** en `models.py` si aún no existen
+5. **Registra las URLs** en `apps/{app_name}/urls.py` y en el archivo principal de URLs
+6. **Prueba el endpoint** usando herramientas como Postman, curl o el cliente REST de Django
+
+## Notas Importantes
+
+- **Autenticación y Permisos**: Añade `permission_classes` y `authentication_classes` según tus necesidades de seguridad
+- **Paginación**: Configura la paginación en `settings.py` o a nivel de vista para endpoints de lista
+- **Optimización de Consultas**: Usa `select_related()` y `prefetch_related()` para evitar el problema N+1
+- **Validación**: Implementa validaciones tanto en serializadores como en servicios
+- **Manejo de Errores**: Usa excepciones de DRF (`ValidationError`, `NotFound`, `PermissionDenied`) para respuestas consistentes
+- **Estructura de Respuesta**: Mantén una estructura de respuesta uniforme en toda la API

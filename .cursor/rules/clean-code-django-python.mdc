@@ -1,0 +1,520 @@
+---
+globs: *.py
+alwaysApply: true
+---
+
+# Reglas de Código Limpio
+
+Este documento establece los principios y prácticas de código limpio basados en los estándares de la industria y las mejores prácticas de desarrollo de software.
+
+## 1. Nombres Intencionales
+
+### Principios Fundamentales
+- **Utiliza nombres completamente descriptivos** para variables, funciones, clases y módulos.
+- **Los nombres deben revelar la intención**: un buen nombre explica qué hace el código sin necesidad de comentarios.
+- **Evita abreviaciones** a menos que sean ampliamente conocidas en el dominio.
+
+### Convenciones de Nomenclatura
+- **Funciones y métodos**: Comienza con un verbo (`get_user`, `calculate_total`, `validate_input`).
+- **Variables de estado**: Usa prefijos descriptivos (`is_active`, `has_permission`, `can_edit`, `should_validate`).
+- **Clases**: Usa sustantivos o frases sustantivas (`UserService`, `PaymentProcessor`, `DataValidator`).
+- **Constantes**: `UPPER_SNAKE_CASE` con nombres descriptivos.
+- **Variables temporales**: Aunque sean temporales, deben tener nombres claros.
+
+### Ejemplos
+
+```python
+# ❌ Malo
+def calc(x, y):
+    return x * y * 0.21
+
+# ✅ Bueno
+def calculate_tax_included_price(base_price: float, quantity: int) -> float:
+    TAX_RATE = 0.21
+    return base_price * quantity * (1 + TAX_RATE)
+```
+
+```python
+# ❌ Malo
+d = datetime.now() - u.created_at
+
+# ✅ Bueno
+days_since_registration = datetime.now() - user.created_at
+```
+
+### Evitar Números y Cadenas Mágicas
+- **Declara constantes con nombre** para valores que tienen significado en el dominio.
+- **Agrupa constantes relacionadas** en clases o módulos dedicados.
+
+```python
+# ❌ Malo
+if user.age < 18:
+    raise ValueError("No permitido")
+
+# ✅ Bueno
+MINIMUM_AGE_FOR_REGISTRATION = 18
+
+if user.age < MINIMUM_AGE_FOR_REGISTRATION:
+    raise ValueError("No permitido")
+```
+
+## 2. Reducir Complejidad
+
+### Principios
+- **Complejidad ciclomática baja**: Cada función debe tener un flujo de control simple.
+- **Un solo nivel de abstracción**: No mezcles detalles de implementación con lógica de alto nivel.
+- **Ley de Demeter**: No hables con extraños (no encadenes múltiples llamadas a objetos).
+
+### Técnicas de Reducción de Complejidad
+
+#### Dividir Instrucciones Complejas
+```python
+# ❌ Malo
+result = [(x * 2) + 1 for x in range(10) if x % 2 == 0 and x > 3]
+
+# ✅ Bueno
+even_numbers = [x for x in range(10) if x % 2 == 0]
+filtered_numbers = [x for x in even_numbers if x > 3]
+result = [(x * 2) + 1 for x in filtered_numbers]
+```
+
+#### Retorno Temprano (Early Return)
+```python
+# ❌ Malo
+def process_user(user):
+    if user is not None:
+        if user.is_active:
+            if user.has_permission:
+                # lógica principal aquí
+                return result
+            else:
+                return None
+        else:
+            return None
+    else:
+        return None
+
+# ✅ Bueno
+def process_user(user):
+    if user is None:
+        return None
+    
+    if not user.is_active:
+        return None
+    
+    if not user.has_permission:
+        return None
+    
+    # lógica principal aquí
+    return result
+```
+
+#### Extraer Bloques Complejos
+```python
+# ❌ Malo
+def calculate_order_total(order):
+    total = 0
+    for item in order.items:
+        if item.discount > 0:
+            price = item.price * (1 - item.discount)
+        else:
+            price = item.price
+        if item.tax_applicable:
+            price = price * 1.21
+        total += price
+    return total
+
+# ✅ Bueno
+def calculate_item_price(item) -> float:
+    price = item.price * (1 - item.discount) if item.discount > 0 else item.price
+    return apply_tax(price) if item.tax_applicable else price
+
+def apply_tax(price: float) -> float:
+    TAX_RATE = 1.21
+    return price * TAX_RATE
+
+def calculate_order_total(order) -> float:
+    return sum(calculate_item_price(item) for item in order.items)
+```
+
+## 3. Funciones y Métodos Pequeños
+
+### Reglas de Oro
+- **Una función, una responsabilidad**: Cada función debe hacer una sola cosa y hacerla bien.
+- **Límite de líneas**: Idealmente menos de 20 líneas, máximo 50 líneas.
+- **Límite de parámetros**: Máximo 3-4 parámetros. Si necesitas más, usa objetos de datos.
+
+### Separación de Funciones Puras y Efectos Secundarios
+```python
+# ❌ Malo: Función con efectos secundarios mezclados
+def process_payment(user_id, amount):
+    user = User.objects.get(id=user_id)
+    user.balance -= amount
+    user.save()
+    send_email(user.email, f"Pago de {amount} procesado")
+    log_transaction(user_id, amount)
+    return user.balance
+
+# ✅ Bueno: Separación de responsabilidades
+def calculate_new_balance(current_balance: float, amount: float) -> float:
+    """Función pura: calcula el nuevo balance sin efectos secundarios."""
+    return current_balance - amount
+
+def update_user_balance(user: User, new_balance: float) -> None:
+    """Efecto secundario: actualiza el balance en la base de datos."""
+    user.balance = new_balance
+    user.save()
+
+def process_payment(user_id: int, amount: float) -> float:
+    """Orquesta el proceso de pago."""
+    user = User.objects.get(id=user_id)
+    new_balance = calculate_new_balance(user.balance, amount)
+    update_user_balance(user, new_balance)
+    notify_payment_processed(user, amount)
+    return new_balance
+```
+
+## 4. Estructuración de Datos
+
+### Preferir Estructuras sobre Primitivos
+```python
+# ❌ Malo: Primitivos que representan un concepto
+def create_user(name: str, email: str, age: int, city: str, country: str):
+    pass
+
+# ✅ Bueno: Estructuras de datos
+from dataclasses import dataclass
+
+@dataclass
+class Address:
+    city: str
+    country: str
+
+@dataclass
+class UserData:
+    name: str
+    email: str
+    age: int
+    address: Address
+
+def create_user(user_data: UserData):
+    pass
+```
+
+### Composición sobre Herencia
+```python
+# ❌ Malo: Herencia profunda
+class Animal:
+    pass
+
+class Mammal(Animal):
+    pass
+
+class Dog(Mammal):
+    pass
+
+# ✅ Bueno: Composición
+class Animal:
+    def __init__(self, behavior):
+        self.behavior = behavior
+
+class Dog:
+    def __init__(self):
+        self.animal = Animal(DogBehavior())
+```
+
+### Validaciones Cerca de las Definiciones
+```python
+# ✅ Bueno: Validación en el modelo/dataclass
+from django.core.exceptions import ValidationError
+
+class User(models.Model):
+    email = models.EmailField()
+    age = models.IntegerField()
+    
+    def clean(self):
+        if self.age < 18:
+            raise ValidationError("El usuario debe ser mayor de edad")
+        super().clean()
+```
+
+## 5. Cohesión y Acoplamiento
+
+### Alta Cohesión
+- **Coloca juntas las cosas que cambian juntas**: Si dos funciones siempre se modifican juntas, deben estar cerca.
+- **Agrupa funcionalidad relacionada**: Módulos y clases deben tener un propósito claro y único.
+
+```python
+# ✅ Bueno: Alta cohesión - todo relacionado con usuarios está junto
+class UserService:
+    def create_user(self, user_data: UserData) -> User:
+        pass
+    
+    def update_user(self, user_id: int, user_data: UserData) -> User:
+        pass
+    
+    def delete_user(self, user_id: int) -> None:
+        pass
+```
+
+### Bajo Acoplamiento
+- **Muestra el comportamiento, oculta la implementación**: Las interfaces deben ser simples y estables.
+- **Depende de abstracciones, no de concreciones**: Usa interfaces, protocolos o clases base.
+
+```python
+# ✅ Bueno: Bajo acoplamiento usando protocolos
+from typing import Protocol
+
+class PaymentProcessor(Protocol):
+    def process_payment(self, amount: float) -> bool:
+        ...
+
+class OrderService:
+    def __init__(self, payment_processor: PaymentProcessor):
+        self.payment_processor = payment_processor
+    
+    def complete_order(self, order: Order) -> bool:
+        return self.payment_processor.process_payment(order.total)
+```
+
+### Envolver Dependencias Externas
+```python
+# ✅ Bueno: Adaptador para dependencia externa
+class EmailService:
+    def __init__(self, smtp_client):
+        self.smtp_client = smtp_client
+    
+    def send_email(self, to: str, subject: str, body: str) -> None:
+        # Adapta la interfaz externa a nuestra interfaz interna
+        self.smtp_client.send(
+            recipient=to,
+            subject=subject,
+            content=body
+        )
+```
+
+## 6. Gestión de Dependencias
+
+### Principios
+- **Mínimas dependencias**: Solo depende de lo que realmente necesitas.
+- **Una dirección de dependencias**: Las dependencias fluyen en una sola dirección (nunca circular).
+- **Un nivel de dependencias**: No hables con extraños (no accedas a objetos a través de múltiples niveles).
+
+### Regla de Dependencias
+```
+Vista → Servicio → Repositorio → Modelo
+```
+
+Nunca inviertas esta dirección. Un repositorio nunca debe llamar a un servicio.
+
+### Ejemplo de Arquitectura en Capas
+```python
+# Repositorio (capa más baja)
+class UserRepository:
+    def get_by_id(self, user_id: int) -> User:
+        return User.objects.get(id=user_id)
+
+# Servicio (capa media)
+class UserService:
+    def __init__(self, repository: UserRepository):
+        self.repository = repository
+    
+    def get_user(self, user_id: int) -> User:
+        return self.repository.get_by_id(user_id)
+
+# Vista (capa más alta)
+class UserAPIView(APIView):
+    def __init__(self, service: UserService):
+        self.service = service
+    
+    def get(self, request, user_id: int):
+        user = self.service.get_user(user_id)
+        return Response(UserSerializer(user).data)
+```
+
+## 7. Principios Fundamentales
+
+### YAGNI (You Aren't Gonna Need It)
+- **No lo vas a necesitar**: No implementes funcionalidad hasta que realmente la necesites.
+- **Haz lo mínimo**: Implementa solo lo que se requiere ahora, no lo que podrías necesitar en el futuro.
+- **Evita la sobre-ingeniería**: La simplicidad es mejor que la complejidad prematura.
+
+### KISS (Keep It Simple, Stupid)
+- **Manténlo simple**: La solución más simple que funcione es la mejor.
+- **Evita la complejidad innecesaria**: No añadas abstracciones hasta que sean realmente necesarias.
+- **Legibilidad sobre elegancia**: El código debe ser fácil de entender, no impresionante.
+
+### DRY (Don't Repeat Yourself)
+- **No te repitas**: Cada pieza de conocimiento debe tener una única representación en el código.
+- **Reutiliza código**: Extrae lógica común a funciones, clases o módulos reutilizables.
+- **Cuidado con la duplicación accidental**: A veces, código similar pero con diferentes razones para cambiar debe mantenerse separado.
+
+```python
+# ❌ Malo: Duplicación
+def calculate_user_discount(user):
+    if user.is_premium:
+        return 0.20
+    elif user.is_vip:
+        return 0.15
+    else:
+        return 0.0
+
+def calculate_order_discount(order):
+    if order.user.is_premium:
+        return 0.20
+    elif order.user.is_vip:
+        return 0.15
+    else:
+        return 0.0
+
+# ✅ Bueno: DRY
+def calculate_discount(user: User) -> float:
+    DISCOUNT_RATES = {
+        'premium': 0.20,
+        'vip': 0.15,
+        'standard': 0.0
+    }
+    
+    if user.is_premium:
+        return DISCOUNT_RATES['premium']
+    elif user.is_vip:
+        return DISCOUNT_RATES['vip']
+    return DISCOUNT_RATES['standard']
+```
+
+## 8. Principios SOLID
+
+### S - Single Responsibility Principle (Responsabilidad Única)
+Cada clase o función debe tener una única razón para cambiar.
+
+```python
+# ❌ Malo: Múltiples responsabilidades
+class User:
+    def save(self):
+        # guarda en BD
+        pass
+    
+    def send_email(self):
+        # envía email
+        pass
+    
+    def generate_report(self):
+        # genera reporte
+        pass
+
+# ✅ Bueno: Responsabilidad única
+class User(models.Model):
+    # Solo datos y validación
+    pass
+
+class UserRepository:
+    def save(self, user: User):
+        # Solo persistencia
+        pass
+
+class EmailService:
+    def send_to_user(self, user: User, message: str):
+        # Solo envío de emails
+        pass
+```
+
+### O - Open/Closed Principle (Abierto/Cerrado)
+Abierto para extensión, cerrado para modificación.
+
+```python
+# ✅ Bueno: Extensible sin modificar código existente
+class PaymentProcessor(Protocol):
+    def process(self, amount: float) -> bool:
+        ...
+
+class CreditCardProcessor:
+    def process(self, amount: float) -> bool:
+        # implementación específica
+        pass
+
+class PayPalProcessor:
+    def process(self, amount: float) -> bool:
+        # implementación específica
+        pass
+```
+
+### L - Liskov Substitution Principle (Sustitución de Liskov)
+Los objetos de una superclase deben poder ser reemplazados por objetos de sus subclases.
+
+### I - Interface Segregation Principle (Segregación de Interfaces)
+Los clientes no deben depender de interfaces que no usan.
+
+```python
+# ❌ Malo: Interfaz demasiado grande
+class Worker(Protocol):
+    def work(self): ...
+    def eat(self): ...
+    def sleep(self): ...
+
+# ✅ Bueno: Interfaces segregadas
+class Workable(Protocol):
+    def work(self): ...
+
+class Eatable(Protocol):
+    def eat(self): ...
+```
+
+### D - Dependency Inversion Principle (Inversión de Dependencias)
+Depende de abstracciones, no de concreciones.
+
+```python
+# ✅ Bueno: Dependencia de abstracción
+class OrderService:
+    def __init__(self, payment_processor: PaymentProcessor):
+        self.payment_processor = payment_processor
+```
+
+## 9. Buenas Prácticas Adicionales
+
+### Comentarios
+- **El código debe ser autoexplicativo**: Los comentarios deben explicar el "por qué", no el "qué".
+- **Elimina código comentado**: Si no se usa, elimínalo. El control de versiones guarda el historial.
+- **Documenta decisiones complejas**: Explica el razonamiento detrás de soluciones no obvias.
+
+### Manejo de Errores
+- **Usa excepciones específicas**: No uses `Exception` genérico, usa excepciones específicas del dominio.
+- **Falla rápido**: Detecta errores lo antes posible y lanza excepciones claras.
+- **No ignores errores silenciosamente**: Si no puedes manejar un error, propágalo.
+
+```python
+# ❌ Malo
+try:
+    process_payment()
+except:
+    pass  # Ignorar errores es peligroso
+
+# ✅ Bueno
+try:
+    process_payment()
+except PaymentError as e:
+    logger.error(f"Error procesando pago: {e}")
+    raise
+```
+
+### Testing
+- **Escribe código testeable**: Funciones pequeñas, puras y con dependencias inyectadas son más fáciles de testear.
+- **Testea el comportamiento, no la implementación**: Los tests deben verificar que el código hace lo correcto, no cómo lo hace.
+
+## 10. Métricas de Calidad
+
+### Indicadores de Código Limpio
+- **Complejidad ciclomática**: < 10 por función
+- **Líneas de código**: < 50 por función, idealmente < 20
+- **Parámetros**: < 4 por función
+- **Profundidad de anidación**: < 3 niveles
+- **Cobertura de tests**: > 80%
+
+### Herramientas Recomendadas
+- **Linters**: `pylint`, `flake8`, `black` (formateo)
+- **Type checkers**: `mypy`, `pyright`
+- **Complejidad**: `radon`, `mccabe`
+- **Tests**: `pytest`, `coverage`
+
+---
+
+**Recuerda**: El código limpio no es un destino, es un viaje continuo. Revisa y refactoriza regularmente para mantener la calidad del código.
