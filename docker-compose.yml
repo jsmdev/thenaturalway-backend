@@ -1,0 +1,42 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=dev_secret_key_change_in_production
+      #- DATABASE_URL=postgres://postgres:postgres@db:5432/postgres
+      #- REDIS_URL=redis://redis:6379/0
+    #depends_on:
+    #  - db
+    #  - redis
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    restart: unless-stopped
+
+#  db:
+#    image: postgres:14
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data/
+#    environment:
+#      - POSTGRES_PASSWORD=postgres
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_DB=postgres
+#    ports:
+#      - "5432:5432"
+#    restart: unless-stopped
+
+#  redis:
+#    image: redis:7
+#    ports:
+#      - "6379:6379"
+#    restart: unless-stopped
+
+#volumes:
+#  postgres_data: 
