@@ -92,4 +92,4 @@ C4Context
 
 ## Referencias de contexto
 
-<!-- Esta sección se actualizará en otras fases del desarrollo -->
+- [Modelo de Dominio](./DOMAIN.md) - Modelo de datos del proyecto con entidades, atributos, relaciones y diagrama ER
