@@ -8,7 +8,7 @@ from apps.users.views import (
     UserTokenRefreshAPIView,
 )
 
-app_name = "users"
+app_name = "users_api"
 
 urlpatterns = [
     path("register/", UserRegisterAPIView.as_view(), name="register"),
