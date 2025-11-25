@@ -96,6 +96,7 @@ git branch -d <feature-slug>
 
 - Usa **Conventional Commits** para todos los mensajes de commit.
 - Los mensajes deben seguir estrictamente la [especificación oficial de Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#specification).
+- El idioma de los commits debe ser español de España.
 
 ### Estructura del Mensaje
 

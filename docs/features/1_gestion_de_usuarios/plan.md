@@ -4,6 +4,8 @@
 
 Implementar el sistema completo de gestión de usuarios con registro, inicio de sesión y autenticación mediante JWT (JSON Web Tokens) utilizando Django REST Framework. El sistema permitirá a los usuarios registrarse, autenticarse, gestionar su perfil y mantener sesiones seguras mediante tokens JWT.
 
+**Nota**: Esta funcionalidad incluye tanto endpoints de API REST (`/api/users/*`) como vistas web con templates Django (`/users/*`). Ambas implementaciones comparten la misma lógica de negocio (services y repositories) pero ofrecen diferentes interfaces: JSON para API y HTML para web.
+
 ## Contexto
 
 ### Funcional
@@ -15,8 +17,10 @@ Implementar el sistema completo de gestión de usuarios con registro, inicio de 
 
 **Tecnologías a utilizar:**
 - Django 5.1.7+
-- Django REST Framework (DRF)
-- djangorestframework-simplejwt para autenticación JWT
+- Django REST Framework (DRF) para API REST
+- Django Templates para interfaz web
+- djangorestframework-simplejwt para autenticación JWT (API)
+- Django's built-in session authentication para web
 - Django's built-in password hashing (PBKDF2)
 - PostgreSQL (configurado en settings pero usando SQLite para desarrollo)
 
@@ -95,6 +99,38 @@ Implementar el sistema completo de gestión de usuarios con registro, inicio de 
 ### Capa de Admin
 
 - [ ] 25. Registrar modelo User en apps/users/admin.py: configurar UserAdmin para gestión en Django admin con campos relevantes
+
+### Capa de Formularios Web
+
+- [ ] 26. Crear formularios Django en apps/users/forms.py: UserRegisterForm, UserLoginForm, UserProfileUpdateForm para validación en vistas web
+
+### Capa de Vistas Web
+
+- [ ] 27. Crear UserRegisterView en apps/users/web_views.py: vista GET/POST para registro con template, usar UserRegisterForm y register_user_service, autenticación por sesión
+
+- [ ] 28. Crear UserLoginView en apps/users/web_views.py: vista GET/POST para login con template, usar UserLoginForm y authenticate_user_service, crear sesión Django
+
+- [ ] 29. Crear UserLogoutView en apps/users/web_views.py: vista POST para logout que cierre sesión Django
+
+- [ ] 30. Crear UserProfileView en apps/users/web_views.py: vista GET/PUT para perfil con template, usar UserProfileUpdateForm y servicios de perfil
+
+### Capa de Templates
+
+- [ ] 31. Configurar directorio de templates en settings.py: añadir BASE_DIR / 'templates' a TEMPLATES['DIRS']
+
+- [ ] 32. Crear template base en templates/base.html: estructura HTML base con navegación, mensajes y bloques extensibles
+
+- [ ] 33. Crear template de registro en apps/users/templates/users/register.html: formulario de registro con validación y mensajes de error
+
+- [ ] 34. Crear template de login en apps/users/templates/users/login.html: formulario de login con validación y mensajes de error
+
+- [ ] 35. Crear template de perfil en apps/users/templates/users/profile.html: formulario de perfil con datos actuales y opción de actualización
+
+### Capa de URLs Web
+
+- [ ] 36. Crear URLs web en apps/users/urls.py: añadir rutas web (sin prefijo /api/) para register, login, logout, profile que apunten a web_views
+
+- [ ] 37. Registrar URLs web en config/urls.py: añadir path('users/', include('apps.users.urls')) al urlpatterns principal (separado de API)
 
 > Fin del Plan de Implementación para `1_gestion_de_usuarios`
 
