@@ -7,38 +7,39 @@
 ### 1. GESTIÓN DE USUARIOS
 
 - Sistema de registro e inicio de sesión con autenticación JWT
-- [1_gestion_de_usuarios](pendiente)
-- Estado: draft
+- [1_gestion_de_usuarios#2](https://github.com/jsmdev/thenaturalway-backend/issues/2)
+- Estado: builder-planned
+- [Plan de Implementación](./features/1_gestion_de_usuarios/plan.md)
 
 ### 2. BIBLIOTECA DE EJERCICIOS
 
 - Crear y gestionar una biblioteca de ejercicios personalizados
-- [2_biblioteca_de_ejercicios](pendiente)
-- Estado: draft
+- [2_biblioteca_de_ejercicios#3](https://github.com/jsmdev/thenaturalway-backend/issues/3)
+- Estado: defined
 
 ### 3. CREAR RUTINAS DE ENTRENAMIENTO
 
 - Diseñar y configurar rutinas de entrenamiento personalizadas utilizando ejercicios de la biblioteca
-- [3_crear_rutinas_de_entrenamiento](pendiente)
-- Estado: draft
+- [3_crear_rutinas_de_entrenamiento#4](https://github.com/jsmdev/thenaturalway-backend/issues/4)
+- Estado: defined
 
 ### 4. REGISTRAR SESIONES DE ENTRENAMIENTO
 
 - Registrar y documentar sesiones de entrenamiento completadas con datos detallados
-- [4_registrar_sesiones_de_entrenamiento](pendiente)
-- Estado: draft
+- [4_registrar_sesiones_de_entrenamiento#5](https://github.com/jsmdev/thenaturalway-backend/issues/5)
+- Estado: defined
 
 ### 5. SEGUIMIENTO DE PROGRESO
 
 - Visualizar y monitorizar la evolución del rendimiento físico a lo largo del tiempo
-- [5_seguimiento_de_progreso](pendiente)
-- Estado: draft
+- [5_seguimiento_de_progreso#6](https://github.com/jsmdev/thenaturalway-backend/issues/6)
+- Estado: defined
 
 ### 6. ESTADÍSTICAS Y ANÁLISIS
 
 - Generar informes estadísticos y análisis avanzados del progreso y rendimiento
-- [6_estadisticas_y_analisis](pendiente)
-- Estado: draft
+- [6_estadisticas_y_analisis#7](https://github.com/jsmdev/thenaturalway-backend/issues/7)
+- Estado: defined
 
 ## Diagrama de contexto
 
