@@ -1,0 +1,40 @@
+{% comment %}
+CSS reutilizable para secciones colapsables usando elementos HTML5 <details> y <summary>.
+Incluir este archivo en el bloque extra_css cuando se necesite una sección colapsable.
+{% endcomment %}
+<style>
+    .collapsible-section {
+        margin: 2rem 0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+    }
+    .collapsible-section summary {
+        padding: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        list-style: none;
+        user-select: none;
+        background-color: #f0f0f0;
+        border-radius: 4px 4px 0 0;
+    }
+    .collapsible-section summary::-webkit-details-marker {
+        display: none;
+    }
+    .collapsible-section summary::before {
+        content: '▶';
+        display: inline-block;
+        margin-right: 0.5rem;
+        transition: transform 0.2s;
+    }
+    .collapsible-section[open] summary::before {
+        transform: rotate(90deg);
+    }
+    .collapsible-section summary:hover {
+        background-color: #e9e9e9;
+    }
+    .collapsible-content {
+        padding: 1rem;
+    }
+</style>
+

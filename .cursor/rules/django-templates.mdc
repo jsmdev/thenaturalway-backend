@@ -1,0 +1,711 @@
+---
+globs: *.html
+alwaysApply: true
+---
+
+# Reglas de Templates Django
+
+Este documento establece las mejores prácticas y convenciones para el desarrollo de templates en Django, siguiendo los estándares de la comunidad Django y principios de código limpio.
+
+## 1. Estructura y Organización
+
+### Estructura de Directorios
+
+- **Templates globales**: Coloca templates compartidos en `templates/` a nivel de proyecto
+- **Templates por app**: Coloca templates específicos de app en `apps/{app_name}/templates/{app_name}/`
+- **Componentes reutilizables**: Coloca componentes compartidos en `templates/components/` o `templates/includes/`
+- **Nomenclatura**: Usa `snake_case` para nombres de archivos de templates
+
+**Estructura recomendada:**
+```
+project_root/
+├── templates/
+│   ├── base.html                    # Template base principal
+│   ├── components/                  # Componentes reutilizables
+│   │   ├── header.html
+│   │   ├── footer.html
+│   │   ├── navigation.html
+│   │   └── messages.html
+│   └── includes/                    # Fragmentos reutilizables
+│       ├── forms/
+│       └── widgets/
+├── apps/
+│   └── {app_name}/
+│       └── templates/
+│           └── {app_name}/
+│               ├── list.html
+│               ├── detail.html
+│               └── form.html
+```
+
+### Configuración en settings.py
+
+```python
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+```
+
+## 2. Herencia de Templates
+
+### Template Base Principal
+
+- **Crea un template base** (`base.html`) que defina la estructura HTML principal
+- **Usa bloques nombrados** para áreas extensibles
+- **Define bloques con nombres descriptivos** que indiquen su propósito
+- **Proporciona contenido por defecto** en bloques cuando sea apropiado
+
+**Ejemplo de template base:**
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}The Natural Way{% endblock %}</title>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'components/header.html' %}
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'components/footer.html' %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+```
+
+### Herencia de Templates
+
+- **Extiende el template base** usando `{% extends %}` como primera línea
+- **Sobrescribe solo los bloques necesarios**
+- **Mantén la jerarquía de herencia simple** (máximo 2-3 niveles)
+- **Usa `{{ block.super }}`** para preservar contenido del bloque padre cuando sea apropiado
+
+**Ejemplo de template que extiende:**
+```html
+{% extends 'base.html' %}
+
+{% block title %}{{ object.name }} - The Natural Way{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>{{ object.name }}</h1>
+        <p>{{ object.description }}</p>
+    </div>
+{% endblock %}
+```
+
+## 3. Nomenclatura y Convenciones
+
+### Nombres de Archivos
+
+- **Usa `snake_case`** para nombres de archivos de templates
+- **Nombres descriptivos** que indiquen el propósito del template
+- **Prefijos para tipos**: `list_`, `detail_`, `form_`, `create_`, `update_`
+
+**Ejemplos:**
+```html
+<!-- ✅ Bueno -->
+user_list.html
+user_detail.html
+user_form.html
+exercise_create.html
+exercise_update.html
+
+<!-- ❌ Malo -->
+users.html
+user.html
+form.html
+```
+
+### Nombres de Bloques
+
+- **Usa nombres descriptivos** para bloques que indiquen su propósito
+- **Convención**: `snake_case` para nombres de bloques
+- **Bloques estándar**: `title`, `content`, `extra_css`, `extra_js`, `sidebar`
+
+**Ejemplos:**
+```html
+<!-- ✅ Bueno -->
+{% block page_title %}{% endblock %}
+{% block main_content %}{% endblock %}
+{% block sidebar_content %}{% endblock %}
+{% block footer_scripts %}{% endblock %}
+
+<!-- ❌ Malo -->
+{% block t %}{% endblock %}
+{% block c %}{% endblock %}
+{% block s %}{% endblock %}
+```
+
+## 4. Separación de Responsabilidades
+
+### Componentes Reutilizables
+
+- **Extrae componentes reutilizables** a archivos separados en `templates/components/`
+- **Usa `{% include %}`** para incluir componentes
+- **Pasa contexto explícito** cuando sea necesario usando `with`
+- **Evita lógica compleja en includes**
+
+**Ejemplo de componente:**
+```html
+<!-- templates/components/messages.html -->
+{% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+```
+
+**Uso del componente:**
+```html
+{% extends 'base.html' %}
+
+{% block content %}
+    {% include 'components/messages.html' %}
+    <!-- resto del contenido -->
+{% endblock %}
+```
+
+### Fragmentos con Contexto
+
+- **Pasa variables explícitas** a includes cuando sea necesario
+- **Usa `with`** para definir variables locales en el contexto del include
+
+**Ejemplo:**
+```html
+{% include 'components/card.html' with title=object.name description=object.description %}
+```
+
+## 5. Seguridad
+
+### Autoescape
+
+- **Nunca desactives el autoescape** a menos que sea absolutamente necesario
+- **El autoescape está activado por defecto** en Django
+- **Usa `|safe`** solo cuando confíes completamente en el contenido
+- **Para contenido HTML confiable**, usa `mark_safe()` en la vista o `|safe` en el template
+
+**Ejemplo:**
+```html
+<!-- ✅ Bueno: Autoescape activado (por defecto) -->
+<p>{{ user_input }}</p>
+
+<!-- ✅ Bueno: Solo cuando el contenido es confiable -->
+<p>{{ trusted_html_content|safe }}</p>
+
+<!-- ❌ Malo: Desactivar autoescape globalmente -->
+{% autoescape off %}
+    {{ user_input }}
+{% endautoescape %}
+```
+
+### CSRF Protection
+
+- **Siempre incluye `{% csrf_token %}`** en formularios POST
+- **Coloca el token dentro del tag `<form>`**
+- **No lo coloques fuera del formulario**
+
+**Ejemplo:**
+```html
+<!-- ✅ Bueno -->
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Enviar</button>
+</form>
+
+<!-- ❌ Malo -->
+{% csrf_token %}
+<form method="post">
+    {{ form.as_p }}
+    <button type="submit">Enviar</button>
+</form>
+```
+
+### Validación de URLs
+
+- **Usa `{% url %}`** en lugar de URLs hardcodeadas
+- **Evita construir URLs manualmente** con concatenación de strings
+- **Usa nombres de URL descriptivos** en `urls.py`
+
+**Ejemplo:**
+```html
+<!-- ✅ Bueno -->
+<a href="{% url 'users:detail' pk=user.id %}">Ver perfil</a>
+<a href="{% url 'exercises:list' %}">Ejercicios</a>
+
+<!-- ❌ Malo -->
+<a href="/users/{{ user.id }}/">Ver perfil</a>
+<a href="/exercises/">Ejercicios</a>
+```
+
+## 6. Uso de Template Tags y Filters
+
+### Template Tags Personalizados
+
+- **Crea template tags personalizados** cuando necesites lógica reutilizable
+- **Coloca template tags en `templatetags/` dentro de la app**
+- **Usa nombres descriptivos** para los módulos de template tags
+- **Documenta el propósito** de cada template tag
+
+**Estructura:**
+```
+apps/{app_name}/
+└── templatetags/
+    ├── __init__.py
+    └── {app_name}_tags.py
+```
+
+**Ejemplo:**
+```python
+# apps/exercises/templatetags/exercise_tags.py
+from django import template
+
+register = template.Library()
+
+@register.simple_tag
+def get_exercise_count(category):
+    """Retorna el número de ejercicios en una categoría."""
+    return category.exercises.count()
+
+@register.inclusion_tag('components/exercise_card.html')
+def render_exercise_card(exercise):
+    """Renderiza una tarjeta de ejercicio."""
+    return {'exercise': exercise}
+```
+
+**Uso en template:**
+```html
+{% load exercise_tags %}
+
+{% get_exercise_count category as count %}
+<p>Ejercicios: {{ count }}</p>
+
+{% render_exercise_card exercise %}
+```
+
+### Filters Personalizados
+
+- **Crea filters personalizados** para transformaciones de datos reutilizables
+- **Mantén los filters simples** y enfocados en una sola transformación
+- **Documenta el propósito** de cada filter
+
+**Ejemplo:**
+```python
+# apps/common/templatetags/common_filters.py
+from django import template
+
+register = template.Library()
+
+@register.filter
+def format_duration(seconds):
+    """Formatea duración en segundos a formato legible."""
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    if hours > 0:
+        return f"{hours}h {minutes}m"
+    return f"{minutes}m"
+```
+
+**Uso en template:**
+```html
+{% load common_filters %}
+
+<p>Duración: {{ exercise.duration|format_duration }}</p>
+```
+
+### Filters Estándar de Django
+
+- **Usa filters estándar de Django** cuando sea apropiado
+- **Familiarízate con filters comunes**: `|date`, `|time`, `|length`, `|default`, `|truncatewords`, `|pluralize`
+
+**Ejemplos:**
+```html
+<!-- Fechas -->
+<p>{{ object.created_at|date:"d/m/Y" }}</p>
+<p>{{ object.created_at|timesince }}</p>
+
+<!-- Texto -->
+<p>{{ object.description|truncatewords:20 }}</p>
+<p>{{ object.title|upper }}</p>
+
+<!-- Valores por defecto -->
+<p>{{ object.subtitle|default:"Sin subtítulo" }}</p>
+
+<!-- Pluralización -->
+<p>{{ count }} ejercicio{{ count|pluralize }}</p>
+```
+
+## 7. Formularios
+
+### Renderizado de Formularios
+
+- **Usa métodos de renderizado de Django Forms** cuando sea apropiado
+- **Personaliza el renderizado** cuando necesites control total
+- **Muestra errores de formulario** de forma clara y accesible
+
+**Ejemplo básico:**
+```html
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Enviar</button>
+</form>
+```
+
+**Ejemplo personalizado:**
+```html
+<form method="post" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+    
+    {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">
+                {{ field.label }}
+                {% if field.field.required %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ field }}
+            {% if field.errors %}
+                <div class="field-errors">
+                    {{ field.errors }}
+                </div>
+            {% endif %}
+            {% if field.help_text %}
+                <small class="help-text">{{ field.help_text }}</small>
+            {% endif %}
+        </div>
+    {% endfor %}
+    
+    <button type="submit">Enviar</button>
+</form>
+```
+
+### Widgets Personalizados
+
+- **Crea widgets personalizados** cuando necesites renderizado específico
+- **Coloca widgets en `widgets.py`** dentro de la app
+- **Reutiliza widgets** cuando sea posible
+
+## 8. Performance y Optimización
+
+### Caché de Templates
+
+- **Usa `{% cache %}`** para fragmentos que no cambian frecuentemente
+- **Define tiempos de expiración apropiados**
+- **Incluye claves de caché descriptivas** que identifiquen el contenido
+
+**Ejemplo:**
+```html
+{% load cache %}
+
+{% cache 3600 exercise_list request.user.id %}
+    <ul>
+        {% for exercise in exercises %}
+            <li>{{ exercise.name }}</li>
+        {% endfor %}
+    </ul>
+{% endcache %}
+```
+
+### Optimización de Consultas
+
+- **Evita consultas N+1** en templates usando `select_related` y `prefetch_related` en las vistas
+- **No ejecutes lógica pesada** directamente en templates
+- **Prepara datos en la vista** antes de pasarlos al template
+
+**Ejemplo en vista:**
+```python
+# ✅ Bueno: Optimizar en la vista
+def exercise_list(request):
+    exercises = Exercise.objects.select_related('category').prefetch_related('tags')
+    return render(request, 'exercises/list.html', {'exercises': exercises})
+```
+
+**Ejemplo en template (evitar):**
+```html
+<!-- ❌ Malo: Consultas N+1 -->
+{% for exercise in exercises %}
+    <p>{{ exercise.category.name }}</p>  <!-- Consulta adicional por iteración -->
+{% endfor %}
+```
+
+### Includes vs Extends
+
+- **Usa `{% extends %}`** para estructura de página completa
+- **Usa `{% include %}`** para fragmentos reutilizables dentro de una página
+- **Evita includes anidados profundamente** (máximo 2-3 niveles)
+
+## 9. Accesibilidad
+
+### HTML Semántico
+
+- **Usa elementos HTML semánticos** apropiados (`<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<footer>`)
+- **Usa headings jerárquicamente** (`<h1>`, `<h2>`, etc.)
+- **Proporciona texto alternativo** para imágenes
+
+**Ejemplo:**
+```html
+<main>
+    <article>
+        <header>
+            <h1>{{ object.title }}</h1>
+            <p class="meta">Publicado el {{ object.created_at|date:"d/m/Y" }}</p>
+        </header>
+        <section>
+            {{ object.content }}
+        </section>
+    </article>
+</main>
+```
+
+### Formularios Accesibles
+
+- **Asocia labels con inputs** usando `for` y `id`
+- **Proporciona ayuda contextual** con `help_text`
+- **Muestra errores de forma clara** y asociados a los campos
+- **Usa `required`** para campos obligatorios
+
+**Ejemplo:**
+```html
+<div class="form-group">
+    <label for="{{ form.email.id_for_label }}">
+        {{ form.email.label }}
+        {% if form.email.field.required %}<span aria-label="requerido">*</span>{% endif %}
+    </label>
+    {{ form.email }}
+    {% if form.email.errors %}
+        <div class="error" role="alert">
+            {{ form.email.errors }}
+        </div>
+    {% endif %}
+    {% if form.email.help_text %}
+        <small id="{{ form.email.id_for_label }}_help">{{ form.email.help_text }}</small>
+    {% endif %}
+</div>
+```
+
+## 10. Principios DRY (Don't Repeat Yourself)
+
+### Reutilización de Código
+
+- **Extrae código repetido** a componentes o includes
+- **Usa template tags** para lógica reutilizable
+- **Crea fragmentos de template** para patrones comunes
+
+**Ejemplo de patrón repetido:**
+```html
+<!-- ❌ Malo: Código duplicado -->
+<div class="card">
+    <h3>Ejercicio 1</h3>
+    <p>Descripción del ejercicio 1</p>
+</div>
+<div class="card">
+    <h3>Ejercicio 2</h3>
+    <p>Descripción del ejercicio 2</p>
+</div>
+
+<!-- ✅ Bueno: Componente reutilizable -->
+{% for exercise in exercises %}
+    {% include 'components/exercise_card.html' with exercise=exercise %}
+{% endfor %}
+```
+
+### Variables y Constantes
+
+- **Define constantes en la vista** cuando sea necesario
+- **Usa context processors** para datos globales compartidos
+- **Evita valores hardcodeados** en templates
+
+## 11. Testing de Templates
+
+### Tests de Templates
+
+- **Prueba la renderización** de templates con datos de prueba
+- **Verifica que los bloques** se renderizan correctamente
+- **Testea template tags y filters** personalizados
+
+**Ejemplo:**
+```python
+from django.test import TestCase
+from django.template import Template, Context
+
+class TemplateTestCase(TestCase):
+    def test_exercise_card_renders(self):
+        template = Template('{% load exercise_tags %}{% render_exercise_card exercise %}')
+        context = Context({'exercise': self.exercise})
+        rendered = template.render(context)
+        self.assertIn(self.exercise.name, rendered)
+```
+
+## 12. Buenas Prácticas Adicionales
+
+### Comentarios en Templates
+
+- **Usa comentarios HTML** para documentar secciones complejas
+- **Evita comentarios obvios** que no añadan valor
+- **Documenta decisiones no obvias** o lógica compleja
+
+**Ejemplo:**
+```html
+<!-- ✅ Bueno: Comentario útil -->
+<!-- Mostrar solo ejercicios activos para usuarios no autenticados -->
+{% if not user.is_authenticated %}
+    {% for exercise in exercises|filter_active %}
+        <!-- contenido -->
+    {% endfor %}
+{% endif %}
+
+<!-- ❌ Malo: Comentario obvio -->
+<!-- Bucle for -->
+{% for item in items %}
+    <!-- contenido -->
+{% endfor %}
+```
+
+### Organización del Código
+
+- **Mantén templates pequeños** y enfocados (idealmente < 200 líneas)
+- **Separa lógica compleja** en template tags o en la vista
+- **Agrupa código relacionado** usando comentarios de sección
+
+### Internacionalización (i18n)
+
+- **Usa `{% load i18n %}`** para templates multilingües
+- **Envuelve strings traducibles** con `{% trans %}` o `{% blocktrans %}`
+- **Usa `{% get_current_language %}`** cuando sea necesario
+
+**Ejemplo:**
+```html
+{% load i18n %}
+
+<h1>{% trans "Welcome" %}</h1>
+<p>{% blocktrans with name=user.name %}Hello, {{ name }}!{% endblocktrans %}</p>
+```
+
+### Debugging
+
+- **Usa `{% debug %}`** solo en desarrollo** (nunca en producción)
+- **Verifica variables disponibles** usando `{{ variable }}` temporalmente
+- **Revisa el contexto** pasado desde la vista
+
+## 13. Estructura de Template Completo
+
+### Ejemplo de Template Completo
+
+```html
+{% extends 'base.html' %}
+{% load static %}
+{% load exercise_tags %}
+
+{% block title %}{{ exercise.name }} - The Natural Way{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/exercises/detail.css' %}">
+{% endblock %}
+
+{% block content %}
+    <article class="exercise-detail">
+        <header>
+            <h1>{{ exercise.name }}</h1>
+            <p class="meta">
+                <span>Categoría: {{ exercise.category.name }}</span>
+                <span>Duración: {{ exercise.duration|format_duration }}</span>
+            </p>
+        </header>
+        
+        {% if messages %}
+            {% include 'components/messages.html' %}
+        {% endif %}
+        
+        <section class="exercise-content">
+            <div class="description">
+                {{ exercise.description|linebreaks }}
+            </div>
+            
+            {% if exercise.instructions %}
+                <div class="instructions">
+                    <h2>Instrucciones</h2>
+                    {{ exercise.instructions|linebreaks }}
+                </div>
+            {% endif %}
+        </section>
+        
+        <footer class="exercise-actions">
+            <a href="{% url 'exercises:list' %}" class="btn btn-secondary">
+                Volver a la lista
+            </a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'exercises:update' pk=exercise.pk %}" class="btn btn-primary">
+                    Editar
+                </a>
+            {% endif %}
+        </footer>
+    </article>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/exercises/detail.js' %}"></script>
+{% endblock %}
+```
+
+## 14. Resumen de Principios
+
+### Principios Fundamentales
+
+1. **Herencia sobre duplicación**: Usa `{% extends %}` para estructura común
+2. **Componentes reutilizables**: Extrae código repetido a includes
+3. **Separación de concerns**: Lógica en vistas, presentación en templates
+4. **Seguridad primero**: Autoescape activado, CSRF tokens, validación de URLs
+5. **Performance**: Caché cuando sea apropiado, optimiza consultas en vistas
+6. **Accesibilidad**: HTML semántico, formularios accesibles
+7. **Mantenibilidad**: Templates pequeños, nombres descriptivos, bien organizados
+8. **DRY**: No te repitas, reutiliza código
+
+### Checklist de Template
+
+- [ ] Extiende el template base apropiado
+- [ ] Usa bloques con nombres descriptivos
+- [ ] Incluye `{% csrf_token %}` en formularios POST
+- [ ] Usa `{% url %}` en lugar de URLs hardcodeadas
+- [ ] Autoescape está activado (por defecto)
+- [ ] HTML semántico apropiado
+- [ ] Formularios accesibles con labels asociados
+- [ ] Errores de formulario mostrados claramente
+- [ ] Template tags y filters cargados correctamente
+- [ ] Sin lógica compleja en el template
+- [ ] Componentes reutilizables extraídos
+- [ ] Nombres descriptivos para archivos y bloques
+- [ ] Comentarios útiles donde sea necesario
+- [ ] Optimización de consultas en la vista (no en el template)
+
+---
+
+**Recuerda**: Los templates deben ser simples, legibles y enfocados en la presentación. La lógica de negocio pertenece a las vistas, servicios y modelos, no a los templates.

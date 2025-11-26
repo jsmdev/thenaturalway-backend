@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil - The Natural Way{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 700px;">
+    <h1>Mi Perfil</h1>
+    <p>Gestiona tu información personal</p>
+
+    <div style="margin-bottom: 2rem;">
+        <h2>Información de la Cuenta</h2>
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 4px; margin-top: 1rem;">
+            <p><strong>Usuario:</strong> {{ profile.username }}</p>
+            <p><strong>Email:</strong> {{ profile.email }}</p>
+            <p><strong>Miembro desde:</strong> {{ profile.createdAt|date:"d/m/Y" }}</p>
+        </div>
+    </div>
+
+    <h2>Actualizar Información Personal</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+                <div class="field-errors">{{ form.first_name.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+                <div class="field-errors">{{ form.last_name.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
+            {{ form.date_of_birth }}
+            {% if form.date_of_birth.errors %}
+                <div class="field-errors">{{ form.date_of_birth.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.gender.id_for_label }}">{{ form.gender.label }}</label>
+            {{ form.gender }}
+            {% if form.gender.errors %}
+                <div class="field-errors">{{ form.gender.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.height.id_for_label }}">{{ form.height.label }}</label>
+            {{ form.height }}
+            {% if form.height.errors %}
+                <div class="field-errors">{{ form.height.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.weight.id_for_label }}">{{ form.weight.label }}</label>
+            {{ form.weight }}
+            {% if form.weight.errors %}
+                <div class="field-errors">{{ form.weight.errors }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
+    </form>
+</div>
+{% endblock %}
+
+

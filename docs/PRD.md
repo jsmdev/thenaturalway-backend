@@ -6,7 +6,8 @@
 
 ### 1. GESTIÓN DE USUARIOS
 
-- Sistema de registro e inicio de sesión con autenticación JWT
+- Sistema de registro e inicio de sesión con autenticación JWT (API REST)
+- Interfaz web con templates Django para registro, login, logout y gestión de perfil
 - [1_gestion_de_usuarios#2](https://github.com/jsmdev/thenaturalway-backend/issues/2)
 - Estado: builder-planned
 - [Plan de Implementación](./features/1_gestion_de_usuarios/plan.md)
@@ -67,9 +68,9 @@ C4Context
 
 ## Especificaciones del sistema y contenedores
 
-- **Interacción**: web, API REST
+- **Interacción**: web (templates Django), API REST
 - **Niveles**: multi-tier
-- **Autenticación**: JWT
+- **Autenticación**: JWT (para API), Session-based (para web)
 - **Integraciones**: Almacenamiento en la nube, servicios de email, APIs de dispositivos wearables (Apple HealthKit, Garmin Connect)
 - **Monitorización**: operativa
 - **Persistencia**: base de datos PostgreSQL
@@ -77,14 +78,36 @@ C4Context
 ### C_1: BACKEND API
 
 - Un Django REST Framework que gestiona la lógica de negocio, autenticación JWT, integración con servicios externos y operaciones CRUD
+- Endpoints REST disponibles en `/api/*` para integración con aplicaciones móviles o frontend separado
 
-### C_2: BASE DE DATOS
+### C_2: BACKEND WEB
+
+- Vistas Django tradicionales con templates HTML que proporcionan interfaz web completa
+- Endpoints web disponibles en rutas sin prefijo `/api/*` (ej: `/users/register/`, `/users/login/`)
+- Autenticación basada en sesiones para la parte web
+- Reutiliza la misma lógica de negocio (services y repositories) que la API REST
+
+### C_3: BASE DE DATOS
 
 - Un PostgreSQL que almacena de forma persistente usuarios, ejercicios, rutinas, sesiones de entrenamiento y datos de progreso
 
-### C_3: FRONTEND
+### C_4: FRONTENDS EXTERNOS (Opcionales)
 
-- Un Next.js (React framework) que proporciona la interfaz de usuario web, renderizado del lado del servidor y experiencia de usuario optimizada
+El backend está diseñado para soportar múltiples frontends externos simultáneamente:
+
+- **Frontend React/Vue/Next.js**: Aplicaciones web modernas en proyectos separados que consumen `/api/*`
+- **Frontend Laravel/PHP**: Aplicaciones web en PHP que consumen `/api/*`
+- **Aplicaciones Móviles**: iOS/Android que consumen `/api/*`
+- **Cualquier otro cliente**: Que consuma la API REST estándar
+
+**Características:**
+- Todos los frontends externos consumen la misma API REST (`/api/*`)
+- Autenticación mediante JWT tokens
+- Configuración CORS para permitir múltiples orígenes
+- Cada frontend puede desarrollarse, desplegarse y mantenerse independientemente
+- Pueden coexistir múltiples frontends sin conflictos
+
+**Nota**: Los templates Django (`/*`) y los frontends externos (`/api/*`) pueden convivir perfectamente, ya que usan rutas diferentes y sistemas de autenticación independientes.
 
 ## Créditos
 
