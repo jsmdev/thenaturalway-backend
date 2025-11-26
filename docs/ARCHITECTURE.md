@@ -176,7 +176,8 @@ apps/{app}/
 ├── forms.py              # Validación para Web
 ├── views.py               # Vistas API REST
 ├── web_views.py           # Vistas Web con templates
-├── urls.py                # URLs (API y Web)
+├── api_urls.py            # URLs para API REST
+├── web_urls.py           # URLs para Web
 ├── templates/
 │   └── {app}/
 │       ├── {resource}_list.html
@@ -185,6 +186,51 @@ apps/{app}/
 │       └── ...
 └── admin.py               # Configuración Django admin
 ```
+
+### Apps Implementadas
+
+#### `apps/exercises/` - Biblioteca de Ejercicios
+
+Gestiona la biblioteca de ejercicios disponibles en el sistema.
+
+**Modelos:**
+- `Exercise`: Modelo principal con campos para nombre, descripción, tipo de movimiento, grupos musculares, equipamiento, dificultad, instrucciones, URLs de imagen/video, y estado activo.
+
+**Endpoints API REST (`/api/exercises/`):**
+- `GET /api/exercises/` - Lista ejercicios con filtros y búsqueda (público)
+- `POST /api/exercises/` - Crea un nuevo ejercicio (requiere autenticación)
+- `GET /api/exercises/{id}/` - Obtiene detalle de un ejercicio (público)
+- `PUT /api/exercises/{id}/` - Actualiza un ejercicio (requiere autenticación + ser creador)
+- `DELETE /api/exercises/{id}/` - Elimina un ejercicio soft delete (requiere autenticación + ser creador)
+
+**Endpoints Web (`/exercises/`):**
+- `GET /exercises/` - Lista ejercicios (vista web)
+- `GET /exercises/{id}/` - Detalle de ejercicio (vista web)
+- `GET /exercises/create/` - Formulario de creación
+- `GET /exercises/{id}/update/` - Formulario de actualización
+- `GET /exercises/{id}/delete/` - Confirmación de eliminación
+
+**Características:**
+- Filtrado avanzado por grupo muscular, equipamiento, dificultad, estado y creador
+- Búsqueda por texto en nombre y descripción
+- Ordenamiento personalizable
+- Soft delete (marca `isActive=False` en lugar de eliminar físicamente)
+- Control de permisos: solo el creador puede actualizar/eliminar
+- Optimización de consultas con `select_related('created_by')` para evitar N+1
+
+**Servicios principales:**
+- `list_exercises_service()` - Lista con filtros y búsqueda
+- `get_exercise_service()` - Obtiene un ejercicio por ID
+- `create_exercise_service()` - Crea un nuevo ejercicio
+- `update_exercise_service()` - Actualiza un ejercicio existente
+- `delete_exercise_service()` - Realiza soft delete
+
+**Repositorios principales:**
+- `list_exercises_repository()` - Consulta con filtros y búsqueda
+- `get_exercise_by_id_repository()` - Obtiene por ID
+- `create_exercise_repository()` - Crea en base de datos
+- `update_exercise_repository()` - Actualiza en base de datos
+- `delete_exercise_repository()` - Marca como inactivo
 
 ## Autenticación
 
@@ -207,35 +253,53 @@ apps/{app}/
 ```python
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/users/', include('apps.users.urls')),  # API REST
-    path('users/', include('apps.users.urls')),       # Web
+    path('api/users/', include('apps.users.api_urls')),      # API REST
+    path('api/exercises/', include('apps.exercises.api_urls')),  # API REST
+    path('users/', include('apps.users.web_urls')),         # Web
+    path('exercises/', include('apps.exercises.web_urls')), # Web
 ]
 ```
 
-### URLs de App (`apps/{app}/urls.py`)
+### URLs de App
 
+Cada app tiene dos archivos de URLs separados:
+
+**`apps/{app}/api_urls.py`** - URLs para API REST:
 ```python
 from django.urls import path
-from apps.users import views, web_views
+from apps.exercises.views import ExerciseListAPIView, ExerciseDetailAPIView
 
-app_name = "users"
+app_name = "exercises_api"
 
 urlpatterns = [
-    # API REST endpoints
-    path("api/register/", views.UserRegisterAPIView.as_view(), name="api-register"),
-    path("api/login/", views.UserLoginAPIView.as_view(), name="api-login"),
-    path("api/logout/", views.UserLogoutAPIView.as_view(), name="api-logout"),
-    path("api/me/", views.UserProfileAPIView.as_view(), name="api-profile"),
-    
-    # Web endpoints
-    path("register/", web_views.UserRegisterView.as_view(), name="register"),
-    path("login/", web_views.UserLoginView.as_view(), name="login"),
-    path("logout/", web_views.UserLogoutView.as_view(), name="logout"),
-    path("profile/", web_views.UserProfileView.as_view(), name="profile"),
+    path("", ExerciseListAPIView.as_view(), name="exercise-list"),
+    path("<int:pk>/", ExerciseDetailAPIView.as_view(), name="exercise-detail"),
 ]
 ```
 
-**Nota**: Las rutas API tienen el prefijo `/api/` en la configuración principal, mientras que las rutas web no lo tienen.
+**`apps/{app}/web_urls.py`** - URLs para Web:
+```python
+from django.urls import path
+from apps.exercises.web_views import (
+    ExerciseListView,
+    ExerciseDetailView,
+    ExerciseCreateView,
+    ExerciseUpdateView,
+    ExerciseDeleteView,
+)
+
+app_name = "exercises"
+
+urlpatterns = [
+    path("", ExerciseListView.as_view(), name="list"),
+    path("<int:pk>/", ExerciseDetailView.as_view(), name="detail"),
+    path("create/", ExerciseCreateView.as_view(), name="create"),
+    path("<int:pk>/update/", ExerciseUpdateView.as_view(), name="update"),
+    path("<int:pk>/delete/", ExerciseDeleteView.as_view(), name="delete"),
+]
+```
+
+**Nota**: Las rutas API tienen el prefijo `/api/` en la configuración principal (`config/urls.py`), mientras que las rutas web no lo tienen.
 
 ## Templates
 
@@ -483,6 +547,7 @@ Cada frontend puede estar en:
 
 - [PRD](./PRD.md) - Documento de Requerimientos del Producto
 - [DOMAIN](./DOMAIN.md) - Modelo de Dominio
+- [API Documentation](./api/README.md) - Documentación de APIs REST
 - [Reglas de Templates Django](../.cursor/rules/django-templates.mdc)
 - [Reglas de API Django](../.cursor/rules/api-structure-django.mdc)
 

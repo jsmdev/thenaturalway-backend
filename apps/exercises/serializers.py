@@ -11,7 +11,29 @@ if TYPE_CHECKING:
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
-    """Serializador para representar un ejercicio completo."""
+    """
+    Serializador para representar un ejercicio completo.
+
+    Este serializador se usa para representar ejercicios en respuestas de la API.
+    Incluye todos los campos del modelo con nombres en camelCase para la API.
+
+    **Campos:**
+    - `id` (int, read-only): ID único del ejercicio
+    - `name` (str): Nombre del ejercicio
+    - `description` (str, opcional): Descripción del ejercicio
+    - `movementType` (str, opcional): Tipo de movimiento (push, pull, squat, hinge, carry, other)
+    - `primaryMuscleGroup` (str, opcional): Grupo muscular principal
+    - `secondaryMuscleGroups` (array[str], opcional): Grupos musculares secundarios
+    - `equipment` (str, opcional): Equipamiento necesario
+    - `difficulty` (str, opcional): Nivel de dificultad (beginner, intermediate, advanced)
+    - `instructions` (str, opcional): Instrucciones de ejecución
+    - `imageUrl` (str, opcional): URL de imagen del ejercicio
+    - `videoUrl` (str, opcional): URL de video del ejercicio
+    - `isActive` (bool): Estado activo del ejercicio
+    - `createdBy` (str, opcional): Username del creador (calculado)
+    - `createdAt` (datetime, read-only): Fecha de creación
+    - `updatedAt` (datetime, read-only): Fecha de última actualización
+    """
 
     # Campos calculados
     createdBy = serializers.SerializerMethodField()
@@ -58,7 +80,43 @@ class ExerciseSerializer(serializers.ModelSerializer):
 
 
 class ExerciseCreateSerializer(serializers.Serializer):
-    """Serializador para crear un nuevo ejercicio."""
+    """
+    Serializador para crear un nuevo ejercicio.
+
+    Este serializador valida los datos de entrada para crear un nuevo ejercicio.
+    El campo `name` es requerido, todos los demás son opcionales.
+
+    **Campos requeridos:**
+    - `name` (str, max_length=255): Nombre del ejercicio
+
+    **Campos opcionales:**
+    - `description` (str): Descripción del ejercicio
+    - `movementType` (str): Tipo de movimiento
+    - `primaryMuscleGroup` (str): Grupo muscular principal
+    - `secondaryMuscleGroups` (array[str]): Grupos musculares secundarios
+    - `equipment` (str): Equipamiento necesario
+    - `difficulty` (str): Nivel de dificultad
+    - `instructions` (str): Instrucciones de ejecución
+    - `imageUrl` (str): URL de imagen (debe ser una URL válida)
+    - `videoUrl` (str): URL de video (debe ser una URL válida)
+    - `isActive` (bool, default=True): Estado activo
+
+    **Validaciones:**
+    - `name`: No puede estar vacío ni contener solo espacios
+    - `secondaryMuscleGroups`: Debe ser un array de strings válidos
+    - Todos los campos de tipo enum validan contra las opciones del modelo
+
+    **Ejemplo de uso:**
+    ```python
+    serializer = ExerciseCreateSerializer(data={
+        "name": "Bench Press",
+        "primaryMuscleGroup": "chest",
+        "equipment": "barbell"
+    })
+    if serializer.is_valid():
+        exercise = create_exercise_service(serializer.validated_data, user)
+    ```
+    """
 
     name = serializers.CharField(required=True, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
@@ -106,7 +164,40 @@ class ExerciseCreateSerializer(serializers.Serializer):
 
 
 class ExerciseUpdateSerializer(serializers.Serializer):
-    """Serializador para actualizar un ejercicio existente."""
+    """
+    Serializador para actualizar un ejercicio existente.
+
+    Este serializador valida los datos de entrada para actualizar un ejercicio existente.
+    Todos los campos son opcionales (solo se actualizan los proporcionados).
+
+    **Campos opcionales:**
+    - `name` (str, max_length=255): Nombre del ejercicio
+    - `description` (str): Descripción del ejercicio
+    - `movementType` (str): Tipo de movimiento
+    - `primaryMuscleGroup` (str): Grupo muscular principal
+    - `secondaryMuscleGroups` (array[str]): Grupos musculares secundarios
+    - `equipment` (str): Equipamiento necesario
+    - `difficulty` (str): Nivel de dificultad
+    - `instructions` (str): Instrucciones de ejecución
+    - `imageUrl` (str): URL de imagen (debe ser una URL válida)
+    - `videoUrl` (str): URL de video (debe ser una URL válida)
+    - `isActive` (bool): Estado activo
+
+    **Validaciones:**
+    - `name`: Si se proporciona, no puede estar vacío ni contener solo espacios
+    - `secondaryMuscleGroups`: Debe ser un array de strings válidos
+    - Todos los campos de tipo enum validan contra las opciones del modelo
+
+    **Ejemplo de uso:**
+    ```python
+    serializer = ExerciseUpdateSerializer(data={
+        "name": "Bench Press Updated",
+        "difficulty": "advanced"
+    })
+    if serializer.is_valid():
+        exercise = update_exercise_service(exercise_id, serializer.validated_data, user)
+    ```
+    """
 
     name = serializers.CharField(required=False, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)

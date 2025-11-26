@@ -1,0 +1,630 @@
+openapi: 3.0.3
+info:
+  title: The Natural Way - Exercises API
+  version: 1.0.0
+  description: |
+    API REST para la gestión de ejercicios en The Natural Way.
+    
+    Esta API permite:
+    - Listar ejercicios con filtros y búsqueda avanzada
+    - Obtener detalles de ejercicios específicos
+    - Crear nuevos ejercicios (requiere autenticación)
+    - Actualizar ejercicios existentes (requiere autenticación + ser creador)
+    - Eliminar ejercicios mediante soft delete (requiere autenticación + ser creador)
+  
+  contact:
+    name: The Natural Way API Support
+    email: support@thenaturalway.com
+
+servers:
+  - url: http://localhost:8000/api
+    description: Servidor de desarrollo local
+  - url: https://api.thenaturalway.com/api
+    description: Servidor de producción
+
+tags:
+  - name: exercises
+    description: Operaciones relacionadas con ejercicios
+
+paths:
+  /exercises/:
+    get:
+      tags:
+        - exercises
+      summary: Lista ejercicios
+      description: |
+        Lista ejercicios con soporte para filtros, búsqueda y ordenamiento.
+        Este endpoint es público y no requiere autenticación.
+      operationId: listExercises
+      parameters:
+        - name: primaryMuscleGroup
+          in: query
+          description: Filtra por grupo muscular principal
+          required: false
+          schema:
+            type: string
+            enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          example: chest
+        - name: equipment
+          in: query
+          description: Filtra por equipamiento necesario
+          required: false
+          schema:
+            type: string
+            enum: [barbell, dumbbell, cable, machine, bodyweight, kettlebell, other]
+          example: barbell
+        - name: difficulty
+          in: query
+          description: Filtra por nivel de dificultad
+          required: false
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+          example: intermediate
+        - name: isActive
+          in: query
+          description: Filtra por estado activo/inactivo
+          required: false
+          schema:
+            type: boolean
+          example: true
+        - name: createdBy
+          in: query
+          description: Filtra por ID de usuario creador
+          required: false
+          schema:
+            type: integer
+          example: 1
+        - name: search
+          in: query
+          description: Búsqueda por texto en nombre y descripción
+          required: false
+          schema:
+            type: string
+          example: bench press
+        - name: ordering
+          in: query
+          description: Campo para ordenamiento (por defecto: name)
+          required: false
+          schema:
+            type: string
+          example: name
+      responses:
+        '200':
+          description: Lista de ejercicios obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Exercise'
+                  request:
+                    $ref: '#/components/schemas/RequestMetadata'
+              example:
+                data:
+                  - id: 1
+                    name: "Bench Press"
+                    description: "Press de banca con barra"
+                    primaryMuscleGroup: "chest"
+                    equipment: "barbell"
+                    difficulty: "intermediate"
+                    isActive: true
+                    createdAt: "2024-01-15T10:30:00Z"
+                request:
+                  method: "GET"
+                  path: "/api/exercises/"
+                  host: "api.thenaturalway.com"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    post:
+      tags:
+        - exercises
+      summary: Crea un nuevo ejercicio
+      description: |
+        Crea un nuevo ejercicio en el sistema.
+        Requiere autenticación. El usuario autenticado se asigna como creador.
+      operationId: createExercise
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseCreate'
+            example:
+              name: "Bench Press"
+              description: "Press de banca con barra"
+              primaryMuscleGroup: "chest"
+              equipment: "barbell"
+              difficulty: "intermediate"
+              instructions: "Acuéstate en el banco, agarra la barra..."
+              isActive: true
+      responses:
+        '201':
+          description: Ejercicio creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Exercise'
+                  message:
+                    type: string
+                    example: "Ejercicio creado correctamente"
+                  request:
+                    $ref: '#/components/schemas/RequestMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /exercises/{id}/:
+    get:
+      tags:
+        - exercises
+      summary: Obtiene el detalle de un ejercicio
+      description: |
+        Obtiene el detalle completo de un ejercicio específico por su ID.
+        Este endpoint es público y no requiere autenticación.
+      operationId: getExercise
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del ejercicio
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Detalle del ejercicio obtenido correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Exercise'
+                  request:
+                    $ref: '#/components/schemas/RequestMetadata'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    put:
+      tags:
+        - exercises
+      summary: Actualiza un ejercicio
+      description: |
+        Actualiza un ejercicio existente.
+        Requiere autenticación y que el usuario sea el creador del ejercicio.
+        Solo se actualizan los campos proporcionados en el body.
+      operationId: updateExercise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del ejercicio a actualizar
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseUpdate'
+            example:
+              name: "Bench Press Updated"
+              difficulty: "advanced"
+      responses:
+        '200':
+          description: Ejercicio actualizado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Exercise'
+                  message:
+                    type: string
+                    example: "Ejercicio actualizado correctamente"
+                  request:
+                    $ref: '#/components/schemas/RequestMetadata'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    delete:
+      tags:
+        - exercises
+      summary: Elimina un ejercicio
+      description: |
+        Elimina un ejercicio mediante soft delete (marca isActive=False).
+        Requiere autenticación y que el usuario sea el creador del ejercicio.
+        El registro permanece en la base de datos pero se marca como inactivo.
+      operationId: deleteExercise
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID del ejercicio a eliminar
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '204':
+          description: Ejercicio eliminado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ejercicio eliminado correctamente"
+                  request:
+                    $ref: '#/components/schemas/RequestMetadata'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Autenticación mediante JWT token.
+        Incluye el token en el header: `Authorization: Bearer <token>`
+
+  schemas:
+    Exercise:
+      type: object
+      description: Representación completa de un ejercicio
+      properties:
+        id:
+          type: integer
+          description: ID único del ejercicio
+          example: 1
+        name:
+          type: string
+          description: Nombre del ejercicio
+          maxLength: 255
+          example: "Bench Press"
+        description:
+          type: string
+          nullable: true
+          description: Descripción del ejercicio
+          example: "Press de banca con barra"
+        movementType:
+          type: string
+          nullable: true
+          enum: [push, pull, squat, hinge, carry, other]
+          description: Tipo de movimiento
+          example: push
+        primaryMuscleGroup:
+          type: string
+          nullable: true
+          enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          description: Grupo muscular principal
+          example: chest
+        secondaryMuscleGroups:
+          type: array
+          items:
+            type: string
+            enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          description: Grupos musculares secundarios
+          example: [shoulders, triceps]
+        equipment:
+          type: string
+          nullable: true
+          enum: [barbell, dumbbell, cable, machine, bodyweight, kettlebell, other]
+          description: Equipamiento necesario
+          example: barbell
+        difficulty:
+          type: string
+          nullable: true
+          enum: [beginner, intermediate, advanced]
+          description: Nivel de dificultad
+          example: intermediate
+        instructions:
+          type: string
+          nullable: true
+          description: Instrucciones de ejecución
+          example: "Acuéstate en el banco, agarra la barra con las manos..."
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de imagen del ejercicio
+          example: "https://example.com/images/bench-press.jpg"
+        videoUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de video del ejercicio
+          example: "https://example.com/videos/bench-press.mp4"
+        isActive:
+          type: boolean
+          description: Estado activo del ejercicio
+          example: true
+        createdBy:
+          type: string
+          nullable: true
+          description: Username del creador del ejercicio
+          example: "johndoe"
+        createdAt:
+          type: string
+          format: date-time
+          description: Fecha de creación
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Fecha de última actualización
+          example: "2024-01-15T10:30:00Z"
+
+    ExerciseCreate:
+      type: object
+      description: Datos para crear un nuevo ejercicio
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Nombre del ejercicio (requerido)
+          maxLength: 255
+          example: "Bench Press"
+        description:
+          type: string
+          nullable: true
+          description: Descripción del ejercicio
+          example: "Press de banca con barra"
+        movementType:
+          type: string
+          nullable: true
+          enum: [push, pull, squat, hinge, carry, other]
+          description: Tipo de movimiento
+          example: push
+        primaryMuscleGroup:
+          type: string
+          nullable: true
+          enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          description: Grupo muscular principal
+          example: chest
+        secondaryMuscleGroups:
+          type: array
+          items:
+            type: string
+            enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          description: Grupos musculares secundarios
+          example: [shoulders, triceps]
+        equipment:
+          type: string
+          nullable: true
+          enum: [barbell, dumbbell, cable, machine, bodyweight, kettlebell, other]
+          description: Equipamiento necesario
+          example: barbell
+        difficulty:
+          type: string
+          nullable: true
+          enum: [beginner, intermediate, advanced]
+          description: Nivel de dificultad
+          example: intermediate
+        instructions:
+          type: string
+          nullable: true
+          description: Instrucciones de ejecución
+          example: "Acuéstate en el banco, agarra la barra..."
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de imagen del ejercicio
+          example: "https://example.com/images/bench-press.jpg"
+        videoUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de video del ejercicio
+          example: "https://example.com/videos/bench-press.mp4"
+        isActive:
+          type: boolean
+          description: Estado activo del ejercicio (por defecto: true)
+          default: true
+          example: true
+
+    ExerciseUpdate:
+      type: object
+      description: Datos para actualizar un ejercicio existente (todos los campos son opcionales)
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          description: Nombre del ejercicio
+          example: "Bench Press Updated"
+        description:
+          type: string
+          nullable: true
+          description: Descripción del ejercicio
+        movementType:
+          type: string
+          nullable: true
+          enum: [push, pull, squat, hinge, carry, other]
+          description: Tipo de movimiento
+        primaryMuscleGroup:
+          type: string
+          nullable: true
+          enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          description: Grupo muscular principal
+        secondaryMuscleGroups:
+          type: array
+          items:
+            type: string
+            enum: [chest, back, shoulders, arms, legs, core, full_body, other]
+          description: Grupos musculares secundarios
+        equipment:
+          type: string
+          nullable: true
+          enum: [barbell, dumbbell, cable, machine, bodyweight, kettlebell, other]
+          description: Equipamiento necesario
+        difficulty:
+          type: string
+          nullable: true
+          enum: [beginner, intermediate, advanced]
+          description: Nivel de dificultad
+        instructions:
+          type: string
+          nullable: true
+          description: Instrucciones de ejecución
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de imagen del ejercicio
+        videoUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL de video del ejercicio
+        isActive:
+          type: boolean
+          description: Estado activo del ejercicio
+
+    RequestMetadata:
+      type: object
+      description: Metadatos de la petición HTTP
+      properties:
+        method:
+          type: string
+          description: Método HTTP utilizado
+          example: "GET"
+        path:
+          type: string
+          description: Ruta de la petición
+          example: "/api/exercises/"
+        host:
+          type: string
+          description: Host del servidor
+          example: "api.thenaturalway.com"
+
+    Error:
+      type: object
+      description: Respuesta de error estándar
+      properties:
+        error:
+          type: string
+          description: Tipo o categoría del error
+          example: "Validation error"
+        message:
+          oneOf:
+            - type: string
+            - type: object
+          description: Mensaje de error descriptivo o detalles de validación
+          example: "El nombre no puede estar vacío"
+        request:
+          $ref: '#/components/schemas/RequestMetadata'
+
+  responses:
+    BadRequest:
+      description: Error de validación o solicitud incorrecta
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Validation error"
+            message:
+              name: ["El nombre no puede estar vacío"]
+              primaryMuscleGroup: ["Debe ser uno de: chest, back, shoulders, arms, legs, core, full_body, other"]
+            request:
+              method: "POST"
+              path: "/api/exercises/"
+              host: "api.thenaturalway.com"
+    
+    Unauthorized:
+      description: No autenticado o token inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+            message: "Las credenciales de autenticación no se proporcionaron."
+            request:
+              method: "POST"
+              path: "/api/exercises/"
+              host: "api.thenaturalway.com"
+    
+    Forbidden:
+      description: No tiene permisos para realizar la operación
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Permission denied"
+            message: "Solo el creador puede actualizar este ejercicio"
+            request:
+              method: "PUT"
+              path: "/api/exercises/1/"
+              host: "api.thenaturalway.com"
+    
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Not found"
+            message: "Ejercicio no encontrado"
+            request:
+              method: "GET"
+              path: "/api/exercises/999/"
+              host: "api.thenaturalway.com"
+    
+    InternalServerError:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Internal server error"
+            message: "An unexpected error occurred"
+            request:
+              method: "GET"
+              path: "/api/exercises/"
+              host: "api.thenaturalway.com"
+
