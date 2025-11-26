@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'create' %}Crear Ejercicio{% else %}Editar Ejercicio{% endif %} - The Natural Way{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 800px;">
+    <h1>{% if action == 'create' %}Crear Nuevo Ejercicio{% else %}Editar Ejercicio{% endif %}</h1>
+    <p>{% if action == 'create' %}Completa el formulario para crear un nuevo ejercicio en tu biblioteca.{% else %}Modifica los campos que desees actualizar.{% endif %}</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">
+                {{ form.name.label }}
+                {% if action == 'create' %}<span class="required">*</span>{% endif %}
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="field-errors">{{ form.name.errors }}</div>
+            {% endif %}
+            {% if form.name.help_text %}
+                <small class="help-text">{{ form.name.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div class="field-errors">{{ form.description.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.movement_type.id_for_label }}">{{ form.movement_type.label }}</label>
+                {{ form.movement_type }}
+                {% if form.movement_type.errors %}
+                    <div class="field-errors">{{ form.movement_type.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.primary_muscle_group.id_for_label }}">{{ form.primary_muscle_group.label }}</label>
+                {{ form.primary_muscle_group }}
+                {% if form.primary_muscle_group.errors %}
+                    <div class="field-errors">{{ form.primary_muscle_group.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.equipment.id_for_label }}">{{ form.equipment.label }}</label>
+                {{ form.equipment }}
+                {% if form.equipment.errors %}
+                    <div class="field-errors">{{ form.equipment.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.difficulty.id_for_label }}">{{ form.difficulty.label }}</label>
+                {{ form.difficulty }}
+                {% if form.difficulty.errors %}
+                    <div class="field-errors">{{ form.difficulty.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.instructions.id_for_label }}">{{ form.instructions.label }}</label>
+            {{ form.instructions }}
+            {% if form.instructions.errors %}
+                <div class="field-errors">{{ form.instructions.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.image_url.id_for_label }}">{{ form.image_url.label }}</label>
+                {{ form.image_url }}
+                {% if form.image_url.errors %}
+                    <div class="field-errors">{{ form.image_url.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.video_url.id_for_label }}">{{ form.video_url.label }}</label>
+                {{ form.video_url }}
+                {% if form.video_url.errors %}
+                    <div class="field-errors">{{ form.video_url.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.is_active.id_for_label }}" style="display: flex; align-items: center; gap: 0.5rem;">
+                {{ form.is_active }}
+                {{ form.is_active.label }}
+            </label>
+            {% if form.is_active.errors %}
+                <div class="field-errors">{{ form.is_active.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                {% if action == 'create' %}Crear Ejercicio{% else %}Actualizar Ejercicio{% endif %}
+            </button>
+            {% if action == 'update' and exercise %}
+                <a href="{% url 'exercises:detail' pk=exercise.id %}" class="btn btn-secondary">Cancelar</a>
+            {% else %}
+                <a href="{% url 'exercises:list' %}" class="btn btn-secondary">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+

@@ -156,9 +156,10 @@
     <header>
         <nav class="container">
             <div>
-                <a href="/">The Natural Way</a>
+                <a href="{% url 'exercises:list' %}">The Natural Way</a>
             </div>
             <ul>
+                <li><a href="{% url 'exercises:list' %}">Ejercicios</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'users:profile' %}">Mi Perfil</a></li>
                     <li>

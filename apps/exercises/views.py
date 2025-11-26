@@ -28,7 +28,11 @@ if TYPE_CHECKING:
 class ExerciseListAPIView(APIView):
     """Endpoint para listar y crear ejercicios."""
 
-    permission_classes = [AllowAny]
+    def get_permissions(self):
+        """Permisos diferentes según el método HTTP."""
+        if self.request.method == "POST":
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
     def get(self, request: Request) -> Response:
         """Lista ejercicios con filtros y búsqueda."""
@@ -100,7 +104,7 @@ class ExerciseListAPIView(APIView):
             )
 
     def post(self, request: Request) -> Response:
-        """Crea un nuevo ejercicio."""
+        """Crea un nuevo ejercicio (requiere autenticación)."""
         serializer = ExerciseCreateSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -118,9 +122,9 @@ class ExerciseListAPIView(APIView):
             )
 
         try:
-            # Llamar al servicio
+            # Llamar al servicio (el usuario está autenticado por permisos)
             exercise = create_exercise_service(
-                validated_data=serializer.validated_data, user=request.user if request.user.is_authenticated else None
+                validated_data=serializer.validated_data, user=request.user
             )
 
             # Serializar respuesta
@@ -169,7 +173,11 @@ class ExerciseListAPIView(APIView):
 class ExerciseDetailAPIView(APIView):
     """Endpoint para obtener, actualizar y eliminar un ejercicio específico."""
 
-    permission_classes = [AllowAny]
+    def get_permissions(self):
+        """Permisos diferentes según el método HTTP."""
+        if self.request.method in ["PUT", "DELETE"]:
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
     def get(self, request: Request, pk: int) -> Response:
         """Obtiene el detalle de un ejercicio."""
@@ -219,21 +227,7 @@ class ExerciseDetailAPIView(APIView):
             )
 
     def put(self, request: Request, pk: int) -> Response:
-        """Actualiza un ejercicio existente."""
-        if not request.user.is_authenticated:
-            return Response(
-                {
-                    "error": "Authentication required",
-                    "message": "Debes estar autenticado para actualizar ejercicios",
-                    "request": {
-                        "method": request.method,
-                        "path": request.path,
-                        "host": request.get_host(),
-                    },
-                },
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
+        """Actualiza un ejercicio existente (requiere autenticación y ser el creador)."""
         serializer = ExerciseUpdateSerializer(data=request.data)
 
         if not serializer.is_valid():
@@ -327,21 +321,7 @@ class ExerciseDetailAPIView(APIView):
             )
 
     def delete(self, request: Request, pk: int) -> Response:
-        """Elimina un ejercicio (soft delete)."""
-        if not request.user.is_authenticated:
-            return Response(
-                {
-                    "error": "Authentication required",
-                    "message": "Debes estar autenticado para eliminar ejercicios",
-                    "request": {
-                        "method": request.method,
-                        "path": request.path,
-                        "host": request.get_host(),
-                    },
-                },
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
+        """Elimina un ejercicio (soft delete, requiere autenticación y ser el creador)."""
         try:
             # Llamar al servicio
             delete_exercise_service(exercise_id=pk, user=request.user)

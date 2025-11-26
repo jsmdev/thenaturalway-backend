@@ -2,7 +2,7 @@ from django.urls import path
 
 from apps.exercises.views import ExerciseListAPIView, ExerciseDetailAPIView
 
-app_name = "exercises"
+app_name = "exercises_api"
 
 urlpatterns = [
     path("", ExerciseListAPIView.as_view(), name="exercise-list"),

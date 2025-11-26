@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Ejercicios - The Natural Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exercises-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .filters-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-group label {
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .search-box {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .search-box input {
+        flex: 1;
+    }
+    .exercises-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .exercise-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .exercise-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .exercise-card h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    .exercise-card .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+    .exercise-card .meta span {
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .exercise-card .description {
+        color: #666;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .exercise-card .actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .badge-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    .badge-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .badge-beginner {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    .badge-intermediate {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .badge-advanced {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .empty-state p {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="exercises-header">
+    <div>
+        <h1>Biblioteca de Ejercicios</h1>
+        <p>Explora y gestiona tu biblioteca de ejercicios personalizados</p>
+    </div>
+    {% if user.is_authenticated %}
+    <a href="{% url 'exercises:create' %}" class="btn btn-primary">Crear Ejercicio</a>
+    {% endif %}
+</div>
+
+<div class="filters-container">
+    <h3 style="margin-top: 0;">Filtros y Búsqueda</h3>
+    <form method="get" action="{% url 'exercises:list' %}">
+        <div class="search-box">
+            <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o descripción..." value="{{ search }}">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+        
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="primaryMuscleGroup">Grupo Muscular</label>
+                <select name="primaryMuscleGroup" id="primaryMuscleGroup" class="form-control">
+                    <option value="">Todos</option>
+                    {% for value, label in muscle_groups %}
+                        <option value="{{ value }}" {% if filters.primaryMuscleGroup == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="equipment">Equipamiento</label>
+                <select name="equipment" id="equipment" class="form-control">
+                    <option value="">Todos</option>
+                    {% for value, label in equipment_choices %}
+                        <option value="{{ value }}" {% if filters.equipment == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="difficulty">Dificultad</label>
+                <select name="difficulty" id="difficulty" class="form-control">
+                    <option value="">Todas</option>
+                    {% for value, label in difficulty_choices %}
+                        <option value="{{ value }}" {% if filters.difficulty == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="isActive">Estado</label>
+                <select name="isActive" id="isActive" class="form-control">
+                    <option value="">Todos</option>
+                    <option value="true" {% if filters.isActive == 'true' %}selected{% endif %}>Activos</option>
+                    <option value="false" {% if filters.isActive == 'false' %}selected{% endif %}>Inactivos</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            <a href="{% url 'exercises:list' %}" class="btn btn-secondary">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+{% if exercises %}
+    <div class="exercises-grid">
+        {% for exercise in exercises %}
+        <div class="exercise-card">
+            <h3>{{ exercise.name }}</h3>
+            <div class="meta">
+                {% if exercise.primaryMuscleGroup %}
+                    <span><strong>Grupo:</strong> {{ exercise.primaryMuscleGroup|title }}</span>
+                {% endif %}
+                {% if exercise.equipment %}
+                    <span><strong>Equipo:</strong> {{ exercise.equipment|title }}</span>
+                {% endif %}
+                {% if exercise.difficulty %}
+                    <span class="badge badge-{{ exercise.difficulty }}">{{ exercise.difficulty|title }}</span>
+                {% endif %}
+                <span class="badge {% if exercise.isActive %}badge-active{% else %}badge-inactive{% endif %}">
+                    {% if exercise.isActive %}Activo{% else %}Inactivo{% endif %}
+                </span>
+            </div>
+            {% if exercise.description %}
+                <div class="description">{{ exercise.description|truncatewords:20 }}</div>
+            {% endif %}
+            <div class="actions">
+                <a href="{% url 'exercises:detail' pk=exercise.id %}" class="btn btn-primary" style="flex: 1;">Ver Detalle</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h3>No se encontraron ejercicios</h3>
+        <p>Intenta ajustar los filtros o crear un nuevo ejercicio.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'exercises:create' %}" class="btn btn-primary">Crear Primer Ejercicio</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
+
