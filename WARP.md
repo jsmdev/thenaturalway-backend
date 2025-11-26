@@ -17,7 +17,7 @@ python manage.py migrate
 python manage.py runserver
 
 # Or using Docker
-docker-compose up
+docker compose up
 ```
 
 ### Database Operations
