@@ -52,6 +52,8 @@ Each quality gate consists of:
 - ✅ Non-functional requirements are identified (performance, security, etc.)
 - ✅ Dependencies on other features are identified
 - ✅ Edge cases and error scenarios are considered
+- ✅ If feature has user interface, UI/UX section is complete with components, user flow, states, and validations
+- ✅ If feature is API/backend only, UI/UX section indicates "Not applicable"
 - ✅ Feature definition is updated in GitHub issue (main description, not just comments)
 
 **Validation Method**:
@@ -108,6 +110,8 @@ Each quality gate consists of:
 - ✅ Risks and mitigations are documented
 - ✅ Required architectural patterns are identified
 - ✅ Plan follows project conventions and patterns
+- ✅ If feature has user interface, plan includes Presentation layer tasks (templates, views, UI components, forms, etc.)
+- ✅ If feature is API/backend only, Presentation layer may be omitted
 
 **Validation Method**:
 - Review plan structure against template
@@ -136,6 +140,8 @@ Each quality gate consists of:
 - ✅ Code is organized following project structure conventions
 - ✅ Dependencies are properly managed
 - ✅ No hardcoded values or magic numbers (use constants/config)
+- ✅ If plan includes Presentation layer, all UI components are implemented (templates, views, forms, reusable components, etc.)
+- ✅ User interface follows UI/UX requirements defined in feature definition
 
 **Validation Method**:
 - Execute static analysis tools
