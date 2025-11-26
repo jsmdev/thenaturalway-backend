@@ -16,3 +16,4 @@ urlpatterns = [
     path("profile/", UserProfileView.as_view(), name="profile"),
 ]
 
+

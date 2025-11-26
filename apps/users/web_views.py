@@ -185,3 +185,4 @@ class UserProfileView(View):
             profile_data = get_user_profile_service(user=request.user)
             return render(request, "users/profile.html", {"profile": profile_data, "form": form})
 
+

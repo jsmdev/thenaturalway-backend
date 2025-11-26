@@ -165,3 +165,4 @@ class UserProfileUpdateForm(forms.Form):
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
 
+
