@@ -19,5 +19,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('apps.users.api_urls')),  # API REST endpoints
+    path('api/exercises/', include('apps.exercises.api_urls')),  # API REST endpoints
     path('users/', include('apps.users.web_urls')),       # Web endpoints
+    path('exercises/', include('apps.exercises.web_urls')),  # Web endpoints
 ]

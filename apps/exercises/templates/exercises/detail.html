@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exercise.name }} - The Natural Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    .exercise-detail {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .exercise-header {
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .exercise-header h1 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+    .exercise-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .meta-item strong {
+        color: #666;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .badge-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    .badge-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .badge-beginner {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    .badge-intermediate {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .badge-advanced {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .exercise-section {
+        margin-bottom: 2rem;
+    }
+    .exercise-section h2 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    .exercise-section p {
+        line-height: 1.8;
+        color: #555;
+    }
+    .exercise-section ul {
+        line-height: 1.8;
+        color: #555;
+        padding-left: 1.5rem;
+    }
+    .exercise-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+    }
+    .exercise-image {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .exercise-video {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .secondary-muscles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .secondary-muscles span {
+        background: #e9ecef;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="exercise-detail">
+    <div class="exercise-header">
+        <h1>{{ exercise.name }}</h1>
+        <div class="exercise-meta">
+            {% if exercise.primaryMuscleGroup %}
+                <div class="meta-item">
+                    <strong>Grupo Muscular:</strong>
+                    <span>{{ exercise.primaryMuscleGroup|title }}</span>
+                </div>
+            {% endif %}
+            {% if exercise.movementType %}
+                <div class="meta-item">
+                    <strong>Tipo de Movimiento:</strong>
+                    <span>{{ exercise.movementType|title }}</span>
+                </div>
+            {% endif %}
+            {% if exercise.equipment %}
+                <div class="meta-item">
+                    <strong>Equipamiento:</strong>
+                    <span>{{ exercise.equipment|title }}</span>
+                </div>
+            {% endif %}
+            {% if exercise.difficulty %}
+                <div class="meta-item">
+                    <strong>Dificultad:</strong>
+                    <span class="badge badge-{{ exercise.difficulty }}">{{ exercise.difficulty|title }}</span>
+                </div>
+            {% endif %}
+            <div class="meta-item">
+                <strong>Estado:</strong>
+                <span class="badge {% if exercise.isActive %}badge-active{% else %}badge-inactive{% endif %}">
+                    {% if exercise.isActive %}Activo{% else %}Inactivo{% endif %}
+                </span>
+            </div>
+            {% if exercise.createdBy %}
+                <div class="meta-item">
+                    <strong>Creado por:</strong>
+                    <span>{{ exercise.createdBy }}</span>
+                </div>
+            {% endif %}
+            {% if exercise.createdAt %}
+                <div class="meta-item">
+                    <strong>Creado:</strong>
+                    <span>{{ exercise.createdAt|date:"d/m/Y H:i" }}</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if exercise.description %}
+    <div class="exercise-section">
+        <h2>Descripción</h2>
+        <p>{{ exercise.description|linebreaks }}</p>
+    </div>
+    {% endif %}
+
+    {% if exercise.secondaryMuscleGroups %}
+    <div class="exercise-section">
+        <h2>Grupos Musculares Secundarios</h2>
+        <div class="secondary-muscles">
+            {% for muscle in exercise.secondaryMuscleGroups %}
+                <span>{{ muscle|title }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if exercise.instructions %}
+    <div class="exercise-section">
+        <h2>Instrucciones</h2>
+        <p>{{ exercise.instructions|linebreaks }}</p>
+    </div>
+    {% endif %}
+
+    {% if exercise.imageUrl %}
+    <div class="exercise-section">
+        <h2>Imagen</h2>
+        <img src="{{ exercise.imageUrl }}" alt="{{ exercise.name }}" class="exercise-image" onerror="this.style.display='none'">
+    </div>
+    {% endif %}
+
+    {% if exercise.videoUrl %}
+    <div class="exercise-section">
+        <h2>Video</h2>
+        <video controls class="exercise-video" onerror="this.style.display='none'">
+            <source src="{{ exercise.videoUrl }}" type="video/mp4">
+            Tu navegador no soporta el elemento de video.
+        </video>
+        <p><a href="{{ exercise.videoUrl }}" target="_blank" rel="noopener noreferrer">Abrir video en nueva pestaña</a></p>
+    </div>
+    {% endif %}
+
+    <div class="exercise-actions">
+        <a href="{% url 'exercises:list' %}" class="btn btn-secondary">Volver a la Lista</a>
+        {% if is_owner %}
+            <a href="{% url 'exercises:update' pk=exercise.id %}" class="btn btn-primary">Editar</a>
+            <form method="post" action="{% url 'exercises:delete' pk=exercise.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary" onclick="return confirm('¿Estás seguro de que deseas eliminar este ejercicio?');">Eliminar</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

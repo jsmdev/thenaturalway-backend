@@ -16,7 +16,8 @@
 
 - Crear y gestionar una biblioteca de ejercicios personalizados
 - [2_biblioteca_de_ejercicios#3](https://github.com/jsmdev/thenaturalway-backend/issues/3)
-- Estado: defined
+- Estado: builder-planned
+- [Plan de Implementación](./features/2_biblioteca_de_ejercicios/plan.md)
 
 ### 3. CREAR RUTINAS DE ENTRENAMIENTO
 
