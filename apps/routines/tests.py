@@ -112,13 +112,24 @@ class RoutineModelTestCase(TestCase):
         routine = Routine.objects.create(**routine_data)
 
         # Assert
-        self.assertEqual(routine.name, "Rutina de Fuerza")
-        self.assertEqual(routine.description, "Rutina para ganar fuerza")
-        self.assertEqual(routine.duration_weeks, 12)
-        self.assertTrue(routine.is_active)
-        self.assertEqual(routine.created_by, self.user)
-        self.assertIsNotNone(routine.created_at)
-        self.assertIsNotNone(routine.updated_at)
+        with self.subTest("Verificar name"):
+            self.assertEqual(routine.name, "Rutina de Fuerza")
+        
+        with self.subTest("Verificar description"):
+            self.assertEqual(routine.description, "Rutina para ganar fuerza")
+        
+        with self.subTest("Verificar duration_weeks"):
+            self.assertEqual(routine.duration_weeks, 12)
+        
+        with self.subTest("Verificar is_active"):
+            self.assertTrue(routine.is_active)
+        
+        with self.subTest("Verificar created_by"):
+            self.assertEqual(routine.created_by, self.user)
+        
+        with self.subTest("Verificar timestamps"):
+            self.assertIsNotNone(routine.created_at)
+            self.assertIsNotNone(routine.updated_at)
 
     def test_routine_str_representation(self) -> None:
         """Test: Representación string de rutina."""
@@ -168,10 +179,17 @@ class WeekModelTestCase(TestCase):
         week = Week.objects.create(**week_data)
 
         # Assert
-        self.assertEqual(week.routine, self.routine)
-        self.assertEqual(week.week_number, 1)
-        self.assertEqual(week.notes, "Primera semana")
-        self.assertIsNotNone(week.created_at)
+        with self.subTest("Verificar routine"):
+            self.assertEqual(week.routine, self.routine)
+        
+        with self.subTest("Verificar week_number"):
+            self.assertEqual(week.week_number, 1)
+        
+        with self.subTest("Verificar notes"):
+            self.assertEqual(week.notes, "Primera semana")
+        
+        with self.subTest("Verificar created_at"):
+            self.assertIsNotNone(week.created_at)
 
     def test_week_str_representation(self) -> None:
         """Test: Representación string de semana."""
@@ -221,9 +239,14 @@ class WeekModelTestCase(TestCase):
         weeks = list(Week.objects.filter(routine=self.routine))
 
         # Assert
-        self.assertEqual(weeks[0].week_number, 1)
-        self.assertEqual(weeks[1].week_number, 2)
-        self.assertEqual(weeks[2].week_number, 3)
+        with self.subTest("Primera semana debe ser week_number=1"):
+            self.assertEqual(weeks[0].week_number, 1)
+        
+        with self.subTest("Segunda semana debe ser week_number=2"):
+            self.assertEqual(weeks[1].week_number, 2)
+        
+        with self.subTest("Tercera semana debe ser week_number=3"):
+            self.assertEqual(weeks[2].week_number, 3)
 
 
 class DayModelTestCase(TestCase):
@@ -254,10 +277,17 @@ class DayModelTestCase(TestCase):
         day = Day.objects.create(**day_data)
 
         # Assert
-        self.assertEqual(day.week, self.week)
-        self.assertEqual(day.day_number, 1)
-        self.assertEqual(day.name, "Día 1")
-        self.assertEqual(day.notes, "Día de pecho")
+        with self.subTest("Verificar week"):
+            self.assertEqual(day.week, self.week)
+        
+        with self.subTest("Verificar day_number"):
+            self.assertEqual(day.day_number, 1)
+        
+        with self.subTest("Verificar name"):
+            self.assertEqual(day.name, "Día 1")
+        
+        with self.subTest("Verificar notes"):
+            self.assertEqual(day.notes, "Día de pecho")
 
     def test_day_str_representation_with_name(self) -> None:
         """Test: Representación string de día con nombre."""
@@ -2149,15 +2179,30 @@ class RoutineSerializerTestCase(TestCase):
         data = serializer.data
 
         # Assert
-        self.assertEqual(data["id"], self.routine.id)
-        self.assertEqual(data["name"], "Rutina Test")
-        self.assertEqual(data["description"], "Descripción")
-        self.assertEqual(data["durationWeeks"], 12)
-        self.assertEqual(data["durationMonths"], 3)
-        self.assertTrue(data["isActive"])
-        self.assertEqual(data["createdBy"], "testuser")
-        self.assertIn("createdAt", data)
-        self.assertIn("updatedAt", data)
+        with self.subTest("Verificar id"):
+            self.assertEqual(data["id"], self.routine.id)
+        
+        with self.subTest("Verificar name"):
+            self.assertEqual(data["name"], "Rutina Test")
+        
+        with self.subTest("Verificar description"):
+            self.assertEqual(data["description"], "Descripción")
+        
+        with self.subTest("Verificar durationWeeks"):
+            self.assertEqual(data["durationWeeks"], 12)
+        
+        with self.subTest("Verificar durationMonths"):
+            self.assertEqual(data["durationMonths"], 3)
+        
+        with self.subTest("Verificar isActive"):
+            self.assertTrue(data["isActive"])
+        
+        with self.subTest("Verificar createdBy"):
+            self.assertEqual(data["createdBy"], "testuser")
+        
+        with self.subTest("Verificar timestamps"):
+            self.assertIn("createdAt", data)
+            self.assertIn("updatedAt", data)
 
     def test_routine_create_serializer_valid_data(self) -> None:
         """Test: Validar datos válidos para crear rutina."""
@@ -2234,12 +2279,21 @@ class WeekSerializerTestCase(TestCase):
         data = serializer.data
 
         # Assert
-        self.assertEqual(data["id"], self.week.id)
-        self.assertEqual(data["routineId"], self.routine.id)
-        self.assertEqual(data["weekNumber"], 1)
-        self.assertEqual(data["notes"], "Notas")
-        self.assertIn("createdAt", data)
-        self.assertIn("updatedAt", data)
+        with self.subTest("Verificar id"):
+            self.assertEqual(data["id"], self.week.id)
+        
+        with self.subTest("Verificar routineId"):
+            self.assertEqual(data["routineId"], self.routine.id)
+        
+        with self.subTest("Verificar weekNumber"):
+            self.assertEqual(data["weekNumber"], 1)
+        
+        with self.subTest("Verificar notes"):
+            self.assertEqual(data["notes"], "Notas")
+        
+        with self.subTest("Verificar timestamps"):
+            self.assertIn("createdAt", data)
+            self.assertIn("updatedAt", data)
 
     def test_week_create_serializer_valid_data(self) -> None:
         """Test: Validar datos válidos para crear semana."""
@@ -2275,13 +2329,24 @@ class DaySerializerTestCase(TestCase):
         data = serializer.data
 
         # Assert
-        self.assertEqual(data["id"], self.day.id)
-        self.assertEqual(data["weekId"], self.week.id)
-        self.assertEqual(data["dayNumber"], 1)
-        self.assertEqual(data["name"], "Día 1")
-        self.assertEqual(data["notes"], "Notas")
-        self.assertIn("createdAt", data)
-        self.assertIn("updatedAt", data)
+        with self.subTest("Verificar id"):
+            self.assertEqual(data["id"], self.day.id)
+        
+        with self.subTest("Verificar weekId"):
+            self.assertEqual(data["weekId"], self.week.id)
+        
+        with self.subTest("Verificar dayNumber"):
+            self.assertEqual(data["dayNumber"], 1)
+        
+        with self.subTest("Verificar name"):
+            self.assertEqual(data["name"], "Día 1")
+        
+        with self.subTest("Verificar notes"):
+            self.assertEqual(data["notes"], "Notas")
+        
+        with self.subTest("Verificar timestamps"):
+            self.assertIn("createdAt", data)
+            self.assertIn("updatedAt", data)
 
     def test_day_create_serializer_valid_data(self) -> None:
         """Test: Validar datos válidos para crear día."""
@@ -2868,14 +2933,24 @@ class CascadeDeleteTestCase(TestCase):
         self.routine.delete()
 
         # Assert: Todos los objetos relacionados deben estar eliminados
-        self.assertFalse(Routine.objects.filter(id=routine_id).exists())
-        self.assertFalse(Week.objects.filter(id=week_id).exists())
-        self.assertFalse(Day.objects.filter(id=day_id).exists())
-        self.assertFalse(Block.objects.filter(id=block_id).exists())
-        self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
+        with self.subTest("Rutina eliminada"):
+            self.assertFalse(Routine.objects.filter(id=routine_id).exists())
+        
+        with self.subTest("Week eliminada en cascada"):
+            self.assertFalse(Week.objects.filter(id=week_id).exists())
+        
+        with self.subTest("Day eliminado en cascada"):
+            self.assertFalse(Day.objects.filter(id=day_id).exists())
+        
+        with self.subTest("Block eliminado en cascada"):
+            self.assertFalse(Block.objects.filter(id=block_id).exists())
+        
+        with self.subTest("RoutineExercise eliminado en cascada"):
+            self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
 
         # Assert: El ejercicio base NO debe eliminarse (no tiene CASCADE desde Routine)
-        self.assertTrue(Exercise.objects.filter(id=exercise_id).exists())
+        with self.subTest("Exercise base preservado"):
+            self.assertTrue(Exercise.objects.filter(id=exercise_id).exists())
 
     def test_delete_week_cascades_to_days_blocks_exercises(self) -> None:
         """Test: Eliminar semana elimina días, bloques y ejercicios en cascada."""
@@ -3013,10 +3088,17 @@ class CascadeDeleteTestCase(TestCase):
         week.delete()
 
         # Assert: Todos los días, bloques y ejercicios deben estar eliminados
-        self.assertFalse(Week.objects.filter(id=week_id).exists())
-        self.assertEqual(Day.objects.filter(week_id=week_id).count(), 0)
-        self.assertEqual(Block.objects.filter(day__week_id=week_id).count(), 0)
-        self.assertEqual(RoutineExercise.objects.filter(block__day__week_id=week_id).count(), 0)
+        with self.subTest("Week eliminada"):
+            self.assertFalse(Week.objects.filter(id=week_id).exists())
+        
+        with self.subTest("Todos los Days eliminados"):
+            self.assertEqual(Day.objects.filter(week_id=week_id).count(), 0)
+        
+        with self.subTest("Todos los Blocks eliminados"):
+            self.assertEqual(Block.objects.filter(day__week_id=week_id).count(), 0)
+        
+        with self.subTest("Todos los RoutineExercises eliminados"):
+            self.assertEqual(RoutineExercise.objects.filter(block__day__week_id=week_id).count(), 0)
 
 
 # ============================================================================
