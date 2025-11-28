@@ -11,6 +11,7 @@ from rest_framework import status
 from unittest.mock import patch, MagicMock
 
 from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
+from apps.exercises.models import Exercise
 from apps.routines.services import (
     list_routines_service,
     get_routine_service,
@@ -2825,6 +2826,197 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("error", response.data)
+
+
+# ============================================================================
+# MEJORA 8: TESTS DE CASCADE DELETE
+# ============================================================================
+
+
+class CascadeDeleteTestCase(TestCase):
+    """Tests para verificar que las relaciones CASCADE funcionan correctamente."""
+
+    def setUp(self) -> None:
+        """Arrange: Configura datos de prueba."""
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
+        self.routine = Routine.objects.create(name="Rutina Test", created_by=self.user)
+
+        from apps.exercises.models import Exercise
+
+        self.exercise = Exercise.objects.create(name="Ejercicio Test", created_by=self.user)
+
+    def test_delete_routine_cascades_to_all_related_objects(self) -> None:
+        """Test: Eliminar rutina (hard delete) elimina toda la jerarquía en cascada."""
+        # Arrange: Crear jerarquía completa
+        week = Week.objects.create(routine=self.routine, week_number=1)
+        day = Day.objects.create(week=week, day_number=1)
+        block = Block.objects.create(day=day, name="Bloque 1")
+        routine_exercise = RoutineExercise.objects.create(
+            block=block, exercise=self.exercise, sets=3
+        )
+
+        routine_id = self.routine.id
+        week_id = week.id
+        day_id = day.id
+        block_id = block.id
+        routine_exercise_id = routine_exercise.id
+        exercise_id = self.exercise.id
+
+        # Act: Hard delete de rutina
+        self.routine.delete()
+
+        # Assert: Todos los objetos relacionados deben estar eliminados
+        self.assertFalse(Routine.objects.filter(id=routine_id).exists())
+        self.assertFalse(Week.objects.filter(id=week_id).exists())
+        self.assertFalse(Day.objects.filter(id=day_id).exists())
+        self.assertFalse(Block.objects.filter(id=block_id).exists())
+        self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
+
+        # Assert: El ejercicio base NO debe eliminarse (no tiene CASCADE desde Routine)
+        self.assertTrue(Exercise.objects.filter(id=exercise_id).exists())
+
+    def test_delete_week_cascades_to_days_blocks_exercises(self) -> None:
+        """Test: Eliminar semana elimina días, bloques y ejercicios en cascada."""
+        # Arrange: Crear jerarquía desde semana
+        week = Week.objects.create(routine=self.routine, week_number=1)
+        day = Day.objects.create(week=week, day_number=1)
+        block = Block.objects.create(day=day, name="Bloque 1")
+        routine_exercise = RoutineExercise.objects.create(
+            block=block, exercise=self.exercise, sets=3
+        )
+
+        week_id = week.id
+        day_id = day.id
+        block_id = block.id
+        routine_exercise_id = routine_exercise.id
+        routine_id = self.routine.id
+        exercise_id = self.exercise.id
+
+        # Act: Eliminar semana
+        week.delete()
+
+        # Assert: Todos los objetos relacionados deben estar eliminados
+        self.assertFalse(Week.objects.filter(id=week_id).exists())
+        self.assertFalse(Day.objects.filter(id=day_id).exists())
+        self.assertFalse(Block.objects.filter(id=block_id).exists())
+        self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
+
+        # Assert: La rutina y el ejercicio NO deben eliminarse
+        self.assertTrue(Routine.objects.filter(id=routine_id).exists())
+        self.assertTrue(Exercise.objects.filter(id=exercise_id).exists())
+
+    def test_delete_day_cascades_to_blocks_exercises(self) -> None:
+        """Test: Eliminar día elimina bloques y ejercicios en cascada."""
+        # Arrange: Crear jerarquía desde día
+        week = Week.objects.create(routine=self.routine, week_number=1)
+        day = Day.objects.create(week=week, day_number=1)
+        block = Block.objects.create(day=day, name="Bloque 1")
+        routine_exercise = RoutineExercise.objects.create(
+            block=block, exercise=self.exercise, sets=3
+        )
+
+        day_id = day.id
+        block_id = block.id
+        routine_exercise_id = routine_exercise.id
+        week_id = week.id
+        routine_id = self.routine.id
+        exercise_id = self.exercise.id
+
+        # Act: Eliminar día
+        day.delete()
+
+        # Assert: Bloques y ejercicios deben estar eliminados
+        self.assertFalse(Day.objects.filter(id=day_id).exists())
+        self.assertFalse(Block.objects.filter(id=block_id).exists())
+        self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
+
+        # Assert: Semana, rutina y ejercicio NO deben eliminarse
+        self.assertTrue(Week.objects.filter(id=week_id).exists())
+        self.assertTrue(Routine.objects.filter(id=routine_id).exists())
+        self.assertTrue(Exercise.objects.filter(id=exercise_id).exists())
+
+    def test_delete_block_cascades_to_routine_exercises(self) -> None:
+        """Test: Eliminar bloque elimina ejercicios de rutina en cascada."""
+        # Arrange: Crear jerarquía desde bloque
+        week = Week.objects.create(routine=self.routine, week_number=1)
+        day = Day.objects.create(week=week, day_number=1)
+        block = Block.objects.create(day=day, name="Bloque 1")
+        routine_exercise = RoutineExercise.objects.create(
+            block=block, exercise=self.exercise, sets=3
+        )
+
+        block_id = block.id
+        routine_exercise_id = routine_exercise.id
+        day_id = day.id
+        week_id = week.id
+        routine_id = self.routine.id
+        exercise_id = self.exercise.id
+
+        # Act: Eliminar bloque
+        block.delete()
+
+        # Assert: Ejercicios de rutina deben estar eliminados
+        self.assertFalse(Block.objects.filter(id=block_id).exists())
+        self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
+
+        # Assert: Día, semana, rutina y ejercicio NO deben eliminarse
+        self.assertTrue(Day.objects.filter(id=day_id).exists())
+        self.assertTrue(Week.objects.filter(id=week_id).exists())
+        self.assertTrue(Routine.objects.filter(id=routine_id).exists())
+        self.assertTrue(Exercise.objects.filter(id=exercise_id).exists())
+
+    def test_delete_exercise_does_not_cascade_to_routine_exercise(self) -> None:
+        """Test: Eliminar ejercicio base elimina RoutineExercise también por CASCADE."""
+        # Arrange: Crear jerarquía completa
+        week = Week.objects.create(routine=self.routine, week_number=1)
+        day = Day.objects.create(week=week, day_number=1)
+        block = Block.objects.create(day=day, name="Bloque 1")
+        routine_exercise = RoutineExercise.objects.create(
+            block=block, exercise=self.exercise, sets=3
+        )
+
+        routine_exercise_id = routine_exercise.id
+        exercise_id = self.exercise.id
+        block_id = block.id
+
+        # Act: Eliminar ejercicio base
+        self.exercise.delete()
+
+        # Assert: RoutineExercise también se elimina (CASCADE desde exercise)
+        self.assertFalse(Exercise.objects.filter(id=exercise_id).exists())
+        self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
+
+        # Assert: El bloque NO debe eliminarse
+        self.assertTrue(Block.objects.filter(id=block_id).exists())
+
+    def test_delete_week_with_multiple_days(self) -> None:
+        """Test: Eliminar semana con múltiples días elimina todos en cascada."""
+        # Arrange: Crear semana con 3 días, cada uno con bloques
+        week = Week.objects.create(routine=self.routine, week_number=1)
+        day1 = Day.objects.create(week=week, day_number=1)
+        day2 = Day.objects.create(week=week, day_number=2)
+        day3 = Day.objects.create(week=week, day_number=3)
+
+        block1 = Block.objects.create(day=day1, name="Bloque 1")
+        block2 = Block.objects.create(day=day2, name="Bloque 2")
+        block3 = Block.objects.create(day=day3, name="Bloque 3")
+
+        RoutineExercise.objects.create(block=block1, exercise=self.exercise, sets=3)
+        RoutineExercise.objects.create(block=block2, exercise=self.exercise, sets=4)
+        RoutineExercise.objects.create(block=block3, exercise=self.exercise, sets=5)
+
+        week_id = week.id
+
+        # Act: Eliminar semana
+        week.delete()
+
+        # Assert: Todos los días, bloques y ejercicios deben estar eliminados
+        self.assertFalse(Week.objects.filter(id=week_id).exists())
+        self.assertEqual(Day.objects.filter(week_id=week_id).count(), 0)
+        self.assertEqual(Block.objects.filter(day__week_id=week_id).count(), 0)
+        self.assertEqual(RoutineExercise.objects.filter(block__day__week_id=week_id).count(), 0)
 
 
 # ============================================================================
