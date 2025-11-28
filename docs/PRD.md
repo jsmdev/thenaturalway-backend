@@ -23,7 +23,8 @@
 
 - Diseñar y configurar rutinas de entrenamiento personalizadas utilizando ejercicios de la biblioteca
 - [3_crear_rutinas_de_entrenamiento#4](https://github.com/jsmdev/thenaturalway-backend/issues/4)
-- Estado: defined
+- Estado: builder-planned
+- [Plan de Implementación](./features/3_crear_rutinas_de_entrenamiento/plan.md)
 
 ### 4. REGISTRAR SESIONES DE ENTRENAMIENTO
 

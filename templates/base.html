@@ -161,6 +161,7 @@
             <ul>
                 <li><a href="{% url 'exercises:list' %}">Ejercicios</a></li>
                 {% if user.is_authenticated %}
+                    <li><a href="{% url 'routines:list' %}">Rutinas</a></li>
                     <li><a href="{% url 'users:profile' %}">Mi Perfil</a></li>
                     <li>
                         <form method="post" action="{% url 'users:logout' %}" style="display: inline;">

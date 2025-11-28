@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ routine.name }} - The Natural Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    .routine-header {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    .routine-header h1 {
+        margin-top: 0;
+    }
+    .routine-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    .routine-meta span {
+        background: #f8f9fa;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+    }
+    .routine-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .week-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    .week-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .day-section {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+    .day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    .block-section {
+        background: white;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+    .block-header {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .exercise-item {
+        background: #f8f9fa;
+        padding: 0.75rem;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .exercise-item a {
+        color: #2c3e50;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .exercise-item a:hover {
+        text-decoration: underline;
+    }
+    .add-button {
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="routine-header">
+    <h1>{{ routine.name }}</h1>
+    {% if routine.description %}
+        <p>{{ routine.description }}</p>
+    {% endif %}
+    <div class="routine-meta">
+        {% if routine.durationWeeks %}
+            <span><strong>Semanas:</strong> {{ routine.durationWeeks }}</span>
+        {% endif %}
+        {% if routine.durationMonths %}
+            <span><strong>Meses:</strong> {{ routine.durationMonths }}</span>
+        {% endif %}
+        <span class="badge {% if routine.isActive %}badge-active{% else %}badge-inactive{% endif %}">
+            {% if routine.isActive %}Activa{% else %}Inactiva{% endif %}
+        </span>
+    </div>
+    {% if is_owner %}
+    <div class="routine-actions">
+        <a href="{% url 'routines:update' pk=routine.id %}" class="btn btn-secondary">Editar Rutina</a>
+        <form method="post" action="{% url 'routines:delete' pk=routine.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de eliminar esta rutina?');">Eliminar</button>
+        </form>
+        <a href="{% url 'routines:week-create' pk=routine.id %}" class="btn btn-primary">Añadir Semana</a>
+    </div>
+    {% endif %}
+</div>
+
+{% if routine.weeks %}
+    {% for week in routine.weeks %}
+    <div class="week-section">
+        <div class="week-header">
+            <h2>Semana {{ week.weekNumber }}</h2>
+            {% if is_owner %}
+            <a href="{% url 'routines:day-create' pk=routine.id weekId=week.id %}" class="btn btn-primary btn-sm">Añadir Día</a>
+            {% endif %}
+        </div>
+        {% if week.notes %}
+            <p><em>{{ week.notes }}</em></p>
+        {% endif %}
+        
+        {% if week.days %}
+            {% for day in week.days %}
+            <div class="day-section">
+                <div class="day-header">
+                    <h3>{{ day.name|default:"Día" }} {{ day.dayNumber }}</h3>
+                    {% if is_owner %}
+                    <a href="{% url 'routines:block-create' pk=routine.id dayId=day.id %}" class="btn btn-primary btn-sm">Añadir Bloque</a>
+                    {% endif %}
+                </div>
+                {% if day.notes %}
+                    <p><em>{{ day.notes }}</em></p>
+                {% endif %}
+                
+                {% if day.blocks %}
+                    {% for block in day.blocks %}
+                    <div class="block-section">
+                        <div class="block-header">{{ block.name }}</div>
+                        {% if block.notes %}
+                            <p><em>{{ block.notes }}</em></p>
+                        {% endif %}
+                        {% if is_owner %}
+                        <a href="{% url 'routines:exercise-create' pk=routine.id blockId=block.id %}" class="btn btn-primary btn-sm add-button">Añadir Ejercicio</a>
+                        {% endif %}
+                        
+                        {% if block.exercises %}
+                            {% for exercise in block.exercises %}
+                            <div class="exercise-item">
+                                <div>
+                                    <a href="{% url 'exercises:detail' pk=exercise.exerciseId %}">{{ exercise.exerciseName }}</a>
+                                    {% if exercise.sets %} - {{ exercise.sets }} series{% endif %}
+                                    {% if exercise.repetitions %} - {{ exercise.repetitions }} reps{% endif %}
+                                    {% if exercise.weight %} - {{ exercise.weight }} kg{% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <p>Esta rutina no tiene semanas configuradas aún.</p>
+        {% if is_owner %}
+            <a href="{% url 'routines:week-create' pk=routine.id %}" class="btn btn-primary">Añadir Primera Semana</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<div style="margin-top: 2rem;">
+    <a href="{% url 'routines:list' %}" class="btn btn-secondary">Volver a Rutinas</a>
+    <a href="{% url 'exercises:list' %}" class="btn btn-secondary">Ver Biblioteca de Ejercicios</a>
+</div>
+{% endblock %}
+
