@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 from unittest.mock import patch, MagicMock
@@ -88,9 +89,10 @@ User = get_user_model()
 class RoutineModelTestCase(TestCase):
     """Tests para el modelo Routine."""
 
-    def setUp(self) -> None:
-        """Arrange: Configura datos de prueba."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Crea datos una sola vez para toda la clase de test."""
+        cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
 
@@ -142,13 +144,14 @@ class RoutineModelTestCase(TestCase):
 class WeekModelTestCase(TestCase):
     """Tests para el modelo Week."""
 
-    def setUp(self) -> None:
-        """Arrange: Configura datos de prueba."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Crea datos una sola vez para toda la clase de test."""
+        cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        self.routine = Routine.objects.create(
-            name="Rutina Test", created_by=self.user
+        cls.routine = Routine.objects.create(
+            name="Rutina Test", created_by=cls.user
         )
 
     def test_week_creation_success(self) -> None:
@@ -225,15 +228,16 @@ class WeekModelTestCase(TestCase):
 class DayModelTestCase(TestCase):
     """Tests para el modelo Day."""
 
-    def setUp(self) -> None:
-        """Arrange: Configura datos de prueba."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Crea datos una sola vez para toda la clase de test."""
+        cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        self.routine = Routine.objects.create(
-            name="Rutina Test", created_by=self.user
+        cls.routine = Routine.objects.create(
+            name="Rutina Test", created_by=cls.user
         )
-        self.week = Week.objects.create(routine=self.routine, week_number=1)
+        cls.week = Week.objects.create(routine=cls.routine, week_number=1)
 
     def test_day_creation_success(self) -> None:
         """Test: Crear día exitosamente."""
@@ -320,16 +324,17 @@ class DayModelTestCase(TestCase):
 class BlockModelTestCase(TestCase):
     """Tests para el modelo Block."""
 
-    def setUp(self) -> None:
-        """Arrange: Configura datos de prueba."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Crea datos una sola vez para toda la clase de test."""
+        cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        self.routine = Routine.objects.create(
-            name="Rutina Test", created_by=self.user
+        cls.routine = Routine.objects.create(
+            name="Rutina Test", created_by=cls.user
         )
-        self.week = Week.objects.create(routine=self.routine, week_number=1)
-        self.day = Day.objects.create(week=self.week, day_number=1)
+        cls.week = Week.objects.create(routine=cls.routine, week_number=1)
+        cls.day = Day.objects.create(week=cls.week, day_number=1)
 
     def test_block_creation_success(self) -> None:
         """Test: Crear bloque exitosamente."""
@@ -401,25 +406,26 @@ class BlockModelTestCase(TestCase):
 class RoutineExerciseModelTestCase(TestCase):
     """Tests para el modelo RoutineExercise."""
 
-    def setUp(self) -> None:
-        """Arrange: Configura datos de prueba."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Crea datos una sola vez para toda la clase de test."""
+        cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        self.routine = Routine.objects.create(
-            name="Rutina Test", created_by=self.user
+        cls.routine = Routine.objects.create(
+            name="Rutina Test", created_by=cls.user
         )
-        self.week = Week.objects.create(routine=self.routine, week_number=1)
-        self.day = Day.objects.create(week=self.week, day_number=1)
-        self.block = Block.objects.create(day=self.day, name="Bloque 1")
+        cls.week = Week.objects.create(routine=cls.routine, week_number=1)
+        cls.day = Day.objects.create(week=cls.week, day_number=1)
+        cls.block = Block.objects.create(day=cls.day, name="Bloque 1")
 
         # Crear ejercicio de prueba
         from apps.exercises.models import Exercise
 
-        self.exercise = Exercise.objects.create(
+        cls.exercise = Exercise.objects.create(
             name="Press de Banca",
             description="Ejercicio de pecho",
-            created_by=self.user,
+            created_by=cls.user,
         )
 
     def test_routine_exercise_creation_success(self) -> None:
@@ -644,6 +650,37 @@ class RoutineRepositoryTestCase(TestCase):
         self.assertFalse(deleted_routine.is_active)
         self.assertIsNotNone(Routine.objects.get(id=routine.id))
 
+    def test_update_routine_repository_partial_with_none_values(self) -> None:
+        """Test: Actualización parcial no debe eliminar datos existentes."""
+        # Arrange
+        routine = Routine.objects.create(
+            name="Original",
+            description="Original description",
+            duration_weeks=12,
+            created_by=self.user
+        )
+        validated_data = {"name": "Updated"}  # Solo actualizar name
+
+        # Act
+        updated = update_routine_repository(routine=routine, validated_data=validated_data)
+
+        # Assert
+        self.assertEqual(updated.name, "Updated")
+        self.assertEqual(updated.description, "Original description")  # No debe cambiar
+        self.assertEqual(updated.duration_weeks, 12)  # No debe cambiar
+
+    def test_update_routine_repository_empty_name(self) -> None:
+        """Test: Actualizar rutina con nombre vacío."""
+        # Arrange
+        routine = Routine.objects.create(name="Rutina Original", created_by=self.user)
+        validated_data = {"name": ""}  # Nombre vacío
+
+        # Act
+        updated_routine = update_routine_repository(routine=routine, validated_data=validated_data)
+
+        # Assert - El repositorio permite nombre vacío (la validación debe estar en el servicio)
+        self.assertEqual(updated_routine.name, "")
+
 
 class WeekRepositoryTestCase(TestCase):
     """Tests para repositorios de Week."""
@@ -736,6 +773,30 @@ class WeekRepositoryTestCase(TestCase):
         self.assertFalse(Week.objects.filter(id=week.id).exists())
         self.assertFalse(Day.objects.filter(id=day.id).exists())
         self.assertFalse(Block.objects.filter(id=block.id).exists())
+
+    def test_create_week_repository_duplicate_week_number(self) -> None:
+        """Test: Crear semana con week_number duplicado lanza excepción."""
+        # Arrange
+        Week.objects.create(routine=self.routine, week_number=1)
+        validated_data = {"weekNumber": 1}
+
+        # Act & Assert
+        with self.assertRaises(ValidationError):
+            week = create_week_repository(routine_id=self.routine.id, validated_data=validated_data)
+            week.full_clean()  # Forzar validación
+
+    def test_update_week_repository_partial_update(self) -> None:
+        """Test: Actualización parcial de semana no debe eliminar datos."""
+        # Arrange
+        week = Week.objects.create(routine=self.routine, week_number=1, notes="Original notes")
+        validated_data = {"weekNumber": 2}  # Solo actualizar week_number
+
+        # Act
+        updated_week = update_week_repository(week=week, validated_data=validated_data)
+
+        # Assert
+        self.assertEqual(updated_week.week_number, 2)
+        self.assertEqual(updated_week.notes, "Original notes")  # No debe cambiar
 
 
 class DayRepositoryTestCase(TestCase):
@@ -831,6 +892,31 @@ class DayRepositoryTestCase(TestCase):
         self.assertFalse(Day.objects.filter(id=day.id).exists())
         self.assertFalse(Block.objects.filter(id=block.id).exists())
 
+    def test_create_day_repository_duplicate_day_number(self) -> None:
+        """Test: Crear día con day_number duplicado lanza excepción."""
+        # Arrange
+        Day.objects.create(week=self.week, day_number=1)
+        validated_data = {"dayNumber": 1}
+
+        # Act & Assert
+        with self.assertRaises(ValidationError):
+            day = create_day_repository(week_id=self.week.id, validated_data=validated_data)
+            day.full_clean()  # Forzar validación
+
+    def test_update_day_repository_partial_update(self) -> None:
+        """Test: Actualización parcial de día no debe eliminar datos."""
+        # Arrange
+        day = Day.objects.create(week=self.week, day_number=1, name="Original", notes="Original notes")
+        validated_data = {"dayNumber": 2}  # Solo actualizar day_number
+
+        # Act
+        updated_day = update_day_repository(day=day, validated_data=validated_data)
+
+        # Assert
+        self.assertEqual(updated_day.day_number, 2)
+        self.assertEqual(updated_day.name, "Original")  # No debe cambiar
+        self.assertEqual(updated_day.notes, "Original notes")  # No debe cambiar
+
 
 class BlockRepositoryTestCase(TestCase):
     """Tests para repositorios de Block."""
@@ -923,6 +1009,20 @@ class BlockRepositoryTestCase(TestCase):
 
         # Assert
         self.assertFalse(Block.objects.filter(id=block.id).exists())
+
+    def test_update_block_repository_partial_update(self) -> None:
+        """Test: Actualización parcial de bloque no debe eliminar datos."""
+        # Arrange
+        block = Block.objects.create(day=self.day, name="Original", order=1, notes="Original notes")
+        validated_data = {"name": "Updated"}  # Solo actualizar name
+
+        # Act
+        updated_block = update_block_repository(block=block, validated_data=validated_data)
+
+        # Assert
+        self.assertEqual(updated_block.name, "Updated")
+        self.assertEqual(updated_block.order, 1)  # No debe cambiar
+        self.assertEqual(updated_block.notes, "Original notes")  # No debe cambiar
 
 
 class RoutineExerciseRepositoryTestCase(TestCase):
@@ -1033,6 +1133,31 @@ class RoutineExerciseRepositoryTestCase(TestCase):
         self.assertEqual(float(updated_routine_exercise.weight), 85.0)
         self.assertEqual(updated_routine_exercise.rest_seconds, 120)
 
+    def test_update_routine_exercise_repository_partial_update(self) -> None:
+        """Test: Actualización parcial de ejercicio en rutina no debe eliminar datos."""
+        # Arrange
+        routine_exercise = RoutineExercise.objects.create(
+            block=self.block,
+            exercise=self.exercise,
+            sets=3,
+            repetitions="8-10",
+            weight=80.0,
+            rest_seconds=90
+        )
+        validated_data = {"sets": 4}  # Solo actualizar sets
+
+        # Act
+        updated = update_routine_exercise_repository(
+            routine_exercise=routine_exercise,
+            validated_data=validated_data
+        )
+
+        # Assert
+        self.assertEqual(updated.sets, 4)
+        self.assertEqual(updated.repetitions, "8-10")  # No debe cambiar
+        self.assertEqual(float(updated.weight), 80.0)  # No debe cambiar
+        self.assertEqual(updated.rest_seconds, 90)  # No debe cambiar
+
     def test_get_routine_full_repository_success(self) -> None:
         """Test: Obtener rutina completa con jerarquía."""
         # Arrange
@@ -1080,7 +1205,8 @@ class RoutineServiceTestCase(TestCase):
     def test_list_routines_service_success(self, mock_repo: MagicMock) -> None:
         """Test: Listar rutinas exitosamente."""
         # Arrange
-        routine = Routine.objects.create(name="Rutina Test", created_by=self.user)
+        routine = Routine(name="Rutina Test", created_by=self.user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_repo.return_value = [routine]
 
         # Act
@@ -1089,13 +1215,14 @@ class RoutineServiceTestCase(TestCase):
         # Assert
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].name, "Rutina Test")
-        mock_repo.assert_called_once_with(user=self.user)
+        mock_repo.assert_called_once_with(user=self.user, filters={"isActive": True})
 
     @patch("apps.routines.services.get_routine_by_id_repository")
     def test_get_routine_service_success(self, mock_repo: MagicMock) -> None:
         """Test: Obtener rutina exitosamente."""
         # Arrange
-        routine = Routine.objects.create(name="Rutina Test", created_by=self.user)
+        routine = Routine(name="Rutina Test", created_by=self.user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_repo.return_value = routine
 
         # Act
@@ -1124,10 +1251,10 @@ class RoutineServiceTestCase(TestCase):
         # Arrange
         from rest_framework.exceptions import NotFound
 
-        other_user = User.objects.create_user(
-            username="otheruser", email="other@example.com", password="testpass123"
-        )
-        routine = Routine.objects.create(name="Rutina Test", created_by=other_user)
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        routine = Routine(name="Rutina Test", created_by=other_user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_repo.return_value = routine
 
         # Act & Assert
@@ -1139,7 +1266,8 @@ class RoutineServiceTestCase(TestCase):
         """Test: Crear rutina exitosamente."""
         # Arrange
         validated_data = {"name": "Nueva Rutina", "description": "Descripción"}
-        routine = Routine.objects.create(name="Nueva Rutina", created_by=self.user)
+        routine = Routine(name="Nueva Rutina", created_by=self.user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_repo.return_value = routine
 
         # Act
@@ -1170,9 +1298,11 @@ class RoutineServiceTestCase(TestCase):
     ) -> None:
         """Test: Actualizar rutina exitosamente."""
         # Arrange
-        routine = Routine.objects.create(name="Rutina Original", created_by=self.user)
+        routine = Routine(name="Rutina Original", created_by=self.user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_get_repo.return_value = routine
-        updated_routine = Routine.objects.create(name="Rutina Actualizada", created_by=self.user)
+        updated_routine = Routine(name="Rutina Actualizada", created_by=self.user)
+        updated_routine.id = 1  # Simular ID sin guardar en BD
         mock_update_repo.return_value = updated_routine
         validated_data = {"name": "Rutina Actualizada"}
 
@@ -1206,10 +1336,10 @@ class RoutineServiceTestCase(TestCase):
         # Arrange
         from rest_framework.exceptions import PermissionDenied
 
-        other_user = User.objects.create_user(
-            username="otheruser", email="other@example.com", password="testpass123"
-        )
-        routine = Routine.objects.create(name="Rutina Test", created_by=other_user)
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        routine = Routine(name="Rutina Test", created_by=other_user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_repo.return_value = routine
 
         # Act & Assert
@@ -1225,9 +1355,11 @@ class RoutineServiceTestCase(TestCase):
     ) -> None:
         """Test: Eliminar rutina exitosamente."""
         # Arrange
-        routine = Routine.objects.create(name="Rutina Test", created_by=self.user, is_active=True)
+        routine = Routine(name="Rutina Test", created_by=self.user, is_active=True)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_get_repo.return_value = routine
-        deleted_routine = Routine.objects.create(name="Rutina Test", created_by=self.user, is_active=False)
+        deleted_routine = Routine(name="Rutina Test", created_by=self.user, is_active=False)
+        deleted_routine.id = 1  # Simular ID sin guardar en BD
         mock_delete_repo.return_value = deleted_routine
 
         # Act
@@ -1244,10 +1376,10 @@ class RoutineServiceTestCase(TestCase):
         # Arrange
         from rest_framework.exceptions import PermissionDenied
 
-        other_user = User.objects.create_user(
-            username="otheruser", email="other@example.com", password="testpass123"
-        )
-        routine = Routine.objects.create(name="Rutina Test", created_by=other_user)
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        routine = Routine(name="Rutina Test", created_by=other_user)
+        routine.id = 1  # Simular ID sin guardar en BD
         mock_repo.return_value = routine
 
         # Act & Assert
@@ -1352,13 +1484,48 @@ class WeekServiceTestCase(TestCase):
         mock_update_repo.assert_called_once()
 
     @patch("apps.routines.services.get_week_by_id_repository")
+    def test_update_week_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar semana inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            update_week_service(
+                week_id=999, validated_data={"weekNumber": 2}, user=self.user
+            )
+
+    @patch("apps.routines.services.get_week_by_id_repository")
+    def test_update_week_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar semana sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        week = Week(routine=other_routine, week_number=1)
+        week.id = 1
+        mock_repo.return_value = week
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            update_week_service(
+                week_id=week.id, validated_data={"weekNumber": 2}, user=self.user
+            )
+
+    @patch("apps.routines.services.get_week_by_id_repository")
     @patch("apps.routines.services.delete_week_repository")
     def test_delete_week_service_success(
         self, mock_delete_repo: MagicMock, mock_get_repo: MagicMock
     ) -> None:
         """Test: Eliminar semana exitosamente."""
         # Arrange
-        week = Week.objects.create(routine=self.routine, week_number=1)
+        week = Week(routine=self.routine, week_number=1)
+        week.id = 1  # Simular ID sin guardar en BD
         mock_get_repo.return_value = week
 
         # Act
@@ -1367,6 +1534,36 @@ class WeekServiceTestCase(TestCase):
         # Assert
         mock_get_repo.assert_called_once_with(week_id=week.id)
         mock_delete_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_week_by_id_repository")
+    def test_delete_week_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar semana inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            delete_week_service(week_id=999, user=self.user)
+
+    @patch("apps.routines.services.get_week_by_id_repository")
+    def test_delete_week_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar semana sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        week = Week(routine=other_routine, week_number=1)
+        week.id = 1
+        mock_repo.return_value = week
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            delete_week_service(week_id=week.id, user=self.user)
 
 
 class DayServiceTestCase(TestCase):
@@ -1421,6 +1618,132 @@ class DayServiceTestCase(TestCase):
                 week_id=self.week.id, validated_data={"dayNumber": 1}, user=self.user
             )
 
+    @patch("apps.routines.services.get_day_by_id_repository")
+    @patch("apps.routines.services.update_day_repository")
+    @patch("apps.routines.services.Day.objects.filter")
+    def test_update_day_service_success(
+        self, mock_day_filter: MagicMock, mock_update_repo: MagicMock, mock_get_repo: MagicMock
+    ) -> None:
+        """Test: Actualizar día exitosamente."""
+        # Arrange
+        day = Day(week=self.week, day_number=1)
+        day.id = 1  # Simular ID sin guardar en BD
+        mock_get_repo.return_value = day
+        mock_day_filter.return_value.exclude.return_value.exists.return_value = False
+        updated_day = Day(week=self.week, day_number=2)
+        updated_day.id = day.id
+        mock_update_repo.return_value = updated_day
+        validated_data = {"dayNumber": 2}
+
+        # Act
+        result = update_day_service(day_id=day.id, validated_data=validated_data, user=self.user)
+
+        # Assert
+        self.assertEqual(result.day_number, 2)
+        mock_get_repo.assert_called_once_with(day_id=day.id)
+        mock_update_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_day_by_id_repository")
+    def test_update_day_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar día inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            update_day_service(day_id=999, validated_data={"dayNumber": 2}, user=self.user)
+
+    @patch("apps.routines.services.get_day_by_id_repository")
+    def test_update_day_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar día sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        other_week = Week(routine=other_routine, week_number=1)
+        other_week.id = 2
+        day = Day(week=other_week, day_number=1)
+        day.id = 1
+        mock_repo.return_value = day
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            update_day_service(day_id=day.id, validated_data={"dayNumber": 2}, user=self.user)
+
+    @patch("apps.routines.services.get_day_by_id_repository")
+    @patch("apps.routines.services.Day.objects.filter")
+    def test_update_day_service_duplicate_day_number(
+        self, mock_day_filter: MagicMock, mock_repo: MagicMock
+    ) -> None:
+        """Test: Actualizar día con dayNumber duplicado."""
+        # Arrange
+        from rest_framework.exceptions import ValidationError
+
+        day = Day(week=self.week, day_number=1)
+        day.id = 1
+        mock_repo.return_value = day
+        # Mock para simular que ya existe otro día con day_number=2
+        mock_day_filter.return_value.exclude.return_value.exists.return_value = True
+
+        # Act & Assert
+        with self.assertRaises(ValidationError):
+            update_day_service(day_id=day.id, validated_data={"dayNumber": 2}, user=self.user)
+
+    @patch("apps.routines.services.get_day_by_id_repository")
+    @patch("apps.routines.services.delete_day_repository")
+    def test_delete_day_service_success(
+        self, mock_delete_repo: MagicMock, mock_get_repo: MagicMock
+    ) -> None:
+        """Test: Eliminar día exitosamente."""
+        # Arrange
+        day = Day(week=self.week, day_number=1)
+        day.id = 1  # Simular ID sin guardar en BD
+        mock_get_repo.return_value = day
+
+        # Act
+        delete_day_service(day_id=day.id, user=self.user)
+
+        # Assert
+        mock_get_repo.assert_called_once_with(day_id=day.id)
+        mock_delete_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_day_by_id_repository")
+    def test_delete_day_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar día inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            delete_day_service(day_id=999, user=self.user)
+
+    @patch("apps.routines.services.get_day_by_id_repository")
+    def test_delete_day_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar día sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        other_week = Week(routine=other_routine, week_number=1)
+        other_week.id = 2
+        day = Day(week=other_week, day_number=1)
+        day.id = 1
+        mock_repo.return_value = day
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            delete_day_service(day_id=day.id, user=self.user)
+
 
 class BlockServiceTestCase(TestCase):
     """Tests para servicios de Block con mocks."""
@@ -1442,7 +1765,8 @@ class BlockServiceTestCase(TestCase):
         """Test: Crear bloque exitosamente."""
         # Arrange
         mock_get_day_repo.return_value = self.day
-        block = Block.objects.create(day=self.day, name="Bloque 1")
+        block = Block(day=self.day, name="Bloque 1")
+        block.id = 1  # Simular ID sin guardar en BD
         mock_create_repo.return_value = block
         validated_data = {"name": "Bloque 1", "order": 1}
 
@@ -1455,6 +1779,115 @@ class BlockServiceTestCase(TestCase):
         self.assertEqual(result.name, "Bloque 1")
         mock_get_day_repo.assert_called_once_with(day_id=self.day.id)
         mock_create_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_block_by_id_repository")
+    @patch("apps.routines.services.update_block_repository")
+    def test_update_block_service_success(
+        self, mock_update_repo: MagicMock, mock_get_repo: MagicMock
+    ) -> None:
+        """Test: Actualizar bloque exitosamente."""
+        # Arrange
+        block = Block(day=self.day, name="Bloque Original")
+        block.id = 1  # Simular ID sin guardar en BD
+        mock_get_repo.return_value = block
+        updated_block = Block(day=self.day, name="Bloque Actualizado")
+        updated_block.id = block.id
+        mock_update_repo.return_value = updated_block
+        validated_data = {"name": "Bloque Actualizado"}
+
+        # Act
+        result = update_block_service(block_id=block.id, validated_data=validated_data, user=self.user)
+
+        # Assert
+        self.assertEqual(result.name, "Bloque Actualizado")
+        mock_get_repo.assert_called_once_with(block_id=block.id)
+        mock_update_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_block_by_id_repository")
+    def test_update_block_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar bloque inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            update_block_service(block_id=999, validated_data={"name": "Test"}, user=self.user)
+
+    @patch("apps.routines.services.get_block_by_id_repository")
+    def test_update_block_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar bloque sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        other_week = Week(routine=other_routine, week_number=1)
+        other_week.id = 2
+        other_day = Day(week=other_week, day_number=1)
+        other_day.id = 2
+        block = Block(day=other_day, name="Bloque Test")
+        block.id = 1
+        mock_repo.return_value = block
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            update_block_service(block_id=block.id, validated_data={"name": "Test"}, user=self.user)
+
+    @patch("apps.routines.services.get_block_by_id_repository")
+    @patch("apps.routines.services.delete_block_repository")
+    def test_delete_block_service_success(
+        self, mock_delete_repo: MagicMock, mock_get_repo: MagicMock
+    ) -> None:
+        """Test: Eliminar bloque exitosamente."""
+        # Arrange
+        block = Block(day=self.day, name="Bloque Test")
+        block.id = 1  # Simular ID sin guardar en BD
+        mock_get_repo.return_value = block
+
+        # Act
+        delete_block_service(block_id=block.id, user=self.user)
+
+        # Assert
+        mock_get_repo.assert_called_once_with(block_id=block.id)
+        mock_delete_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_block_by_id_repository")
+    def test_delete_block_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar bloque inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            delete_block_service(block_id=999, user=self.user)
+
+    @patch("apps.routines.services.get_block_by_id_repository")
+    def test_delete_block_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar bloque sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        other_week = Week(routine=other_routine, week_number=1)
+        other_week.id = 2
+        other_day = Day(week=other_week, day_number=1)
+        other_day.id = 2
+        block = Block(day=other_day, name="Bloque Test")
+        block.id = 1
+        mock_repo.return_value = block
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            delete_block_service(block_id=block.id, user=self.user)
 
 
 class RoutineExerciseServiceTestCase(TestCase):
@@ -1487,9 +1920,8 @@ class RoutineExerciseServiceTestCase(TestCase):
         # Arrange
         mock_get_block_repo.return_value = self.block
         mock_get_exercise_repo.return_value = self.exercise
-        routine_exercise = RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise
-        )
+        routine_exercise = RoutineExercise(block=self.block, exercise=self.exercise)
+        routine_exercise.id = 1  # Simular ID sin guardar en BD
         mock_create_repo.return_value = routine_exercise
         validated_data = {"sets": 3, "repetitions": "8-10"}
 
@@ -1539,6 +1971,125 @@ class RoutineExerciseServiceTestCase(TestCase):
             create_routine_exercise_service(
                 block_id=self.block.id, exercise_id=999, validated_data={}, user=self.user
             )
+
+    @patch("apps.routines.services.get_routine_exercise_by_id_repository")
+    @patch("apps.routines.services.update_routine_exercise_repository")
+    def test_update_routine_exercise_service_success(
+        self, mock_update_repo: MagicMock, mock_get_repo: MagicMock
+    ) -> None:
+        """Test: Actualizar ejercicio en rutina exitosamente."""
+        # Arrange
+        routine_exercise = RoutineExercise(block=self.block, exercise=self.exercise, sets=3)
+        routine_exercise.id = 1  # Simular ID sin guardar en BD
+        mock_get_repo.return_value = routine_exercise
+        updated_routine_exercise = RoutineExercise(block=self.block, exercise=self.exercise, sets=4)
+        updated_routine_exercise.id = routine_exercise.id
+        mock_update_repo.return_value = updated_routine_exercise
+        validated_data = {"sets": 4}
+
+        # Act
+        result = update_routine_exercise_service(
+            routine_exercise_id=routine_exercise.id, validated_data=validated_data, user=self.user
+        )
+
+        # Assert
+        self.assertEqual(result.sets, 4)
+        mock_get_repo.assert_called_once_with(routine_exercise_id=routine_exercise.id)
+        mock_update_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_routine_exercise_by_id_repository")
+    def test_update_routine_exercise_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar ejercicio inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            update_routine_exercise_service(
+                routine_exercise_id=999, validated_data={"sets": 4}, user=self.user
+            )
+
+    @patch("apps.routines.services.get_routine_exercise_by_id_repository")
+    def test_update_routine_exercise_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Actualizar ejercicio sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        other_week = Week(routine=other_routine, week_number=1)
+        other_week.id = 2
+        other_day = Day(week=other_week, day_number=1)
+        other_day.id = 2
+        other_block = Block(day=other_day, name="Bloque Test")
+        other_block.id = 2
+        routine_exercise = RoutineExercise(block=other_block, exercise=self.exercise)
+        routine_exercise.id = 1
+        mock_repo.return_value = routine_exercise
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            update_routine_exercise_service(
+                routine_exercise_id=routine_exercise.id, validated_data={"sets": 4}, user=self.user
+            )
+
+    @patch("apps.routines.services.get_routine_exercise_by_id_repository")
+    @patch("apps.routines.services.delete_routine_exercise_repository")
+    def test_delete_routine_exercise_service_success(
+        self, mock_delete_repo: MagicMock, mock_get_repo: MagicMock
+    ) -> None:
+        """Test: Eliminar ejercicio de rutina exitosamente."""
+        # Arrange
+        routine_exercise = RoutineExercise(block=self.block, exercise=self.exercise)
+        routine_exercise.id = 1  # Simular ID sin guardar en BD
+        mock_get_repo.return_value = routine_exercise
+
+        # Act
+        delete_routine_exercise_service(routine_exercise_id=routine_exercise.id, user=self.user)
+
+        # Assert
+        mock_get_repo.assert_called_once_with(routine_exercise_id=routine_exercise.id)
+        mock_delete_repo.assert_called_once()
+
+    @patch("apps.routines.services.get_routine_exercise_by_id_repository")
+    def test_delete_routine_exercise_service_not_found(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar ejercicio inexistente."""
+        # Arrange
+        from rest_framework.exceptions import NotFound
+
+        mock_repo.return_value = None
+
+        # Act & Assert
+        with self.assertRaises(NotFound):
+            delete_routine_exercise_service(routine_exercise_id=999, user=self.user)
+
+    @patch("apps.routines.services.get_routine_exercise_by_id_repository")
+    def test_delete_routine_exercise_service_permission_denied(self, mock_repo: MagicMock) -> None:
+        """Test: Eliminar ejercicio sin permisos."""
+        # Arrange
+        from rest_framework.exceptions import PermissionDenied
+
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        other_routine = Routine(name="Otra Rutina", created_by=other_user)
+        other_routine.id = 2
+        other_week = Week(routine=other_routine, week_number=1)
+        other_week.id = 2
+        other_day = Day(week=other_week, day_number=1)
+        other_day.id = 2
+        other_block = Block(day=other_day, name="Bloque Test")
+        other_block.id = 2
+        routine_exercise = RoutineExercise(block=other_block, exercise=self.exercise)
+        routine_exercise.id = 1
+        mock_repo.return_value = routine_exercise
+
+        # Act & Assert
+        with self.assertRaises(PermissionDenied):
+            delete_routine_exercise_service(routine_exercise_id=routine_exercise.id, user=self.user)
 
     @patch("apps.routines.services.get_routine_full_repository")
     def test_get_routine_full_service_success(self, mock_repo: MagicMock) -> None:
@@ -1930,7 +2481,7 @@ class RoutineListAPIViewTestCase(TestCase):
         Routine.objects.create(name="Rutina 2", created_by=self.user)
 
         # Act
-        response = self.client.get("/api/routines/")
+        response = self.client.get(reverse("routines_api:routine-list"))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1941,7 +2492,7 @@ class RoutineListAPIViewTestCase(TestCase):
     def test_list_routines_get_empty(self) -> None:
         """Test: GET lista vacía cuando no hay rutinas."""
         # Act
-        response = self.client.get("/api/routines/")
+        response = self.client.get(reverse("routines_api:routine-list"))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1959,7 +2510,7 @@ class RoutineListAPIViewTestCase(TestCase):
         }
 
         # Act
-        response = self.client.post("/api/routines/", data, format="json")
+        response = self.client.post(reverse("routines_api:routine-list"), data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1974,7 +2525,7 @@ class RoutineListAPIViewTestCase(TestCase):
         data = {"description": "Sin nombre"}
 
         # Act
-        response = self.client.post("/api/routines/", data, format="json")
+        response = self.client.post(reverse("routines_api:routine-list"), data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1987,7 +2538,7 @@ class RoutineListAPIViewTestCase(TestCase):
         self.client.force_authenticate(user=None)
 
         # Act
-        response = self.client.get("/api/routines/")
+        response = self.client.get(reverse("routines_api:routine-list"))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -2011,7 +2562,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
     def test_get_routine_detail_success(self) -> None:
         """Test: GET detalle de rutina exitosamente."""
         # Act
-        response = self.client.get(f"/api/routines/{self.routine.id}/")
+        response = self.client.get(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2022,7 +2573,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
     def test_get_routine_detail_not_found(self) -> None:
         """Test: GET rutina inexistente."""
         # Act
-        response = self.client.get("/api/routines/999/")
+        response = self.client.get(reverse("routines_api:routine-detail", kwargs={"pk": 999}))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -2037,7 +2588,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
         Block.objects.create(day=day, name="Bloque 1")
 
         # Act
-        response = self.client.get(f"/api/routines/{self.routine.id}/?full=true")
+        response = self.client.get(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}) + "?full=true")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2050,7 +2601,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
         data = {"name": "Rutina Actualizada", "description": "Nueva descripción"}
 
         # Act
-        response = self.client.put(f"/api/routines/{self.routine.id}/", data, format="json")
+        response = self.client.put(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}), data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2065,7 +2616,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
         data = {"name": "Rutina Actualizada"}
 
         # Act
-        response = self.client.put(f"/api/routines/{other_routine.id}/", data, format="json")
+        response = self.client.put(reverse("routines_api:routine-detail", kwargs={"pk": other_routine.id}), data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -2074,7 +2625,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
     def test_delete_routine_delete_success(self) -> None:
         """Test: DELETE eliminar rutina exitosamente."""
         # Act
-        response = self.client.delete(f"/api/routines/{self.routine.id}/")
+        response = self.client.delete(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -2088,7 +2639,7 @@ class RoutineDetailAPIViewTestCase(TestCase):
         other_routine = Routine.objects.create(name="Otra Rutina", created_by=self.other_user)
 
         # Act
-        response = self.client.delete(f"/api/routines/{other_routine.id}/")
+        response = self.client.delete(reverse("routines_api:routine-detail", kwargs={"pk": other_routine.id}))
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -2113,7 +2664,7 @@ class WeekCreateAPIViewTestCase(TestCase):
         data = {"weekNumber": 1, "notes": "Primera semana"}
 
         # Act
-        response = self.client.post(f"/api/routines/{self.routine.id}/weeks/", data, format="json")
+        response = self.client.post(reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -2128,7 +2679,7 @@ class WeekCreateAPIViewTestCase(TestCase):
         data = {"weekNumber": 1}
 
         # Act
-        response = self.client.post(f"/api/routines/{self.routine.id}/weeks/", data, format="json")
+        response = self.client.post(reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -2155,7 +2706,9 @@ class DayCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            f"/api/routines/{self.routine.id}/weeks/{self.week.id}/days/", data, format="json"
+            reverse("routines_api:day-create", kwargs={"pk": self.routine.id, "weekId": self.week.id}),
+            data,
+            format="json"
         )
 
         # Assert
@@ -2186,7 +2739,9 @@ class BlockCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            f"/api/routines/{self.routine.id}/days/{self.day.id}/blocks/", data, format="json"
+            reverse("routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}),
+            data,
+            format="json"
         )
 
         # Assert
@@ -2202,7 +2757,9 @@ class BlockCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            f"/api/routines/{self.routine.id}/days/{self.day.id}/blocks/", data, format="json"
+            reverse("routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}),
+            data,
+            format="json"
         )
 
         # Assert
@@ -2242,7 +2799,7 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            f"/api/routines/{self.routine.id}/blocks/{self.block.id}/exercises/",
+            reverse("routines_api:routine-exercise-create", kwargs={"pk": self.routine.id, "blockId": self.block.id}),
             data,
             format="json",
         )
@@ -2260,7 +2817,7 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            f"/api/routines/{self.routine.id}/blocks/{self.block.id}/exercises/",
+            reverse("routines_api:routine-exercise-create", kwargs={"pk": self.routine.id, "blockId": self.block.id}),
             data,
             format="json",
         )
@@ -2268,3 +2825,239 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("error", response.data)
+
+
+# ============================================================================
+# MEJORA 7: TESTS DE INTEGRACIÓN END-TO-END
+# ============================================================================
+
+
+class RoutineIntegrationE2ETestCase(TestCase):
+    """Tests E2E que verifican flujos completos desde API hasta base de datos."""
+
+    def setUp(self) -> None:
+        """Arrange: Configura datos de prueba."""
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="testpass123"
+        )
+        self.client.force_authenticate(user=self.user)
+
+        from apps.exercises.models import Exercise
+
+        self.exercise1 = Exercise.objects.create(name="Press Banca", created_by=self.user)
+        self.exercise2 = Exercise.objects.create(name="Sentadillas", created_by=self.user)
+
+    def test_e2e_create_complete_routine_hierarchy(self) -> None:
+        """Test E2E: Crear jerarquía completa de rutina con todas sus relaciones."""
+        # Step 1: Crear rutina
+        routine_data = {"name": "Rutina Completa", "description": "Descripción completa"}
+        routine_response = self.client.post(
+            reverse("routines_api:routine-list"), routine_data, format="json"
+        )
+        self.assertEqual(routine_response.status_code, status.HTTP_201_CREATED)
+        routine_id = routine_response.data["data"]["id"]
+
+        # Step 2: Crear semana
+        week_data = {"weekNumber": 1, "notes": "Primera semana"}
+        week_response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": routine_id}),
+            week_data,
+            format="json",
+        )
+        self.assertEqual(week_response.status_code, status.HTTP_201_CREATED)
+        week_id = week_response.data["data"]["id"]
+
+        # Step 3: Crear día
+        day_data = {"dayNumber": 1, "name": "Día 1", "notes": "Notas del día"}
+        day_response = self.client.post(
+            reverse("routines_api:day-create", kwargs={"pk": routine_id, "weekId": week_id}),
+            day_data,
+            format="json",
+        )
+        self.assertEqual(day_response.status_code, status.HTTP_201_CREATED)
+        day_id = day_response.data["data"]["id"]
+
+        # Step 4: Crear bloque
+        block_data = {"name": "Bloque 1", "order": 1, "notes": "Notas del bloque"}
+        block_response = self.client.post(
+            reverse("routines_api:block-create", kwargs={"pk": routine_id, "dayId": day_id}),
+            block_data,
+            format="json",
+        )
+        self.assertEqual(block_response.status_code, status.HTTP_201_CREATED)
+        block_id = block_response.data["data"]["id"]
+
+        # Step 5: Agregar ejercicios al bloque
+        exercise1_data = {
+            "exerciseId": self.exercise1.id,
+            "sets": 4,
+            "repetitions": "8-10",
+            "weight": "80.00",
+            "restSeconds": 90,
+        }
+        exercise1_response = self.client.post(
+            reverse("routines_api:routine-exercise-create", kwargs={"pk": routine_id, "blockId": block_id}),
+            exercise1_data,
+            format="json",
+        )
+        self.assertEqual(exercise1_response.status_code, status.HTTP_201_CREATED)
+
+        exercise2_data = {
+            "exerciseId": self.exercise2.id,
+            "sets": 3,
+            "repetitions": "10-12",
+            "weight": "100.00",
+            "restSeconds": 120,
+        }
+        exercise2_response = self.client.post(
+            reverse("routines_api:routine-exercise-create", kwargs={"pk": routine_id, "blockId": block_id}),
+            exercise2_data,
+            format="json",
+        )
+        self.assertEqual(exercise2_response.status_code, status.HTTP_201_CREATED)
+
+        # Step 6: Verificar estructura completa en base de datos
+        routine = Routine.objects.get(id=routine_id)
+        self.assertEqual(routine.name, "Rutina Completa")
+        self.assertEqual(routine.created_by, self.user)
+        self.assertTrue(routine.is_active)
+
+        week = Week.objects.get(id=week_id)
+        self.assertEqual(week.routine, routine)
+        self.assertEqual(week.week_number, 1)
+
+        day = Day.objects.get(id=day_id)
+        self.assertEqual(day.week, week)
+        self.assertEqual(day.day_number, 1)
+
+        block = Block.objects.get(id=block_id)
+        self.assertEqual(block.day, day)
+        self.assertEqual(block.name, "Bloque 1")
+
+        routine_exercises = RoutineExercise.objects.filter(block=block).order_by("id")
+        self.assertEqual(routine_exercises.count(), 2)
+        self.assertEqual(routine_exercises[0].exercise, self.exercise1)
+        self.assertEqual(routine_exercises[1].exercise, self.exercise2)
+
+        # Step 7: Verificar GET detalle devuelve estructura completa
+        detail_response = self.client.get(
+            reverse("routines_api:routine-detail", kwargs={"pk": routine_id}) + "?full=true"
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        detail_data = detail_response.data["data"]
+        self.assertEqual(detail_data["name"], "Rutina Completa")
+        self.assertEqual(len(detail_data["weeks"]), 1)
+        self.assertEqual(len(detail_data["weeks"][0]["days"]), 1)
+        self.assertEqual(len(detail_data["weeks"][0]["days"][0]["blocks"]), 1)
+        self.assertEqual(len(detail_data["weeks"][0]["days"][0]["blocks"][0]["exercises"]), 2)
+
+    def test_e2e_soft_delete_preserves_hierarchy(self) -> None:
+        """Test E2E: Soft delete de rutina preserva jerarquía pero marca como inactiva."""
+        # Arrange: Crear estructura completa
+        routine = Routine.objects.create(name="Rutina Test", created_by=self.user)
+        week = Week.objects.create(routine=routine, week_number=1)
+        day = Day.objects.create(week=week, day_number=1)
+        block = Block.objects.create(day=day, name="Bloque 1")
+        routine_exercise = RoutineExercise.objects.create(
+            block=block, exercise=self.exercise1, sets=3
+        )
+
+        # Verificar que aparece en lista antes de eliminar
+        list_response_before = self.client.get(reverse("routines_api:routine-list"))
+        routine_ids_before = [r["id"] for r in list_response_before.data["data"]]
+        self.assertIn(routine.id, routine_ids_before)
+
+        # Act: Soft delete de rutina
+        delete_response = self.client.delete(
+            reverse("routines_api:routine-detail", kwargs={"pk": routine.id})
+        )
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Assert: Rutina marcada como inactiva
+        routine.refresh_from_db()
+        self.assertFalse(routine.is_active)
+
+        # Assert: Jerarquía completa aún existe en BD
+        self.assertTrue(Week.objects.filter(id=week.id).exists())
+        self.assertTrue(Day.objects.filter(id=day.id).exists())
+        self.assertTrue(Block.objects.filter(id=block.id).exists())
+        self.assertTrue(RoutineExercise.objects.filter(id=routine_exercise.id).exists())
+
+        # Assert: No aparece en lista de rutinas activas (filtradas por is_active=True)
+        list_response = self.client.get(reverse("routines_api:routine-list"))
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        routine_ids = [r["id"] for r in list_response.data["data"]]
+        self.assertNotIn(routine.id, routine_ids)
+
+    def test_e2e_create_routine_with_multiple_weeks_and_days(self) -> None:
+        """Test E2E: Crear rutina con múltiples semanas y días."""
+        # Step 1: Crear rutina
+        routine_data = {"name": "Rutina Multiweek"}
+        routine_response = self.client.post(
+            reverse("routines_api:routine-list"), routine_data, format="json"
+        )
+        self.assertEqual(routine_response.status_code, status.HTTP_201_CREATED)
+        routine_id = routine_response.data["data"]["id"]
+
+        # Step 2: Crear 2 semanas
+        week1_data = {"weekNumber": 1}
+        week1_response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": routine_id}),
+            week1_data,
+            format="json",
+        )
+        self.assertEqual(week1_response.status_code, status.HTTP_201_CREATED)
+        week1_id = week1_response.data["data"]["id"]
+
+        week2_data = {"weekNumber": 2}
+        week2_response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": routine_id}),
+            week2_data,
+            format="json",
+        )
+        self.assertEqual(week2_response.status_code, status.HTTP_201_CREATED)
+        week2_id = week2_response.data["data"]["id"]
+
+        # Step 3: Crear 3 días en semana 1
+        for day_number in range(1, 4):
+            day_data = {"dayNumber": day_number, "name": f"Día {day_number}"}
+            day_response = self.client.post(
+                reverse("routines_api:day-create", kwargs={"pk": routine_id, "weekId": week1_id}),
+                day_data,
+                format="json",
+            )
+            self.assertEqual(day_response.status_code, status.HTTP_201_CREATED)
+
+        # Step 4: Crear 2 días en semana 2
+        for day_number in range(1, 3):
+            day_data = {"dayNumber": day_number, "name": f"Día {day_number}"}
+            day_response = self.client.post(
+                reverse("routines_api:day-create", kwargs={"pk": routine_id, "weekId": week2_id}),
+                day_data,
+                format="json",
+            )
+            self.assertEqual(day_response.status_code, status.HTTP_201_CREATED)
+
+        # Step 5: Verificar estructura en base de datos
+        routine = Routine.objects.get(id=routine_id)
+        weeks = Week.objects.filter(routine=routine).order_by("week_number")
+        self.assertEqual(weeks.count(), 2)
+
+        week1 = weeks[0]
+        days_week1 = Day.objects.filter(week=week1)
+        self.assertEqual(days_week1.count(), 3)
+
+        week2 = weeks[1]
+        days_week2 = Day.objects.filter(week=week2)
+        self.assertEqual(days_week2.count(), 2)
+
+        # Step 6: Verificar GET detalle
+        detail_response = self.client.get(
+            reverse("routines_api:routine-detail", kwargs={"pk": routine_id}) + "?full=true"
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        detail_data = detail_response.data["data"]
+        self.assertEqual(len(detail_data["weeks"]), 2)
+        self.assertEqual(len(detail_data["weeks"][0]["days"]), 3)
+        self.assertEqual(len(detail_data["weeks"][1]["days"]), 2)

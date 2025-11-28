@@ -43,15 +43,15 @@ if TYPE_CHECKING:
 # Servicios para Routine
 def list_routines_service(user: User) -> List[Routine]:
     """
-    Servicio para listar rutinas del usuario autenticado.
+    Servicio para listar rutinas activas del usuario autenticado.
 
     Args:
         user: Usuario autenticado
 
     Returns:
-        Lista de rutinas del usuario
+        Lista de rutinas activas del usuario
     """
-    queryset = list_routines_repository(user=user)
+    queryset = list_routines_repository(user=user, filters={"isActive": True})
     return list(queryset)
 
 
