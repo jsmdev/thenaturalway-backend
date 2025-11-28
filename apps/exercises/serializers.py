@@ -41,7 +41,9 @@ class ExerciseSerializer(serializers.ModelSerializer):
     primaryMuscleGroup = serializers.CharField(
         source="primary_muscle_group", required=False, allow_null=True
     )
-    secondaryMuscleGroups = serializers.JSONField(required=False, allow_null=True)
+    secondaryMuscleGroups = serializers.JSONField(
+        source="secondary_muscle_groups", required=False, allow_null=True
+    )
     equipment = serializers.CharField(required=False, allow_null=True)
     difficulty = serializers.CharField(required=False, allow_null=True)
     instructions = serializers.CharField(required=False, allow_null=True)

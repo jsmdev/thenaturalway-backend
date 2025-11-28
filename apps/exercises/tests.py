@@ -4,10 +4,9 @@ from typing import TYPE_CHECKING
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from unittest.mock import patch, MagicMock
 
 from apps.exercises.models import Exercise
