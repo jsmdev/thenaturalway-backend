@@ -2751,6 +2751,42 @@ class WeekCreateAPIViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
 
+    def test_create_week_post_permission_denied(self) -> None:
+        """Test: POST crear semana en rutina de otro usuario."""
+        # Arrange
+        other_user = User.objects.create_user(
+            username="otheruser", email="other@example.com", password="testpass123"
+        )
+        other_routine = Routine.objects.create(name="Otra Rutina", created_by=other_user)
+        data = {"weekNumber": 1}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": other_routine.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("error", response.data)
+
+    def test_create_week_post_unauthenticated(self) -> None:
+        """Test: POST crear semana sin autenticación."""
+        # Arrange
+        self.client.force_authenticate(user=None)
+        data = {"weekNumber": 1}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": self.routine.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class DayCreateAPIViewTestCase(TestCase):
     """Tests para DayCreateAPIView."""
@@ -2782,6 +2818,43 @@ class DayCreateAPIViewTestCase(TestCase):
         self.assertIn("data", response.data)
         self.assertEqual(response.data["data"]["dayNumber"], 1)
         self.assertIn("message", response.data)
+
+    def test_create_day_post_permission_denied(self) -> None:
+        """Test: POST crear día en rutina de otro usuario."""
+        # Arrange
+        other_user = User.objects.create_user(
+            username="otheruser", email="other@example.com", password="testpass123"
+        )
+        other_routine = Routine.objects.create(name="Otra Rutina", created_by=other_user)
+        other_week = Week.objects.create(routine=other_routine, week_number=1)
+        data = {"dayNumber": 1, "name": "Día 1"}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:day-create", kwargs={"pk": other_routine.id, "weekId": other_week.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("error", response.data)
+
+    def test_create_day_post_unauthenticated(self) -> None:
+        """Test: POST crear día sin autenticación."""
+        # Arrange
+        self.client.force_authenticate(user=None)
+        data = {"dayNumber": 1, "name": "Día 1"}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:day-create", kwargs={"pk": self.routine.id, "weekId": self.week.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class BlockCreateAPIViewTestCase(TestCase):
@@ -2831,6 +2904,44 @@ class BlockCreateAPIViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("error", response.data)
+
+    def test_create_block_post_permission_denied(self) -> None:
+        """Test: POST crear bloque en rutina de otro usuario."""
+        # Arrange
+        other_user = User.objects.create_user(
+            username="otheruser", email="other@example.com", password="testpass123"
+        )
+        other_routine = Routine.objects.create(name="Otra Rutina", created_by=other_user)
+        other_week = Week.objects.create(routine=other_routine, week_number=1)
+        other_day = Day.objects.create(week=other_week, day_number=1)
+        data = {"name": "Bloque 1"}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:block-create", kwargs={"pk": other_routine.id, "dayId": other_day.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("error", response.data)
+
+    def test_create_block_post_unauthenticated(self) -> None:
+        """Test: POST crear bloque sin autenticación."""
+        # Arrange
+        self.client.force_authenticate(user=None)
+        data = {"name": "Bloque 1"}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 class RoutineExerciseCreateAPIViewTestCase(TestCase):
@@ -2891,6 +3002,45 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertIn("error", response.data)
+
+    def test_create_routine_exercise_post_permission_denied(self) -> None:
+        """Test: POST crear ejercicio en rutina de otro usuario."""
+        # Arrange
+        other_user = User.objects.create_user(
+            username="otheruser", email="other@example.com", password="testpass123"
+        )
+        other_routine = Routine.objects.create(name="Otra Rutina", created_by=other_user)
+        other_week = Week.objects.create(routine=other_routine, week_number=1)
+        other_day = Day.objects.create(week=other_week, day_number=1)
+        other_block = Block.objects.create(day=other_day, name="Bloque 1")
+        data = {"exerciseId": self.exercise.id, "sets": 3}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:routine-exercise-create", kwargs={"pk": other_routine.id, "blockId": other_block.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn("error", response.data)
+
+    def test_create_routine_exercise_post_unauthenticated(self) -> None:
+        """Test: POST crear ejercicio sin autenticación."""
+        # Arrange
+        self.client.force_authenticate(user=None)
+        data = {"exerciseId": self.exercise.id, "sets": 3}
+
+        # Act
+        response = self.client.post(
+            reverse("routines_api:routine-exercise-create", kwargs={"pk": self.routine.id, "blockId": self.block.id}),
+            data,
+            format="json"
+        )
+
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
 # ============================================================================
