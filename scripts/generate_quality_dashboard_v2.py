@@ -617,9 +617,10 @@ def generate_html(stats):
         <div class="sidebar-logo">
             📊 Quality Dashboard
         </div>
-        <div class="sidebar-subtitle">Análisis de Código</div>
+        <div class="sidebar-subtitle">The Natural Way Backend</div>
         
         <ul class="sidebar-nav">
+            <li><a href="#overview" class="nav-link"><span class="icon">📄</span> Resumen</a></li>
             <li><a href="#complexity" class="nav-link"><span class="icon">🔄</span> Complejidad</a></li>
             <li><a href="#maintainability" class="nav-link"><span class="icon">🔧</span> Mantenibilidad</a></li>
             <li><a href="#pylint" class="nav-link"><span class="icon">📝</span> Pylint</a></li>
@@ -635,6 +636,38 @@ def generate_html(stats):
             <div class="header">
                 <h1>📊 Dashboard de Calidad de Código</h1>
                 <div class="timestamp">Generado: {timestamp}</div>
+            </div>
+
+            <!-- Project Overview -->
+            <div id="overview" class="card full-width section" style="margin-bottom: 30px;">
+                <h2>📄 The Natural Way - Backend API</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                        <h3 style="font-size: 16px; margin-bottom: 12px; color: #374151;">🛠️ Stack Tecnológico</h3>
+                        <ul style="list-style: none; font-size: 14px; line-height: 2;">
+                            <li><strong>Python:</strong> 3.13</li>
+                            <li><strong>Framework:</strong> Django 5.1+</li>
+                            <li><strong>API:</strong> Django REST Framework</li>
+                            <li><strong>Auth:</strong> JWT (simplejwt)</li>
+                            <li><strong>Database:</strong> SQLite (dev) / PostgreSQL (prod)</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                        <h3 style="font-size: 16px; margin-bottom: 12px; color: #374151;">🎯 Descripción</h3>
+                        <p style="font-size: 14px; line-height: 1.8; color: #4b5563;">
+                            API REST para una aplicación de fitness tracking. Los usuarios pueden crear rutinas personalizadas de entrenamiento, registrar sesiones de ejercicio y monitorear su progreso a lo largo del tiempo.
+                        </p>
+                    </div>
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                        <h3 style="font-size: 16px; margin-bottom: 12px; color: #374151;">🏛️ Arquitectura</h3>
+                        <p style="font-size: 14px; line-height: 1.8; color: #4b5563;">
+                            <strong>Capas:</strong> View → Service → Repository<br>
+                            <strong>Apps:</strong> users, routines, exercises<br>
+                            <strong>Testing:</strong> factory-boy + coverage<br>
+                            <strong>Quality:</strong> Ruff + pre-commit hooks
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div class="grid">
@@ -891,7 +924,7 @@ def generate_html(stats):
                 details_html += f"<div style='padding: 5px; background: #f9fafb; margin-bottom: 3px; border-radius: 4px;'>{line}</div>"
             details_html += "</div>"
 
-        html += generate_metric_card("dead_code", info, stats_html, details_html)
+        html += generate_metric_card("dead-code", info, stats_html, details_html)
 
     html += """
             </div>
