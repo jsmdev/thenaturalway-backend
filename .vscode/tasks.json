@@ -434,5 +434,187 @@
       },
       "problemMatcher": []
     }
+  ,
+    {
+      "label": "Make: Run",
+      "type": "shell",
+      "command": "make",
+      "args": ["run"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Run (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["run-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Stop Docker",
+      "type": "shell",
+      "command": "make",
+      "args": ["stop-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Format",
+      "type": "shell",
+      "command": "make",
+      "args": ["format"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Make: Check",
+      "type": "shell",
+      "command": "make",
+      "args": ["check"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Make: Lint",
+      "type": "shell",
+      "command": "make",
+      "args": ["lint"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Make: Test",
+      "type": "shell",
+      "command": "make",
+      "args": ["test"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Test (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-docker"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Test App",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-app", "APP=${input:appName}"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Test App (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-app-docker", "APP=${input:appName}"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Coverage",
+      "type": "shell",
+      "command": "make",
+      "args": ["coverage"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Make: Migrations",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrations"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Migrations (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrations-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Migrate",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrate"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Migrate (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrate-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Shell",
+      "type": "shell",
+      "command": "make",
+      "args": ["shell"],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Make: Shell (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["shell-docker"],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Make: Django Check",
+      "type": "shell",
+      "command": "make",
+      "args": ["django-check"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Django Check (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["django-check-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Pre-commit Run",
+      "type": "shell",
+      "command": "make",
+      "args": ["pre-commit"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Make: Pre-commit Update",
+      "type": "shell",
+      "command": "make",
+      "args": ["pre-commit-update"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Secrets Scan",
+      "type": "shell",
+      "command": "make",
+      "args": ["secrets-scan"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Secrets Audit",
+      "type": "shell",
+      "command": "make",
+      "args": ["secrets-audit"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Clean",
+      "type": "shell",
+      "command": "make",
+      "args": ["clean"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    }
+  ]
+,
+  "inputs": [
+    {
+      "id": "appName",
+      "type": "promptString",
+      "description": "Nombre de la app Django (users, exercises, routines)",
+      "default": "users"
+    }
   ]
 }
