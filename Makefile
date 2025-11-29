@@ -26,19 +26,27 @@ check: ## Verificar código sin modificar
 	ruff check apps config
 	ruff format --check apps config
 
-test: ## Ejecutar tests
+test: ## Ejecutar tests (local)
 	@echo "🧪 Ejecutando tests..."
+	python manage.py test
+
+test-docker: ## Ejecutar tests (Docker)
+	@echo "🧪 Ejecutando tests con Docker..."
 	docker compose run --rm web python manage.py test
 
 test-app: ## Ejecutar tests de una app específica (uso: make test-app APP=routines)
 	@echo "🧪 Ejecutando tests de apps.$(APP)..."
+	python manage.py test apps.$(APP)
+
+test-app-docker: ## Ejecutar tests de una app (Docker)
+	@echo "🧪 Ejecutando tests de apps.$(APP) con Docker..."
 	docker compose run --rm web python manage.py test apps.$(APP)
 
-coverage: ## Generar reporte de cobertura
+coverage: ## Generar reporte de cobertura (local)
 	@echo "📊 Generando reporte de cobertura..."
-	docker compose run --rm web coverage run --source='apps' manage.py test
-	docker compose run --rm web coverage report
-	docker compose run --rm web coverage html
+	coverage run --source='apps' manage.py test
+	coverage report
+	coverage html
 	@echo "✅ Reporte HTML generado en htmlcov/index.html"
 
 pre-commit: ## Ejecutar pre-commit en todos los archivos
@@ -57,23 +65,38 @@ secrets-audit: ## Auditar secretos detectados
 	@echo "🔍 Auditando secretos..."
 	detect-secrets audit .secrets.baseline
 
-django-check: ## Ejecutar checks de Django
+django-check: ## Ejecutar checks de Django (local)
 	@echo "✅ Ejecutando Django system checks..."
+	python manage.py check
+
+django-check-docker: ## Ejecutar checks de Django (Docker)
+	@echo "✅ Ejecutando Django system checks con Docker..."
 	docker compose run --rm web python manage.py check
 
 django-upgrade: ## Actualizar sintaxis de Django
 	@echo "⬆️  Actualizando código Django..."
 	django-upgrade --target-version 5.1 apps/**/*.py config/**/*.py
 
-migrations: ## Crear migraciones
+migrations: ## Crear migraciones (local)
 	@echo "📝 Creando migraciones..."
+	python manage.py makemigrations
+
+migrations-docker: ## Crear migraciones (Docker)
+	@echo "📝 Creando migraciones con Docker..."
 	docker compose run --rm web python manage.py makemigrations
 
-migrate: ## Aplicar migraciones
+migrate: ## Aplicar migraciones (local)
 	@echo "🚀 Aplicando migraciones..."
+	python manage.py migrate
+
+migrate-docker: ## Aplicar migraciones (Docker)
+	@echo "🚀 Aplicando migraciones con Docker..."
 	docker compose run --rm web python manage.py migrate
 
-shell: ## Abrir shell de Django
+shell: ## Abrir shell de Django (local)
+	python manage.py shell
+
+shell-docker: ## Abrir shell de Django (Docker)
 	docker compose run --rm web python manage.py shell
 
 run: ## Arrancar servidor de desarrollo
@@ -82,7 +105,7 @@ run: ## Arrancar servidor de desarrollo
 
 run-docker: ## Arrancar servidor con Docker
 	@echo "🐳 Arrancando servidor con Docker..."
-	docker compose up
+	docker compose up -d
 
 stop-docker: ## Detener servidor Docker
 	@echo "🛑 Deteniendo servidor Docker..."

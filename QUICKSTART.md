@@ -255,11 +255,15 @@ make help
 
 | Acción | Local | Docker |
 |--------|-------|--------|
-| Arrancar servidor | `make run` | `make run-docker` o `docker compose up` |
-| Detener servidor | `Ctrl+C` | `make stop-docker` o `docker compose down` |
-| Ejecutar tests | `make test` o `python manage.py test` | `docker compose run --rm web python manage.py test` |
-| Migraciones | `python manage.py migrate` | `docker compose run --rm web python manage.py migrate` |
-| Shell | `python manage.py shell` | `docker compose run --rm web python manage.py shell` |
+| Arrancar servidor | `make run` | `make run-docker` |
+| Detener servidor | `Ctrl+C` | `make stop-docker` |
+| Ejecutar tests | `make test` | `make test-docker` |
+| Tests de una app | `make test-app APP=users` | `make test-app-docker APP=users` |
+| Cobertura | `make coverage` | (usar local) |
+| Crear migraciones | `make migrations` | `make migrations-docker` |
+| Aplicar migraciones | `make migrate` | `make migrate-docker` |
+| Django shell | `make shell` | `make shell-docker` |
+| Django check | `make django-check` | `make django-check-docker` |
 
 ### Workflow recomendado:
 
