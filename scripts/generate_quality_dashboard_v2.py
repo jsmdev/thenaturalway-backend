@@ -134,21 +134,22 @@ def get_maintainability_stats(data):
     count = 0
     details = []
 
+    # El JSON tiene formato: {archivo: {mi: ..., rank: ...}}
     for filename, file_data in data.items():
-        for item in file_data:
-            if isinstance(item, dict) and "mi" in item:
-                rank = item.get("rank", "A")
-                stats[rank] = stats.get(rank, 0) + 1
-                total_mi += item["mi"]
-                count += 1
+        # file_data es un dict, no una lista
+        if isinstance(file_data, dict) and "mi" in file_data:
+            rank = file_data.get("rank", "A")
+            stats[rank] = stats.get(rank, 0) + 1
+            total_mi += file_data["mi"]
+            count += 1
 
-                # Guardar archivos con baja mantenibilidad
-                if rank in ["B", "C"]:
-                    details.append({
-                        "file": filename,
-                        "mi": round(item["mi"], 2),
-                        "rank": rank,
-                    })
+            # Guardar archivos con baja mantenibilidad
+            if rank in ["B", "C"]:
+                details.append({
+                    "file": filename,
+                    "mi": round(file_data["mi"], 2),
+                    "rank": rank,
+                })
 
     avg_mi = total_mi / count if count > 0 else 0
 
