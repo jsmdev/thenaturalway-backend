@@ -657,6 +657,14 @@
       "command": "pylint",
       "args": ["apps/"],
       "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Quality: Generate HTML Dashboard",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-html"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
     }
   ]
 ,

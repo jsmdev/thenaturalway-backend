@@ -156,4 +156,10 @@ quality-summary: ## Resumen rápido de calidad
 	@echo "=== Código muerto ==="
 	@vulture apps/ --min-confidence 90 | head -20 || true
 
+quality-html: ## Generar dashboard HTML visual
+	@echo "🌐 Generando dashboard HTML..."
+	@python scripts/generate_quality_dashboard.py
+	@echo "✅ Dashboard listo en: quality-reports/dashboard.html"
+	@open quality-reports/dashboard.html || xdg-open quality-reports/dashboard.html || true
+
 .DEFAULT_GOAL := help
