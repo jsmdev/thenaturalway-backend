@@ -126,26 +126,20 @@ clean: ## Limpiar archivos temporales
 quality: ## Análisis exhaustivo de calidad de código
 	@echo "🔍 Análisis exhaustivo de calidad..."
 	@mkdir -p quality-reports
-	@echo "
-⚙️  Ejecutando Ruff..."
-	ruff check apps config --output-format=json > quality-reports/ruff.json || true
-	@echo "
-📊 Analizando complejidad (Radon)..."
-	radon cc apps/ -a -j > quality-reports/complexity.json
-	radon mi apps/ -j > quality-reports/maintainability.json
-	@echo "
-🔒 Análisis de seguridad (Bandit)..."
-	bandit -r apps/ -f json -o quality-reports/security.json || true
-	@echo "
-🔍 Linting exhaustivo (Pylint)..."
-	pylint apps/ --output-format=json > quality-reports/pylint.json || true
-	@echo "
-💀 Detectando código muerto (Vulture)..."
-	vulture apps/ --min-confidence 80 > quality-reports/dead-code.txt || true
-	@echo "
-✅ Análisis completo! Reportes en: quality-reports/"
+	@echo "⚙️  Ejecutando Ruff..."
+	@ruff check apps config --output-format=json > quality-reports/ruff.json || true
+	@echo "📊 Analizando complejidad (Radon)..."
+	@radon cc apps/ -a -j > quality-reports/complexity.json
+	@radon mi apps/ -j > quality-reports/maintainability.json
+	@echo "🔒 Análisis de seguridad (Bandit)..."
+	@bandit -r apps/ -f json -o quality-reports/security.json || true
+	@echo "🔍 Linting exhaustivo (Pylint)..."
+	@pylint apps/ --output-format=json > quality-reports/pylint.json || true
+	@echo "💀 Detectando código muerto (Vulture)..."
+	@vulture apps/ --min-confidence 80 > quality-reports/dead-code.txt || true
+	@echo "✅ Análisis completo! Reportes en: quality-reports/"
 	@echo "   - ruff.json: Problemas de estilo y bugs"
-	@echo "   - complexity.json: Complejidad ciclomatíca"
+	@echo "   - complexity.json: Complejidad ciclomática"
 	@echo "   - maintainability.json: Índice de mantenibilidad"
 	@echo "   - security.json: Vulnerabilidades de seguridad"
 	@echo "   - pylint.json: Linting exhaustivo"
@@ -153,17 +147,13 @@ quality: ## Análisis exhaustivo de calidad de código
 
 quality-summary: ## Resumen rápido de calidad
 	@echo "📊 Resumen de calidad de código"
-	@echo "
-=== Complejidad ==="
-	radon cc apps/ -a -s
-	@echo "
-=== Mantenibilidad ==="
-	radon mi apps/ -s
-	@echo "
-=== Seguridad (top 10) ==="
-	bandit -r apps/ -ll | head -20 || true
-	@echo "
-=== Código muerto ==="
-	vulture apps/ --min-confidence 90 | head -20 || true
+	@echo "=== Complejidad ==="
+	@radon cc apps/ -a -s
+	@echo "=== Mantenibilidad ==="
+	@radon mi apps/ -s
+	@echo "=== Seguridad (top 10) ==="
+	@bandit -r apps/ -ll | head -20 || true
+	@echo "=== Código muerto ==="
+	@vulture apps/ --min-confidence 90 | head -20 || true
 
 .DEFAULT_GOAL := help
