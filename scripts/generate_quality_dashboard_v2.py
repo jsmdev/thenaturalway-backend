@@ -254,10 +254,10 @@ def get_dead_code_stats(filepath):
         return None
 
 
-def generate_metric_card(key, info, stats, details_html=""):
+def generate_metric_card(section_id, info, stats, details_html=""):
     """Genera una tarjeta de métrica con explicación."""
     return f"""
-        <div class="card full-width">
+        <div id="{section_id}" class="card full-width section">
             <h2>{info['icon']} {info['title']}</h2>
             <div class="metric-description">
                 <p><strong>¿Qué mide?</strong> {info['description']}</p>
@@ -300,9 +300,75 @@ def generate_html(stats):
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #f3f4f6;
-            padding: 20px;
             color: #1f2937;
             line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }}
+        html {{
+            scroll-behavior: smooth;
+        }}
+        .sidebar {{
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            padding: 30px 20px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }}
+        .sidebar-logo {{
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }}
+        .sidebar-subtitle {{
+            color: #9ca3af;
+            font-size: 12px;
+            margin-bottom: 30px;
+        }}
+        .sidebar-nav {{
+            list-style: none;
+        }}
+        .sidebar-nav li {{
+            margin-bottom: 8px;
+        }}
+        .sidebar-nav a {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #d1d5db;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }}
+        .sidebar-nav a:hover {{
+            background: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(4px);
+        }}
+        .sidebar-nav a.active {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }}
+        .sidebar-nav .icon {{
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }}
+        .main-content {{
+            margin-left: 260px;
+            padding: 20px;
         }}
         .container {{
             max-width: 1400px;
@@ -513,16 +579,65 @@ def generate_html(stats):
             font-family: 'Courier New', monospace;
             font-size: 13px;
         }}
+        .section {{
+            scroll-margin-top: 20px;
+        }}
     </style>
+    <script>
+        // Activar el link de navegación correspondiente al hacer scroll
+        document.addEventListener('DOMContentLoaded', function() {{
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            // Resaltar sección activa en el menú
+            const observer = new IntersectionObserver((entries) => {{
+                entries.forEach(entry => {{
+                    if (entry.isIntersecting) {{
+                        const id = entry.target.getAttribute('id');
+                        navLinks.forEach(link => {{
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${{id}}`) {{
+                                link.classList.add('active');
+                            }}
+                        }});
+                    }}
+                }});
+            }}, {{
+                threshold: 0.3,
+                rootMargin: '-100px 0px -50% 0px'
+            }});
+            
+            sections.forEach(section => observer.observe(section));
+        }});
+    </script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Dashboard de Calidad de Código</h1>
-            <div class="timestamp">Generado: {timestamp}</div>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            📊 Quality Dashboard
         </div>
+        <div class="sidebar-subtitle">Análisis de Código</div>
+        
+        <ul class="sidebar-nav">
+            <li><a href="#complexity" class="nav-link"><span class="icon">🔄</span> Complejidad</a></li>
+            <li><a href="#maintainability" class="nav-link"><span class="icon">🔧</span> Mantenibilidad</a></li>
+            <li><a href="#pylint" class="nav-link"><span class="icon">📝</span> Pylint</a></li>
+            <li><a href="#ruff" class="nav-link"><span class="icon">⚡</span> Ruff</a></li>
+            <li><a href="#security" class="nav-link"><span class="icon">🔒</span> Seguridad</a></li>
+            <li><a href="#dead-code" class="nav-link"><span class="icon">💀</span> Código Muerto</a></li>
+        </ul>
+    </div>
 
-        <div class="grid">
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>📊 Dashboard de Calidad de Código</h1>
+                <div class="timestamp">Generado: {timestamp}</div>
+            </div>
+
+            <div class="grid">
 """
 
     # 1. Complejidad Ciclomática
@@ -779,6 +894,8 @@ def generate_html(stats):
         html += generate_metric_card("dead_code", info, stats_html, details_html)
 
     html += """
+            </div>
+        </div>
     </div>
 </body>
 </html>
