@@ -405,10 +405,10 @@ def generate_html(stats):
 
 def main():
     """Función principal."""
-    reports_dir = Path("quality-reports")
+    reports_dir = Path("docs/quality-reports/code-analysis")
 
     if not reports_dir.exists():
-        print("❌ No se encontró el directorio quality-reports/")
+        print("❌ No se encontró el directorio docs/quality-reports/code-analysis/")
         print("   Ejecuta primero: make quality")
         return
 

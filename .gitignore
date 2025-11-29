@@ -104,7 +104,4 @@ ENV/
 /logs/
 
 # Quality reports
-quality-reports/
-*.json
-!package.json
-!tsconfig.json
+docs/quality-reports/

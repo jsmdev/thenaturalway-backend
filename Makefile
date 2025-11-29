@@ -46,8 +46,10 @@ coverage: ## Generar reporte de cobertura (local)
 	@echo "📊 Generando reporte de cobertura..."
 	coverage run --source='apps' manage.py test
 	coverage report
-	coverage html
-	@echo "✅ Reporte HTML generado en htmlcov/index.html"
+	@mkdir -p docs/quality-reports/coverage
+	coverage html -d docs/quality-reports/coverage
+	@echo "✅ Reporte HTML generado en docs/quality-reports/coverage/index.html"
+	@open docs/quality-reports/coverage/index.html || xdg-open docs/quality-reports/coverage/index.html || true
 
 pre-commit: ## Ejecutar pre-commit en todos los archivos
 	@echo "🔨 Ejecutando pre-commit hooks..."
@@ -118,26 +120,25 @@ clean: ## Limpiar archivos temporales
 	find . -type f -name "*.pyo" -delete
 	find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "htmlcov" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name ".coverage" -delete
-	find . -type d -name "quality-reports" -exec rm -rf {} + 2>/dev/null || true
+	rm -rf docs/quality-reports
 	@echo "✅ Limpieza completada"
 
 quality: ## Análisis exhaustivo de calidad de código
 	@echo "🔍 Análisis exhaustivo de calidad..."
-	@mkdir -p quality-reports
+	@mkdir -p docs/quality-reports/code-analysis
 	@echo "⚙️  Ejecutando Ruff..."
-	@ruff check apps config --output-format=json > quality-reports/ruff.json || true
+	@ruff check apps config --output-format=json > docs/quality-reports/code-analysis/ruff.json || true
 	@echo "📊 Analizando complejidad (Radon)..."
-	@radon cc apps/ -a -j > quality-reports/complexity.json
-	@radon mi apps/ -j > quality-reports/maintainability.json
+	@radon cc apps/ -a -j > docs/quality-reports/code-analysis/complexity.json
+	@radon mi apps/ -j > docs/quality-reports/code-analysis/maintainability.json
 	@echo "🔒 Análisis de seguridad (Bandit)..."
-	@bandit -r apps/ -f json -o quality-reports/security.json || true
+	@bandit -r apps/ -f json -o docs/quality-reports/code-analysis/security.json || true
 	@echo "🔍 Linting exhaustivo (Pylint)..."
-	@pylint apps/ --output-format=json > quality-reports/pylint.json || true
+	@pylint apps/ --output-format=json > docs/quality-reports/code-analysis/pylint.json || true
 	@echo "💀 Detectando código muerto (Vulture)..."
-	@vulture apps/ --min-confidence 80 > quality-reports/dead-code.txt || true
-	@echo "✅ Análisis completo! Reportes en: quality-reports/"
+	@vulture apps/ --min-confidence 80 > docs/quality-reports/code-analysis/dead-code.txt || true
+	@echo "✅ Análisis completo! Reportes en: docs/quality-reports/code-analysis/"
 	@echo "   - ruff.json: Problemas de estilo y bugs"
 	@echo "   - complexity.json: Complejidad ciclomática"
 	@echo "   - maintainability.json: Índice de mantenibilidad"
@@ -159,7 +160,7 @@ quality-summary: ## Resumen rápido de calidad
 quality-html: ## Generar dashboard HTML visual
 	@echo "🌐 Generando dashboard HTML..."
 	@python scripts/generate_quality_dashboard.py
-	@echo "✅ Dashboard listo en: quality-reports/dashboard.html"
-	@open quality-reports/dashboard.html || xdg-open quality-reports/dashboard.html || true
+	@echo "✅ Dashboard listo en: docs/quality-reports/code-analysis/dashboard.html"
+	@open docs/quality-reports/code-analysis/dashboard.html || xdg-open docs/quality-reports/code-analysis/dashboard.html || true
 
 .DEFAULT_GOAL := help
