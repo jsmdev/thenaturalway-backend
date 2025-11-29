@@ -101,4 +101,7 @@ ENV/
 /media/
 /static/
 /staticfiles/
-/logs/ 
+/logs/
+
+# Quality reports
+docs/quality-reports/

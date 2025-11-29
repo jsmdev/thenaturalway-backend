@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Añadir Bloque - The Natural Way{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Añadir Bloque a {{ day_name|default:"Día" }}</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="field-errors">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+            {{ form.order }}
+            {% if form.order.errors %}
+                <div class="field-errors">{{ form.order.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div class="field-errors">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <a href="{% url 'routines:detail' pk=routine_id %}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Crear Bloque</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

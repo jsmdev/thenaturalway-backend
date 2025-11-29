@@ -1,0 +1,695 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ========================================
+    // SERVIDOR
+    // ========================================
+    {
+      "label": "Django: Run Server",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "runserver"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^Performing system checks",
+          "endsPattern": "^Quit the server with"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Django: Run Server (Docker)",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "up"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Django: Stop Server (Docker)",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "down"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+
+    // ========================================
+    // TESTS
+    // ========================================
+    {
+      "label": "Django: Run All Tests",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "test"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Django: Run All Tests (Verbose)",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "test", "--verbosity=2"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Django: Run All Tests (Docker)",
+      "type": "shell",
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "web", "python", "manage.py", "test"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Django: Run Users Tests",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "test", "apps.users"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Django: Run Exercises Tests",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "test", "apps.exercises"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Django: Run Routines Tests",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "test", "apps.routines"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Django: Run Tests with Coverage",
+      "type": "shell",
+      "command": "coverage",
+      "args": ["run", "--source=apps", "manage.py", "test"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    },
+    {
+      "label": "Django: Coverage Report",
+      "type": "shell",
+      "command": "coverage",
+      "args": ["report"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Django: Coverage HTML Report",
+      "type": "shell",
+      "command": "coverage",
+      "args": ["html"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // LINTING Y FORMATTING
+    // ========================================
+    {
+      "label": "Ruff: Format Code",
+      "type": "shell",
+      "command": "ruff",
+      "args": ["format", "."],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ruff: Lint Code",
+      "type": "shell",
+      "command": "ruff",
+      "args": ["check", "."],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "ruff",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(\\w+)\\s+(.+)\\s+\\[(.+)\\]$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5,
+          "code": 6
+        }
+      }
+    },
+    {
+      "label": "Ruff: Lint and Fix",
+      "type": "shell",
+      "command": "ruff",
+      "args": ["check", "--fix", "."],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ruff: Format and Lint",
+      "type": "shell",
+      "dependsOn": ["Ruff: Format Code", "Ruff: Lint and Fix"],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Pre-commit: Run All Hooks",
+      "type": "shell",
+      "command": "pre-commit",
+      "args": ["run", "--all-files"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // DJANGO MIGRATIONS
+    // ========================================
+    {
+      "label": "Django: Make Migrations",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "makemigrations"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Django: Migrate",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "migrate"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Django: Show Migrations",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "showmigrations"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // DJANGO MANAGEMENT
+    // ========================================
+    {
+      "label": "Django: Create Superuser",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "createsuperuser"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Django: Shell",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "shell"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Django: Check",
+      "type": "shell",
+      "command": "python",
+      "args": ["manage.py", "check"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // UTILIDADES
+    // ========================================
+    {
+      "label": "Clean: Python Cache",
+      "type": "shell",
+      "command": "find",
+      "args": [
+        ".",
+        "-type",
+        "d",
+        "-name",
+        "__pycache__",
+        "-exec",
+        "rm",
+        "-rf",
+        "{}",
+        "+"
+      ],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install: Production Dependencies",
+      "type": "shell",
+      "command": "pip",
+      "args": ["install", "-r", "requirements.txt"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install: Development Dependencies",
+      "type": "shell",
+      "command": "pip",
+      "args": ["install", "-r", "requirements-dev.txt"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Install: All Dependencies",
+      "type": "shell",
+      "dependsOn": [
+        "Install: Production Dependencies",
+        "Install: Development Dependencies"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Pre-commit: Install Hooks",
+      "type": "shell",
+      "command": "pre-commit",
+      "args": ["install"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+
+    // ========================================
+    // TAREAS COMPUESTAS
+    // ========================================
+    {
+      "label": "Setup: Initial Project Setup",
+      "type": "shell",
+      "dependsOn": [
+        "Install: All Dependencies",
+        "Pre-commit: Install Hooks",
+        "Django: Migrate"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Format, Lint and Test",
+      "type": "shell",
+      "dependsOn": [
+        "Ruff: Format and Lint",
+        "Django: Run All Tests"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    }
+  ,
+    {
+      "label": "Make: Run",
+      "type": "shell",
+      "command": "make",
+      "args": ["run"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Run (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["run-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Stop Docker",
+      "type": "shell",
+      "command": "make",
+      "args": ["stop-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Format",
+      "type": "shell",
+      "command": "make",
+      "args": ["format"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Make: Check",
+      "type": "shell",
+      "command": "make",
+      "args": ["check"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Make: Lint",
+      "type": "shell",
+      "command": "make",
+      "args": ["lint"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Make: Test",
+      "type": "shell",
+      "command": "make",
+      "args": ["test"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Test (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-docker"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Test App",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-app", "APP=${input:appName}"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Test App (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["test-app-docker", "APP=${input:appName}"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "group": { "kind": "test" }
+    },
+    {
+      "label": "Make: Coverage",
+      "type": "shell",
+      "command": "make",
+      "args": ["coverage"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Make: Migrations",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrations"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Migrations (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrations-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Migrate",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrate"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Migrate (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["migrate-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Shell",
+      "type": "shell",
+      "command": "make",
+      "args": ["shell"],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Make: Shell (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["shell-docker"],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Make: Django Check",
+      "type": "shell",
+      "command": "make",
+      "args": ["django-check"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Django Check (Docker)",
+      "type": "shell",
+      "command": "make",
+      "args": ["django-check-docker"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Pre-commit Run",
+      "type": "shell",
+      "command": "make",
+      "args": ["pre-commit"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Make: Pre-commit Update",
+      "type": "shell",
+      "command": "make",
+      "args": ["pre-commit-update"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Secrets Scan",
+      "type": "shell",
+      "command": "make",
+      "args": ["secrets-scan"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Secrets Audit",
+      "type": "shell",
+      "command": "make",
+      "args": ["secrets-audit"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Make: Clean",
+      "type": "shell",
+      "command": "make",
+      "args": ["clean"],
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Quality: Full Analysis",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Summary",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-summary"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Complexity Analysis",
+      "type": "shell",
+      "command": "radon",
+      "args": ["cc", "apps/", "-a", "-s"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Quality: Maintainability Index",
+      "type": "shell",
+      "command": "radon",
+      "args": ["mi", "apps/", "-s"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Quality: Security Scan",
+      "type": "shell",
+      "command": "bandit",
+      "args": ["-r", "apps/", "-ll"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Quality: Dead Code Detection",
+      "type": "shell",
+      "command": "vulture",
+      "args": ["apps/", "--min-confidence", "80"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Quality: Pylint Full",
+      "type": "shell",
+      "command": "pylint",
+      "args": ["apps/"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Quality: Generate HTML Dashboard",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-html"],
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Quick Summary (Terminal)",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-summary"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Full Analysis + Dashboard",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-dashboard"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    }
+  ]
+,
+  "inputs": [
+    {
+      "id": "appName",
+      "type": "promptString",
+      "description": "Nombre de la app Django (users, exercises, routines)",
+      "default": "users"
+    }
+  ]
+}

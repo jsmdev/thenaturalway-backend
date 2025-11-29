@@ -1,0 +1,50 @@
+# EditorConfig: https://EditorConfig.org
+# Configuración de estilo para todos los editores
+
+root = true
+
+# Configuración por defecto para todos los archivos
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+# Python
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# Django templates
+[*.html]
+indent_size = 2
+
+# JavaScript/TypeScript
+[*.{js,ts,jsx,tsx}]
+indent_size = 2
+
+# JSON
+[*.json]
+indent_size = 2
+
+# YAML
+[*.{yml,yaml}]
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Makefile
+[Makefile]
+indent_style = tab
+
+# Docker
+[Dockerfile*]
+indent_size = 2
+
+# Shell scripts
+[*.sh]
+indent_size = 2

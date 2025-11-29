@@ -1,0 +1,67 @@
+# Pre-commit hooks configuration
+# https://pre-commit.com/
+
+repos:
+  # Hooks generales de pre-commit
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Eliminar espacios en blanco al final
+      - id: end-of-file-fixer
+        name: Agregar línea en blanco al final de archivo
+      - id: check-yaml
+        name: Verificar sintaxis YAML
+      - id: check-json
+        name: Verificar sintaxis JSON
+      - id: check-toml
+        name: Verificar sintaxis TOML
+      - id: check-added-large-files
+        name: Prevenir archivos grandes
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+        name: Verificar conflictos de merge
+      - id: check-case-conflict
+        name: Verificar conflictos de nombre
+      - id: mixed-line-ending
+        name: Normalizar finales de línea
+        args: ['--fix=lf']
+      - id: debug-statements
+        name: Detectar imports de debugger
+
+  # Ruff - Linter y formatter ultra-rápido (reemplaza Black, isort, flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      # Linter
+      - id: ruff
+        name: Ruff linter
+        args: [--fix]
+        types_or: [python, pyi, jupyter]
+      # Formatter
+      - id: ruff-format
+        name: Ruff formatter
+        types_or: [python, pyi, jupyter]
+
+  # Verificaciones de seguridad
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        name: Detectar secretos en código
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # Verificación específica de Django
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.16.0
+    hooks:
+      - id: django-upgrade
+        name: Actualizar código Django
+        args: [--target-version, "5.1"]
+
+# Configuración global
+ci:
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

@@ -158,19 +158,27 @@ class ExerciseCreateView(View):
             return render(request, "exercises/form.html", {"form": form, "action": "create"})
 
         try:
-            # Preparar datos para el servicio
-            validated_data = {
-                "name": form.cleaned_data["name"],
-                "description": form.cleaned_data.get("description") or None,
-                "movementType": form.cleaned_data.get("movement_type") or None,
-                "primaryMuscleGroup": form.cleaned_data.get("primary_muscle_group") or None,
-                "equipment": form.cleaned_data.get("equipment") or None,
-                "difficulty": form.cleaned_data.get("difficulty") or None,
-                "instructions": form.cleaned_data.get("instructions") or None,
-                "imageUrl": form.cleaned_data.get("image_url") or None,
-                "videoUrl": form.cleaned_data.get("video_url") or None,
-                "isActive": form.cleaned_data.get("is_active", True),
-            }
+            # Preparar datos para el servicio (solo incluir campos con valores)
+            validated_data = {"name": form.cleaned_data["name"]}
+            
+            if form.cleaned_data.get("description"):
+                validated_data["description"] = form.cleaned_data["description"]
+            if form.cleaned_data.get("movement_type"):
+                validated_data["movementType"] = form.cleaned_data["movement_type"]
+            if form.cleaned_data.get("primary_muscle_group"):
+                validated_data["primaryMuscleGroup"] = form.cleaned_data["primary_muscle_group"]
+            if form.cleaned_data.get("equipment"):
+                validated_data["equipment"] = form.cleaned_data["equipment"]
+            if form.cleaned_data.get("difficulty"):
+                validated_data["difficulty"] = form.cleaned_data["difficulty"]
+            if form.cleaned_data.get("instructions"):
+                validated_data["instructions"] = form.cleaned_data["instructions"]
+            if form.cleaned_data.get("image_url"):
+                validated_data["imageUrl"] = form.cleaned_data["image_url"]
+            if form.cleaned_data.get("video_url"):
+                validated_data["videoUrl"] = form.cleaned_data["video_url"]
+            
+            validated_data["isActive"] = form.cleaned_data.get("is_active", True)
 
             # Crear ejercicio usando el servicio
             exercise = create_exercise_service(validated_data=validated_data, user=request.user)

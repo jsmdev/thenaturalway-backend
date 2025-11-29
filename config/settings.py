@@ -32,7 +32,7 @@ if raw_allowed_hosts:
         host.strip() for host in raw_allowed_hosts.split(",") if host.strip()
     ]
 else:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0"]
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "testserver", "*"]
 
 
 # Application definition
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'apps.users',
     'apps.exercises',
+    'apps.routines',
 ]
 
 # Custom User Model

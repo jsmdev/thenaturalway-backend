@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Añadir Ejercicio - The Natural Way{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 800px;">
+    <h1>Añadir Ejercicio a {{ block_name|default:"Bloque" }}</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="{{ form.exercise.id_for_label }}">{{ form.exercise.label }}</label>
+            {{ form.exercise }}
+            {% if form.exercise.errors %}
+                <div class="field-errors">{{ form.exercise.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                {{ form.order }}
+                {% if form.order.errors %}
+                    <div class="field-errors">{{ form.order.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.sets.id_for_label }}">{{ form.sets.label }}</label>
+                {{ form.sets }}
+                {% if form.sets.errors %}
+                    <div class="field-errors">{{ form.sets.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.repetitions.id_for_label }}">{{ form.repetitions.label }}</label>
+                {{ form.repetitions }}
+                {% if form.repetitions.errors %}
+                    <div class="field-errors">{{ form.repetitions.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.weight.id_for_label }}">{{ form.weight.label }}</label>
+                {{ form.weight }}
+                {% if form.weight.errors %}
+                    <div class="field-errors">{{ form.weight.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.weight_percentage.id_for_label }}">{{ form.weight_percentage.label }}</label>
+                {{ form.weight_percentage }}
+                {% if form.weight_percentage.errors %}
+                    <div class="field-errors">{{ form.weight_percentage.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.tempo.id_for_label }}">{{ form.tempo.label }}</label>
+                {{ form.tempo }}
+                {% if form.tempo.errors %}
+                    <div class="field-errors">{{ form.tempo.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.rest_seconds.id_for_label }}">{{ form.rest_seconds.label }}</label>
+                {{ form.rest_seconds }}
+                {% if form.rest_seconds.errors %}
+                    <div class="field-errors">{{ form.rest_seconds.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div class="field-errors">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+            <a href="{% url 'routines:detail' pk=routine_id %}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Añadir Ejercicio</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

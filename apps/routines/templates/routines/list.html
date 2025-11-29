@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Rutinas - The Natural Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    .routines-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .routines-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    .routine-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .routine-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .routine-card h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    .routine-card .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+    .routine-card .meta span {
+        background: #f8f9fa;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+    }
+    .routine-card .description {
+        color: #666;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .routine-card .actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .badge-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    .badge-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="routines-header">
+    <div>
+        <h1>Mis Rutinas</h1>
+        <p>Gestiona tus rutinas de entrenamiento personalizadas</p>
+    </div>
+    <a href="{% url 'routines:create' %}" class="btn btn-primary">Crear Rutina</a>
+</div>
+
+{% if routines %}
+    <div class="routines-grid">
+        {% for routine in routines %}
+        <div class="routine-card">
+            <h3>{{ routine.name }}</h3>
+            <div class="meta">
+                {% if routine.durationWeeks %}
+                    <span><strong>Semanas:</strong> {{ routine.durationWeeks }}</span>
+                {% endif %}
+                {% if routine.durationMonths %}
+                    <span><strong>Meses:</strong> {{ routine.durationMonths }}</span>
+                {% endif %}
+                <span class="badge {% if routine.isActive %}badge-active{% else %}badge-inactive{% endif %}">
+                    {% if routine.isActive %}Activa{% else %}Inactiva{% endif %}
+                </span>
+            </div>
+            {% if routine.description %}
+                <div class="description">{{ routine.description|truncatewords:20 }}</div>
+            {% endif %}
+            <div class="actions">
+                <a href="{% url 'routines:detail' pk=routine.id %}" class="btn btn-primary" style="flex: 1;">Ver Detalle</a>
+                {% if routine.isActive %}
+                <a href="{% url 'routines:update' pk=routine.id %}" class="btn btn-secondary">Editar</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h3>No tienes rutinas creadas</h3>
+        <p>Crea tu primera rutina de entrenamiento personalizada.</p>
+        <a href="{% url 'routines:create' %}" class="btn btn-primary">Crear Primera Rutina</a>
+    </div>
+{% endif %}
+{% endblock %}
+
