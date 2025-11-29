@@ -10,6 +10,33 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Common Commands
 
+### Development Setup
+```bash
+# Install development dependencies
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+pre-commit install
+
+# View available commands
+make help
+```
+
+### Code Quality
+```bash
+# Format code automatically (Ruff)
+make format
+
+# Check code without modifying
+make check
+
+# Run linter
+make lint
+
+# Run pre-commit hooks manually
+make pre-commit
+```
+
 ### Development Server
 ```bash
 # Run migrations and start development server
@@ -23,10 +50,10 @@ docker compose up
 ### Database Operations
 ```bash
 # Create migrations after model changes
-python manage.py makemigrations
+make migrations
 
 # Apply migrations
-python manage.py migrate
+make migrate
 
 # Create superuser
 python manage.py createsuperuser
@@ -35,19 +62,19 @@ python manage.py createsuperuser
 ### Testing
 ```bash
 # Run all tests
-python manage.py test
+make test
 
 # Run tests for specific app
-python manage.py test apps.users
+make test-app APP=users
 
-# Run specific test class
-python manage.py test apps.users.tests.UserServiceTestCase
+# Generate coverage report
+make coverage
 ```
 
 ### Django Shell
 ```bash
 # Access Django shell for debugging
-python manage.py shell
+make shell
 ```
 
 ## Architecture
@@ -114,7 +141,21 @@ Each Django app in `apps/` follows this structure:
 
 ## Code Style and Conventions
 
+**Important**: Code style is enforced automatically by Ruff (linter/formatter) and pre-commit hooks.
+
+### Automated Tools
+
+- **Ruff**: Linter and formatter (replaces Black, isort, flake8, pylint)
+- **Pre-commit hooks**: Run automatically before each commit
+- **Configuration**: `pyproject.toml` and `.pre-commit-config.yaml`
+- **EditorConfig**: `.editorconfig` for cross-editor consistency
+
+**For detailed information** about these tools, how they work, and best practices, see `docs/LINTING_AND_PRECOMMIT_GUIDE.md`.
+
 ### Import Organization
+
+Imports are automatically ordered by Ruff (isort):
+
 ```python
 from __future__ import annotations
 
@@ -124,9 +165,15 @@ from typing import TYPE_CHECKING
 import os
 from datetime import datetime
 
-# Third-party imports
+# Django imports
+from django.db import models
+
+# Django REST Framework imports
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+# Third-party imports
+import requests
 
 # Local imports
 from apps.users.services import register_user_service
@@ -136,7 +183,15 @@ if TYPE_CHECKING:
     from rest_framework.request import Request
 ```
 
+### Style Guidelines
+
+- **Line length**: 100 characters (enforced by Ruff)
+- **Indentation**: 4 spaces for Python
+- **Quotes**: Double quotes for strings
+- **Line endings**: LF (Unix-style)
+
 ### Naming Conventions
+
 - Functions/methods: `snake_case` with verb prefix (`get_user`, `create_order`)
 - Classes: `PascalCase` (`UserService`, `PaymentProcessor`)
 - Constants: `UPPER_SNAKE_CASE` 
@@ -222,6 +277,37 @@ This project follows the AIDD methodology defined in `.ai/AIDD.metodology.md`:
 - Use `IsAuthenticated` for protected endpoints
 - Create custom permission classes in `apps/*/permissions.py` as needed
 
+## Development Tools
+
+### Linting and Formatting
+
+- **Ruff**: Ultra-fast linter and formatter
+  - Configuration: `pyproject.toml`
+  - Run: `make format` or `make check`
+  - Replaces: Black, isort, flake8, pylint, pyupgrade
+
+### Pre-commit Hooks
+
+- Automatically run before each commit
+- Configuration: `.pre-commit-config.yaml`
+- Install: `pre-commit install`
+- Run manually: `make pre-commit`
+
+### Testing Tools
+
+- Django TestCase
+- factory-boy for test data
+- coverage for test coverage reports
+- See: `.ai/craftsman/c-1.test.instructions.v2.md`
+
+### Documentation
+
+- **DEVELOPMENT.md**: Complete development guide
+- **docs/LINTING_AND_PRECOMMIT_GUIDE.md**: Comprehensive guide to linting and pre-commit tools
+- **Makefile**: List of available commands (`make help`)
+- **pyproject.toml**: Tool configurations
+- **.editorconfig**: Editor consistency
+
 ## Important Notes
 
 - Custom user model is `apps.users.models.User` (not Django's default)
@@ -230,3 +316,4 @@ This project follows the AIDD methodology defined in `.ai/AIDD.metodology.md`:
 - Database currently uses SQLite; PostgreSQL support configured but commented in docker-compose
 - All API endpoints are under `/api/` prefix
 - The project uses absolute imports for app modules
+- **Code style is automatically enforced** by Ruff and pre-commit hooks

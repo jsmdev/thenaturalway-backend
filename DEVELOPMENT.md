@@ -35,6 +35,8 @@ detect-secrets audit .secrets.baseline
 
 ## Herramientas de Desarrollo
 
+**Para información detallada** sobre estas herramientas, su funcionamiento, ventajas/desventajas, y mejores prácticas, consulta: **[docs/LINTING_AND_PRECOMMIT_GUIDE.md](docs/LINTING_AND_PRECOMMIT_GUIDE.md)**
+
 ### Ruff (Linter y Formatter)
 
 Ruff es un linter y formatter ultra-rápido para Python que reemplaza a:
