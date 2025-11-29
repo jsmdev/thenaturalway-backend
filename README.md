@@ -4,6 +4,8 @@ API backend para aplicación de fitness tracking desarrollada con Django REST Fr
 
 ## 🚀 Quick Start
 
+**🎯 ¿Necesitas ayuda rápida?** Ve a **[QUICKSTART.md](QUICKSTART.md)** - Guía concisa con comandos exactos para cada situación.
+
 ### 1. Clonar y Preparar Entorno
 
 ```bash
