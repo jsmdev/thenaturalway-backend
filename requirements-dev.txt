@@ -30,4 +30,3 @@ radon>=6.0.1         # Métricas de complejidad y mantenibilidad
 bandit>=1.7.5        # Análisis de seguridad detallado
 pylint>=3.0.3        # Linter exhaustivo
 vulture>=2.11        # Detecta código muerto
-xenocanto>=0.1.0     # Análisis de dependencias (opcional)
