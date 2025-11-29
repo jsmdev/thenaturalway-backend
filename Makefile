@@ -76,6 +76,18 @@ migrate: ## Aplicar migraciones
 shell: ## Abrir shell de Django
 	docker compose run --rm web python manage.py shell
 
+run: ## Arrancar servidor de desarrollo
+	@echo "🚀 Arrancando servidor de desarrollo..."
+	python manage.py runserver
+
+run-docker: ## Arrancar servidor con Docker
+	@echo "🐳 Arrancando servidor con Docker..."
+	docker compose up
+
+stop-docker: ## Detener servidor Docker
+	@echo "🛑 Deteniendo servidor Docker..."
+	docker compose down
+
 clean: ## Limpiar archivos temporales
 	@echo "🧹 Limpiando archivos temporales..."
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
