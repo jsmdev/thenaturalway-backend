@@ -665,6 +665,22 @@
       "args": ["quality-html"],
       "presentation": { "reveal": "always", "panel": "shared" },
       "problemMatcher": []
+    },
+    {
+      "label": "Quality: Quick Summary (Terminal)",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-summary"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Full Analysis + Dashboard",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-dashboard"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
     }
   ]
 ,

@@ -163,4 +163,10 @@ quality-html: ## Generar dashboard HTML visual
 	@echo "✅ Dashboard listo en: docs/quality-reports/code-analysis/dashboard.html"
 	@open docs/quality-reports/code-analysis/dashboard.html || xdg-open docs/quality-reports/code-analysis/dashboard.html || true
 
+quality-dashboard: ## Análisis completo + dashboard HTML (quality + quality-html)
+	@echo "🚀 Ejecutando análisis completo y generando dashboard..."
+	@$(MAKE) quality
+	@$(MAKE) quality-html
+	@echo "✅ ¡Completo! Dashboard disponible en el navegador"
+
 .DEFAULT_GOAL := help
