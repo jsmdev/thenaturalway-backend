@@ -186,15 +186,45 @@ def get_security_stats(data):
     return {"distribution": stats, "total_issues": len(issues), "issues": issues[:15]}
 
 
-def get_pylint_score(data):
-    """Extrae el score de Pylint."""
+def get_pylint_stats(data):
+    """Extrae estadísticas de Pylint."""
     if not data:
         return None
 
-    # Pylint puede tener diferentes formatos
+    # Pylint devuelve un array de issues
+    if isinstance(data, list):
+        stats = {"convention": 0, "warning": 0, "error": 0, "refactor": 0}
+        details = []
+        
+        for item in data:
+            if isinstance(item, dict):
+                issue_type = item.get("type", "convention")
+                stats[issue_type] = stats.get(issue_type, 0) + 1
+                
+                details.append({
+                    "type": issue_type,
+                    "symbol": item.get("symbol", ""),
+                    "message": item.get("message", ""),
+                    "file": item.get("path", ""),
+                    "line": item.get("line", 0),
+                })
+        
+        # Calcular score simple: 10 - (total issues / 100)
+        total_issues = sum(stats.values())
+        score = max(0, 10 - (total_issues / 100))
+        
+        return {
+            "score": round(score, 2),
+            "total_issues": total_issues,
+            "stats": stats,
+            "details": details[:30],  # Top 30
+        }
+    
+    # Si viene un dict con score (formato antiguo)
     if isinstance(data, dict):
-        return data.get("score", 0)
-    return 0
+        return {"score": data.get("score", 0), "total_issues": 0, "stats": {}, "details": []}
+    
+    return None
 
 
 def get_ruff_stats(data):
@@ -254,21 +284,32 @@ def get_dead_code_stats(filepath):
         return None
 
 
-def generate_metric_card(section_id, info, stats, details_html=""):
+def generate_metric_card(section_id, info, stats, details_html="", collapsible=True):
     """Genera una tarjeta de métrica con explicación."""
+    collapse_button = f"""
+        <button class="collapse-btn" onclick="toggleSection('{section_id}')">
+            <span class="collapse-icon" id="icon-{section_id}">▼</span>
+        </button>
+    """ if collapsible else ""
+    
     return f"""
         <div id="{section_id}" class="card full-width section">
-            <h2>{info['icon']} {info['title']}</h2>
-            <div class="metric-description">
-                <p><strong>¿Qué mide?</strong> {info['description']}</p>
-                <div class="metric-thresholds">
-                    <div>{info['optimal']}</div>
-                    <div>{info['warning']}</div>
-                    <div>{info['critical']}</div>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>{info['icon']} {info['title']}</h2>
+                {collapse_button}
             </div>
-            {stats}
-            {details_html}
+            <div id="content-{section_id}" class="section-content">
+                <div class="metric-description">
+                    <p><strong>¿Qué mide?</strong> {info['description']}</p>
+                    <div class="metric-thresholds">
+                        <div>{info['optimal']}</div>
+                        <div>{info['warning']}</div>
+                        <div>{info['critical']}</div>
+                    </div>
+                </div>
+                {stats}
+                {details_html}
+            </div>
         </div>
     """
 
@@ -280,7 +321,7 @@ def generate_html(stats):
     complexity = stats.get("complexity")
     maintainability = stats.get("maintainability")
     security = stats.get("security")
-    pylint_score = stats.get("pylint_score", 0)
+    pylint = stats.get("pylint")
     ruff = stats.get("ruff")
     dead_code = stats.get("dead_code")
 
@@ -582,10 +623,61 @@ def generate_html(stats):
         .section {{
             scroll-margin-top: 20px;
         }}
+        .collapse-btn {{
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            transition: transform 0.3s;
+            padding: 8px;
+            border-radius: 4px;
+        }}
+        .collapse-btn:hover {{
+            background: #f3f4f6;
+            color: #374151;
+        }}
+        .collapse-icon {{
+            display: inline-block;
+            transition: transform 0.3s;
+        }}
+        .collapse-icon.collapsed {{
+            transform: rotate(-90deg);
+        }}
+        .section-content {{
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            overflow: hidden;
+        }}
+        .section-content.collapsed {{
+            max-height: 0 !important;
+            opacity: 0;
+        }}
     </style>
     <script>
+        // Toggle section collapse
+        function toggleSection(sectionId) {{
+            const content = document.getElementById(`content-${{sectionId}}`);
+            const icon = document.getElementById(`icon-${{sectionId}}`);
+            
+            if (content.classList.contains('collapsed')) {{
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+                content.style.maxHeight = content.scrollHeight + 'px';
+            }} else {{
+                content.style.maxHeight = content.scrollHeight + 'px';
+                setTimeout(() => {{
+                    content.classList.add('collapsed');
+                    icon.classList.add('collapsed');
+                }}, 10);
+            }}
+        }}
+        
         // Activar el link de navegación correspondiente al hacer scroll
         document.addEventListener('DOMContentLoaded', function() {{
+            // Set initial max-height for all sections
+            document.querySelectorAll('.section-content').forEach(content => {{
+                content.style.maxHeight = content.scrollHeight + 'px';
+            }});
             const sections = document.querySelectorAll('.section');
             const navLinks = document.querySelectorAll('.nav-link');
             
@@ -795,18 +887,70 @@ def generate_html(stats):
         html += generate_metric_card("maintainability", info, stats_html, details_html)
 
     # 3. Pylint
-    if pylint_score:
+    if pylint:
         info = METRIC_INFO["pylint"]
-        score_color = COLORS["A"] if pylint_score >= 8 else (
-            COLORS["C"] if pylint_score >= 6 else COLORS["E"]
+        score = pylint.get("score", 0)
+        score_color = COLORS["A"] if score >= 8 else (
+            COLORS["C"] if score >= 6 else COLORS["E"]
         )
         stats_html = f"""
             <div class="score-circle" style="background: {score_color}">
-                {pylint_score:.1f}
+                {score:.1f}
                 <div class="score-label">/ 10</div>
             </div>
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <strong>{pylint['total_issues']}</strong>
+                    <span>Total issues</span>
+                </div>
+                <div class="summary-item" style="background: #fef2f2;">
+                    <strong style="color: #dc2626;">{pylint['stats'].get('error', 0)}</strong>
+                    <span>Errores</span>
+                </div>
+                <div class="summary-item" style="background: #fff7ed;">
+                    <strong style="color: #f97316;">{pylint['stats'].get('warning', 0)}</strong>
+                    <span>Warnings</span>
+                </div>
+                <div class="summary-item" style="background: #fefce8;">
+                    <strong style="color: #eab308;">{pylint['stats'].get('convention', 0)}</strong>
+                    <span>Conventions</span>
+                </div>
+            </div>
         """
-        html += generate_metric_card("pylint", info, stats_html, "")
+        
+        details_html = ""
+        if pylint["details"]:
+            details_html = """
+            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">📝 Issues detectados</h3>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Símbolo</th>
+                        <th>Mensaje</th>
+                        <th>Archivo</th>
+                        <th>Línea</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            for item in pylint["details"][:30]:
+                type_color = {"error": "#dc2626", "warning": "#f97316", "convention": "#eab308", "refactor": "#3b82f6"}.get(item["type"], "#6b7280")
+                details_html += f"""
+                    <tr>
+                        <td><span style="color: {type_color}; font-weight: bold;">{item['type']}</span></td>
+                        <td><code>{item['symbol']}</code></td>
+                        <td>{item['message']}</td>
+                        <td><code>{item['file']}</code></td>
+                        <td>{item['line']}</td>
+                    </tr>
+                """
+            details_html += """
+                </tbody>
+            </table>
+            """
+        
+        html += generate_metric_card("pylint", info, stats_html, details_html)
 
     # 4. Ruff Linter
     if ruff:
@@ -961,7 +1105,7 @@ def main():
         "complexity": get_complexity_stats(complexity_data),
         "maintainability": get_maintainability_stats(maintainability_data),
         "security": get_security_stats(security_data),
-        "pylint_score": get_pylint_score(pylint_data),
+        "pylint": get_pylint_stats(pylint_data),
         "ruff": get_ruff_stats(ruff_data),
         "dead_code": dead_code_data,
     }
