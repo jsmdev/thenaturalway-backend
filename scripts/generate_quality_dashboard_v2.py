@@ -1,0 +1,830 @@
+#!/usr/bin/env python
+"""
+Genera un dashboard HTML completo con todos los reportes de calidad de código.
+Incluye explicaciones en español y valores óptimos para cada métrica.
+"""
+import json
+from pathlib import Path
+from datetime import datetime
+
+# Colores para los scores
+COLORS = {
+    "A": "#22c55e",  # green
+    "B": "#84cc16",  # lime
+    "C": "#eab308",  # yellow
+    "D": "#f97316",  # orange
+    "E": "#ef4444",  # red
+    "F": "#dc2626",  # dark red
+    "HIGH": "#dc2626",
+    "MEDIUM": "#f97316",
+    "LOW": "#eab308",
+}
+
+# Explicaciones en español
+METRIC_INFO = {
+    "complexity": {
+        "title": "Complejidad Ciclomática",
+        "icon": "🔄",
+        "description": "Mide el número de caminos independientes a través del código. Mayor complejidad = más difícil de mantener y probar.",
+        "optimal": "✅ A-B (1-10): Código simple y fácil de mantener",
+        "warning": "⚠️ C-D (11-20): Considerar refactorizar",
+        "critical": "❌ E-F (>20): Refactorizar urgente - código muy complejo",
+    },
+    "maintainability": {
+        "title": "Índice de Mantenibilidad",
+        "icon": "🔧",
+        "description": "Calcula qué tan fácil es mantener el código (0-100). Considera complejidad, volumen y comentarios.",
+        "optimal": "✅ A (20-100): Código muy mantenible",
+        "warning": "⚠️ B (10-19): Mantenibilidad moderada",
+        "critical": "❌ C (0-9): Difícil de mantener - refactorizar",
+    },
+    "security": {
+        "title": "Análisis de Seguridad",
+        "icon": "🔒",
+        "description": "Detecta vulnerabilidades de seguridad comunes (SQL injection, XSS, contraseñas hardcoded, etc.).",
+        "optimal": "✅ 0 issues HIGH/MEDIUM: Código seguro",
+        "warning": "⚠️ 1-5 MEDIUM: Revisar y corregir",
+        "critical": "❌ HIGH issues: Corregir inmediatamente",
+    },
+    "pylint": {
+        "title": "Pylint Score",
+        "icon": "📝",
+        "description": "Análisis exhaustivo de estilo, errores y code smells. Penaliza cada problema encontrado.",
+        "optimal": "✅ 8-10: Excelente calidad de código",
+        "warning": "⚠️ 6-8: Buena calidad, algunas mejoras",
+        "critical": "❌ <6: Muchos problemas - revisar",
+    },
+    "ruff": {
+        "title": "Ruff Linter",
+        "icon": "⚡",
+        "description": "Linter ultra-rápido que detecta errores de sintaxis, bugs potenciales y problemas de estilo.",
+        "optimal": "✅ 0 errores: Código limpio",
+        "warning": "⚠️ <10 warnings: Pocos problemas menores",
+        "critical": "❌ >10 errores: Revisar y corregir",
+    },
+    "dead_code": {
+        "title": "Código Muerto",
+        "icon": "💀",
+        "description": "Detecta funciones, clases y variables que nunca se usan. Mantener código muerto dificulta el mantenimiento.",
+        "optimal": "✅ <10 items: Código limpio y utilizado",
+        "warning": "⚠️ 10-30 items: Considerar limpiar",
+        "critical": "❌ >30 items: Eliminar código no usado",
+    },
+}
+
+
+def load_json(filepath):
+    """Carga un archivo JSON."""
+    try:
+        with open(filepath) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
+
+
+def get_complexity_stats(data):
+    """Extrae estadísticas de complejidad."""
+    if not data:
+        return None
+
+    stats = {"A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0}
+    total_complexity = 0
+    count = 0
+    details = []
+
+    for filename, file_data in data.items():
+        for item in file_data:
+            if isinstance(item, dict) and "complexity" in item:
+                rank = item.get("rank", "A")
+                stats[rank] = stats.get(rank, 0) + 1
+                total_complexity += item["complexity"]
+                count += 1
+
+                # Guardar detalles de funciones con complejidad >= C
+                if rank in ["C", "D", "E", "F"]:
+                    details.append({
+                        "file": filename,
+                        "name": item.get("name", "unknown"),
+                        "type": item.get("type", "F"),
+                        "lineno": item.get("lineno", 0),
+                        "complexity": item["complexity"],
+                        "rank": rank,
+                    })
+
+    avg_complexity = total_complexity / count if count > 0 else 0
+
+    # Ordenar por complejidad descendente
+    details.sort(key=lambda x: x["complexity"], reverse=True)
+
+    return {
+        "distribution": stats,
+        "average": round(avg_complexity, 2),
+        "total_functions": count,
+        "details": details[:30],  # Top 30
+    }
+
+
+def get_maintainability_stats(data):
+    """Extrae estadísticas de mantenibilidad."""
+    if not data:
+        return None
+
+    stats = {"A": 0, "B": 0, "C": 0}
+    total_mi = 0
+    count = 0
+    details = []
+
+    for filename, file_data in data.items():
+        for item in file_data:
+            if isinstance(item, dict) and "mi" in item:
+                rank = item.get("rank", "A")
+                stats[rank] = stats.get(rank, 0) + 1
+                total_mi += item["mi"]
+                count += 1
+
+                # Guardar archivos con baja mantenibilidad
+                if rank in ["B", "C"]:
+                    details.append({
+                        "file": filename,
+                        "mi": round(item["mi"], 2),
+                        "rank": rank,
+                    })
+
+    avg_mi = total_mi / count if count > 0 else 0
+
+    # Ordenar por MI ascendente (peores primero)
+    details.sort(key=lambda x: x["mi"])
+
+    return {
+        "distribution": stats,
+        "average": round(avg_mi, 2),
+        "total_files": count,
+        "details": details[:20],  # Top 20
+    }
+
+
+def get_security_stats(data):
+    """Extrae estadísticas de seguridad."""
+    if not data or "results" not in data:
+        return None
+
+    stats = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
+    issues = []
+
+    for result in data["results"]:
+        severity = result.get("issue_severity", "LOW")
+        stats[severity] = stats.get(severity, 0) + 1
+        issues.append({
+            "severity": severity,
+            "test_id": result.get("test_id", ""),
+            "issue_text": result.get("issue_text", ""),
+            "filename": result.get("filename", ""),
+            "line_number": result.get("line_number", 0),
+        })
+
+    return {"distribution": stats, "total_issues": len(issues), "issues": issues[:15]}
+
+
+def get_pylint_score(data):
+    """Extrae el score de Pylint."""
+    if not data:
+        return None
+
+    # Pylint puede tener diferentes formatos
+    if isinstance(data, dict):
+        return data.get("score", 0)
+    return 0
+
+
+def get_ruff_stats(data):
+    """Extrae estadísticas de Ruff."""
+    if not data or not isinstance(data, list):
+        return None
+
+    stats = {"error": 0, "warning": 0}
+    details = []
+
+    for item in data:
+        if isinstance(item, dict):
+            code = item.get("code", "")
+            message = item.get("message", "")
+            filename = item.get("filename", "")
+            location = item.get("location", {})
+
+            # Clasificar por tipo
+            if code.startswith(("E", "F")):  # Errores
+                stats["error"] += 1
+            else:
+                stats["warning"] += 1
+
+            details.append({
+                "code": code,
+                "message": message,
+                "file": filename,
+                "line": location.get("row", 0),
+            })
+
+    return {
+        "total": len(data),
+        "errors": stats["error"],
+        "warnings": stats["warning"],
+        "details": details[:30],  # Top 30
+    }
+
+
+def get_dead_code_stats(filepath):
+    """Extrae estadísticas de código muerto."""
+    try:
+        with open(filepath) as f:
+            content = f.read()
+            lines = content.strip().split("\n")
+
+            # Filtrar líneas vacías
+            details = []
+            for line in lines:
+                if line.strip() and not line.startswith(("#", "//")):
+                    details.append(line.strip())
+
+            return {
+                "total": len(details),
+                "details": details[:30],  # Top 30
+            }
+    except FileNotFoundError:
+        return None
+
+
+def generate_metric_card(key, info, stats, details_html=""):
+    """Genera una tarjeta de métrica con explicación."""
+    return f"""
+        <div class="card full-width">
+            <h2>{info['icon']} {info['title']}</h2>
+            <div class="metric-description">
+                <p><strong>¿Qué mide?</strong> {info['description']}</p>
+                <div class="metric-thresholds">
+                    <div>{info['optimal']}</div>
+                    <div>{info['warning']}</div>
+                    <div>{info['critical']}</div>
+                </div>
+            </div>
+            {stats}
+            {details_html}
+        </div>
+    """
+
+
+def generate_html(stats):
+    """Genera el HTML del dashboard."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    complexity = stats.get("complexity")
+    maintainability = stats.get("maintainability")
+    security = stats.get("security")
+    pylint_score = stats.get("pylint_score", 0)
+    ruff = stats.get("ruff")
+    dead_code = stats.get("dead_code")
+
+    html = f"""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Calidad de Código</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+            padding: 20px;
+            color: #1f2937;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            color: white;
+        }}
+        .header h1 {{
+            font-size: 36px;
+            margin-bottom: 10px;
+        }}
+        .header .timestamp {{
+            font-size: 14px;
+            opacity: 0.9;
+        }}
+        .card {{
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }}
+        .card.full-width {{
+            grid-column: 1 / -1;
+        }}
+        .card h2 {{
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }}
+        .metric-description {{
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }}
+        .metric-description p {{
+            margin-bottom: 15px;
+            color: #374151;
+        }}
+        .metric-thresholds {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }}
+        .metric-thresholds div {{
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #e5e7eb;
+        }}
+        .grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }}
+        .metric {{
+            text-align: center;
+            padding: 25px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }}
+        .metric-value {{
+            font-size: 56px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }}
+        .metric-label {{
+            font-size: 14px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }}
+        .distribution {{
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }}
+        .dist-item {{
+            flex: 1;
+            text-align: center;
+            padding: 18px 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+        }}
+        .dist-label {{
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }}
+        .dist-value {{
+            font-size: 28px;
+        }}
+        .details-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }}
+        .details-table th {{
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }}
+        .details-table td {{
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }}
+        .details-table tr:hover {{
+            background: #f9fafb;
+        }}
+        .rank-badge {{
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }}
+        .issue {{
+            padding: 15px;
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }}
+        .issue.medium {{
+            background: #fff7ed;
+            border-left-color: #f97316;
+        }}
+        .issue.low {{
+            background: #fefce8;
+            border-left-color: #eab308;
+        }}
+        .issue-header {{
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }}
+        .issue-text {{
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 6px;
+        }}
+        .issue-location {{
+            font-size: 12px;
+            color: #6b7280;
+            font-family: 'Courier New', monospace;
+        }}
+        .score-circle {{
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }}
+        .score-label {{
+            font-size: 14px;
+            margin-top: 5px;
+        }}
+        .summary-stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }}
+        .summary-item {{
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }}
+        .summary-item strong {{
+            display: block;
+            font-size: 32px;
+            margin-bottom: 5px;
+        }}
+        .summary-item span {{
+            color: #6b7280;
+            font-size: 14px;
+        }}
+        code {{
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Dashboard de Calidad de Código</h1>
+            <div class="timestamp">Generado: {timestamp}</div>
+        </div>
+
+        <div class="grid">
+"""
+
+    # 1. Complejidad Ciclomática
+    if complexity:
+        info = METRIC_INFO["complexity"]
+        stats_html = f"""
+            <div class="metric">
+                <div class="metric-value" style="color: {COLORS.get('B', '#84cc16')}">{complexity['average']}</div>
+                <div class="metric-label">Promedio</div>
+            </div>
+            <div class="distribution">
+        """
+        for rank in ["A", "B", "C", "D", "E", "F"]:
+            count = complexity["distribution"].get(rank, 0)
+            stats_html += f"""
+                <div class="dist-item" style="background: {COLORS.get(rank, '#6b7280')}">
+                    <div class="dist-label">{rank}</div>
+                    <div class="dist-value">{count}</div>
+                </div>
+            """
+        stats_html += f"""
+            </div>
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <strong>{complexity['total_functions']}</strong>
+                    <span>Funciones analizadas</span>
+                </div>
+            </div>
+        """
+
+        details_html = ""
+        if complexity["details"]:
+            details_html = """
+            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">🔍 Funciones más complejas (requieren refactorización)</h3>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Función</th>
+                        <th>Línea</th>
+                        <th>Complejidad</th>
+                        <th>Rank</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            for item in complexity["details"]:
+                details_html += f"""
+                    <tr>
+                        <td><code>{item['file']}</code></td>
+                        <td><strong>{item['name']}</strong></td>
+                        <td>{item['lineno']}</td>
+                        <td>{item['complexity']}</td>
+                        <td><span class="rank-badge" style="background: {COLORS.get(item['rank'], '#6b7280')}">{item['rank']}</span></td>
+                    </tr>
+                """
+            details_html += """
+                </tbody>
+            </table>
+            """
+
+        html += generate_metric_card("complexity", info, stats_html, details_html)
+
+    # 2. Mantenibilidad
+    if maintainability:
+        info = METRIC_INFO["maintainability"]
+        mi_color = COLORS["A"] if maintainability["average"] >= 20 else (
+            COLORS["B"] if maintainability["average"] >= 10 else COLORS["C"]
+        )
+        stats_html = f"""
+            <div class="metric">
+                <div class="metric-value" style="color: {mi_color}">{maintainability['average']}</div>
+                <div class="metric-label">Promedio (0-100)</div>
+            </div>
+            <div class="distribution">
+        """
+        for rank in ["A", "B", "C"]:
+            count = maintainability["distribution"].get(rank, 0)
+            stats_html += f"""
+                <div class="dist-item" style="background: {COLORS.get(rank, '#6b7280')}">
+                    <div class="dist-label">{rank}</div>
+                    <div class="dist-value">{count}</div>
+                </div>
+            """
+        stats_html += f"""
+            </div>
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <strong>{maintainability['total_files']}</strong>
+                    <span>Archivos analizados</span>
+                </div>
+            </div>
+        """
+
+        details_html = ""
+        if maintainability["details"]:
+            details_html = """
+            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">⚠️ Archivos con baja mantenibilidad</h3>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Índice MI</th>
+                        <th>Rank</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            for item in maintainability["details"]:
+                details_html += f"""
+                    <tr>
+                        <td><code>{item['file']}</code></td>
+                        <td>{item['mi']}</td>
+                        <td><span class="rank-badge" style="background: {COLORS.get(item['rank'], '#6b7280')}">{item['rank']}</span></td>
+                    </tr>
+                """
+            details_html += """
+                </tbody>
+            </table>
+            """
+
+        html += generate_metric_card("maintainability", info, stats_html, details_html)
+
+    # 3. Pylint
+    if pylint_score:
+        info = METRIC_INFO["pylint"]
+        score_color = COLORS["A"] if pylint_score >= 8 else (
+            COLORS["C"] if pylint_score >= 6 else COLORS["E"]
+        )
+        stats_html = f"""
+            <div class="score-circle" style="background: {score_color}">
+                {pylint_score:.1f}
+                <div class="score-label">/ 10</div>
+            </div>
+        """
+        html += generate_metric_card("pylint", info, stats_html, "")
+
+    # 4. Ruff Linter
+    if ruff:
+        info = METRIC_INFO["ruff"]
+        stats_html = f"""
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <strong>{ruff['total']}</strong>
+                    <span>Total problemas</span>
+                </div>
+                <div class="summary-item" style="background: #fef2f2;">
+                    <strong style="color: #dc2626;">{ruff['errors']}</strong>
+                    <span>Errores</span>
+                </div>
+                <div class="summary-item" style="background: #fff7ed;">
+                    <strong style="color: #f97316;">{ruff['warnings']}</strong>
+                    <span>Warnings</span>
+                </div>
+            </div>
+        """
+
+        details_html = ""
+        if ruff["details"]:
+            details_html = """
+            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">⚡ Problemas detectados</h3>
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Mensaje</th>
+                        <th>Archivo</th>
+                        <th>Línea</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            for item in ruff["details"][:30]:
+                details_html += f"""
+                    <tr>
+                        <td><code>{item['code']}</code></td>
+                        <td>{item['message']}</td>
+                        <td><code>{item['file']}</code></td>
+                        <td>{item['line']}</td>
+                    </tr>
+                """
+            details_html += """
+                </tbody>
+            </table>
+            """
+
+        html += generate_metric_card("ruff", info, stats_html, details_html)
+
+    html += """
+        </div>
+    """
+
+    # 5. Seguridad (full width)
+    if security:
+        info = METRIC_INFO["security"]
+        high = security["distribution"].get("HIGH", 0)
+        medium = security["distribution"].get("MEDIUM", 0)
+        low = security["distribution"].get("LOW", 0)
+
+        stats_html = f"""
+            <div class="distribution">
+                <div class="dist-item" style="background: {COLORS['HIGH']}">
+                    <div class="dist-label">HIGH</div>
+                    <div class="dist-value">{high}</div>
+                </div>
+                <div class="dist-item" style="background: {COLORS['MEDIUM']}">
+                    <div class="dist-label">MEDIUM</div>
+                    <div class="dist-value">{medium}</div>
+                </div>
+                <div class="dist-item" style="background: {COLORS['LOW']}">
+                    <div class="dist-label">LOW</div>
+                    <div class="dist-value">{low}</div>
+                </div>
+            </div>
+        """
+
+        details_html = ""
+        if security["issues"]:
+            details_html = "<h3 style='margin-top: 25px; margin-bottom: 15px; font-size: 18px;'>🚨 Vulnerabilidades detectadas</h3>"
+            for issue in security["issues"]:
+                severity_class = issue["severity"].lower()
+                details_html += f"""
+            <div class="issue {severity_class}">
+                <div class="issue-header">[{issue['severity']}] {issue['test_id']}</div>
+                <div class="issue-text">{issue['issue_text']}</div>
+                <div class="issue-location">{issue['filename']}:{issue['line_number']}</div>
+            </div>
+                """
+
+        html += generate_metric_card("security", info, stats_html, details_html)
+
+    # 6. Código Muerto
+    if dead_code and dead_code["total"] > 0:
+        info = METRIC_INFO["dead_code"]
+        stats_html = f"""
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <strong>{dead_code['total']}</strong>
+                    <span>Items de código no usado</span>
+                </div>
+            </div>
+        """
+
+        details_html = ""
+        if dead_code["details"]:
+            details_html = """
+            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">💀 Código muerto detectado</h3>
+            <div style="font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.8;">
+            """
+            for line in dead_code["details"][:30]:
+                details_html += f"<div style='padding: 5px; background: #f9fafb; margin-bottom: 3px; border-radius: 4px;'>{line}</div>"
+            details_html += "</div>"
+
+        html += generate_metric_card("dead_code", info, stats_html, details_html)
+
+    html += """
+    </div>
+</body>
+</html>
+"""
+
+    return html
+
+
+def main():
+    """Función principal."""
+    reports_dir = Path("docs/quality-reports/code-analysis")
+
+    if not reports_dir.exists():
+        print("❌ No se encontró el directorio docs/quality-reports/code-analysis/")
+        print("   Ejecuta primero: make quality")
+        return
+
+    print("📊 Generando dashboard HTML mejorado...")
+
+    # Cargar datos
+    complexity_data = load_json(reports_dir / "complexity.json")
+    maintainability_data = load_json(reports_dir / "maintainability.json")
+    security_data = load_json(reports_dir / "security.json")
+    pylint_data = load_json(reports_dir / "pylint.json")
+    ruff_data = load_json(reports_dir / "ruff.json")
+    dead_code_data = get_dead_code_stats(reports_dir / "dead-code.txt")
+
+    # Procesar estadísticas
+    stats = {
+        "complexity": get_complexity_stats(complexity_data),
+        "maintainability": get_maintainability_stats(maintainability_data),
+        "security": get_security_stats(security_data),
+        "pylint_score": get_pylint_score(pylint_data),
+        "ruff": get_ruff_stats(ruff_data),
+        "dead_code": dead_code_data,
+    }
+
+    # Generar HTML
+    html_content = generate_html(stats)
+
+    # Guardar archivo
+    output_file = reports_dir / "dashboard.html"
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(html_content)
+
+    print(f"✅ Dashboard generado: {output_file}")
+
+
+if __name__ == "__main__":
+    main()

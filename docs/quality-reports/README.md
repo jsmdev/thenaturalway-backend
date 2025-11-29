@@ -54,11 +54,20 @@ open docs/quality-reports/code-analysis/dashboard.html
 
 ### Code Quality Dashboard
 - **URL**: `docs/quality-reports/code-analysis/dashboard.html`
-- **Muestra**:
-  - Complejidad ciclomática
-  - Índice de mantenibilidad
-  - Pylint score
-  - Vulnerabilidades de seguridad (top 10)
+- **Características**:
+  - ✅ **Explicaciones en español** de cada métrica
+  - 📊 **Valores óptimos/warning/críticos** para cada indicador
+  - 🔍 **Detalles accionables**: funciones complejas, archivos con baja mantenibilidad
+  - ⚡ **Ruff linter**: errores vs warnings con tabla de detalles
+  - 🔒 **Seguridad**: vulnerabilidades HIGH/MEDIUM/LOW con top 15 issues
+  - 💀 **Código muerto**: lista de funciones/variables no usadas
+- **Métricas mostradas**:
+  - 🔄 Complejidad ciclomática (promedio + distribución A-F + top 30 funciones)
+  - 🔧 Índice de mantenibilidad (0-100 + archivos problemáticos)
+  - 📝 Pylint score (/10 con indicador visual)
+  - ⚡ Ruff linter (total, errores, warnings)
+  - 🔒 Seguridad (distribución + detalles)
+  - 💀 Código muerto (total + listado)
 - **Actualizar**: `make quality && make quality-html`
 
 ## 📊 Reportes JSON

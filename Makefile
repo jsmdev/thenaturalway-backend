@@ -158,8 +158,8 @@ quality-summary: ## Resumen rápido de calidad
 	@vulture apps/ --min-confidence 90 | head -20 || true
 
 quality-html: ## Generar dashboard HTML visual
-	@echo "🌐 Generando dashboard HTML..."
-	@python scripts/generate_quality_dashboard.py
+	@echo "🌐 Generando dashboard HTML mejorado..."
+	@python3 scripts/generate_quality_dashboard_v2.py
 	@echo "✅ Dashboard listo en: docs/quality-reports/code-analysis/dashboard.html"
 	@open docs/quality-reports/code-analysis/dashboard.html || xdg-open docs/quality-reports/code-analysis/dashboard.html || true
 
