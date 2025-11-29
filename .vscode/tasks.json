@@ -606,6 +606,57 @@
       "command": "make",
       "args": ["clean"],
       "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Quality: Full Analysis",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Summary",
+      "type": "shell",
+      "command": "make",
+      "args": ["quality-summary"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Quality: Complexity Analysis",
+      "type": "shell",
+      "command": "radon",
+      "args": ["cc", "apps/", "-a", "-s"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Quality: Maintainability Index",
+      "type": "shell",
+      "command": "radon",
+      "args": ["mi", "apps/", "-s"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Quality: Security Scan",
+      "type": "shell",
+      "command": "bandit",
+      "args": ["-r", "apps/", "-ll"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "Quality: Dead Code Detection",
+      "type": "shell",
+      "command": "vulture",
+      "args": ["apps/", "--min-confidence", "80"],
+      "presentation": { "reveal": "always", "panel": "shared", "clear": true }
+    },
+    {
+      "label": "Quality: Pylint Full",
+      "type": "shell",
+      "command": "pylint",
+      "args": ["apps/"],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
     }
   ]
 ,

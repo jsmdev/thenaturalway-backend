@@ -101,4 +101,10 @@ ENV/
 /media/
 /static/
 /staticfiles/
-/logs/ 
+/logs/
+
+# Quality reports
+quality-reports/
+*.json
+!package.json
+!tsconfig.json
