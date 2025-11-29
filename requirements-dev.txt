@@ -1,0 +1,26 @@
+# Development dependencies
+# Instalar con: pip install -r requirements-dev.txt
+
+# Linting y formateo
+ruff>=0.1.9  # Linter y formatter ultra-rápido (reemplaza Black, isort, flake8, etc.)
+
+# Testing
+pytest>=7.4.0
+pytest-django>=4.7.0
+pytest-cov>=4.1.0
+factory-boy>=3.3.0
+coverage>=7.4.0
+
+# Pre-commit hooks
+pre-commit>=3.6.0
+
+# Debugging
+ipython>=8.20.0
+django-debug-toolbar>=4.2.0
+django-extensions>=3.2.3
+
+# Security scanning
+detect-secrets>=1.4.0
+
+# Django specific
+django-upgrade>=1.16.0
