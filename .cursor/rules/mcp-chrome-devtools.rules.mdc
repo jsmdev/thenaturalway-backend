@@ -1,0 +1,472 @@
+---
+globs: *.py, *.md
+alwaysApply: false
+---
+
+# Reglas para Integración de Chrome DevTools MCP con Django REST Framework
+
+## Configuración del Proyecto
+
+### Chrome DevTools MCP Setup
+
+Para conectar la IA con Chrome DevTools en este proyecto Django:
+
+1. **Instalar MCP Server**:
+```bash
+npx @modelcontextprotocol/server-chrome-devtools
+```
+
+2. **Iniciar Chrome con debugging remoto**:
+```bash
+# macOS
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+
+# Linux
+google-chrome --remote-debugging-port=9222
+```
+
+3. **Iniciar servidor Django**:
+```bash
+python manage.py runserver
+```
+
+4. **Configurar AI**: Añadir MCP server a configuración de Warp/Cursor
+
+## Test Frontend para APIs Django
+
+### Estructura de Test Page
+
+Crear en `frontend-test/` en la raíz del proyecto:
+
+```
+frontend-test/
+├── index.html          # Página principal con controles
+├── app.js             # Lógica de peticiones a API
+├── auth.js            # Específico para autenticación JWT
+└── README.md          # Instrucciones de uso
+```
+
+### Template de Test Page
+
+**frontend-test/index.html**:
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TNW API Test - The Natural Way</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .endpoint { border: 1px solid #ccc; margin: 10px 0; padding: 15px; border-radius: 5px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 3px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .token-display { background: #fff3cd; padding: 10px; margin: 10px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>The Natural Way - API Testing</h1>
+    
+    <div class="token-display">
+        <strong>Access Token:</strong> <span id="token-display">No token</span>
+        <button onclick="clearToken()">Clear Token</button>
+    </div>
+
+    <!-- Authentication Section -->
+    <section>
+        <h2>Authentication</h2>
+        
+        <div class="endpoint">
+            <h3>POST /api/users/register/</h3>
+            <input type="email" id="register-email" placeholder="email@example.com" value="test@example.com">
+            <input type="password" id="register-password" placeholder="password" value="Test123!">
+            <input type="text" id="register-firstname" placeholder="first_name" value="Test">
+            <button onclick="testRegister()">Register User</button>
+            <pre id="register-output"></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3>POST /api/users/login/</h3>
+            <input type="email" id="login-email" placeholder="email@example.com" value="test@example.com">
+            <input type="password" id="login-password" placeholder="password" value="Test123!">
+            <button onclick="testLogin()">Login</button>
+            <pre id="login-output"></pre>
+        </div>
+
+        <div class="endpoint">
+            <h3>POST /api/users/token/refresh/</h3>
+            <button onclick="testTokenRefresh()">Refresh Token</button>
+            <pre id="refresh-output"></pre>
+        </div>
+    </section>
+
+    <!-- Protected Endpoints Section -->
+    <section>
+        <h2>Protected Endpoints</h2>
+        
+        <div class="endpoint">
+            <h3>GET /api/users/profile/</h3>
+            <button onclick="testProfile()">Get Profile</button>
+            <pre id="profile-output"></pre>
+        </div>
+    </section>
+
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+```
+
+**frontend-test/auth.js**:
+```javascript
+// API Configuration
+const API_URL = 'http://localhost:8000/api';
+
+// Token Management
+let accessToken = localStorage.getItem('access_token');
+let refreshToken = localStorage.getItem('refresh_token');
+
+function saveTokens(access, refresh) {
+    accessToken = access;
+    refreshToken = refresh;
+    localStorage.setItem('access_token', access);
+    localStorage.setItem('refresh_token', refresh);
+    updateTokenDisplay();
+}
+
+function clearToken() {
+    accessToken = null;
+    refreshToken = null;
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    updateTokenDisplay();
+}
+
+function updateTokenDisplay() {
+    const display = document.getElementById('token-display');
+    if (accessToken) {
+        display.textContent = accessToken.substring(0, 20) + '...';
+        display.className = 'success';
+    } else {
+        display.textContent = 'No token';
+        display.className = 'error';
+    }
+}
+
+// Initialize display
+updateTokenDisplay();
+
+// API Request Helper
+async function apiRequest(endpoint, options = {}) {
+    const url = `${API_URL}${endpoint}`;
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+
+    if (accessToken && !options.skipAuth) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    const config = {
+        ...options,
+        headers
+    };
+
+    console.log('Request:', url, config);
+
+    try {
+        const response = await fetch(url, config);
+        const data = await response.json();
+        
+        console.log('Response:', response.status, data);
+        
+        return {
+            status: response.status,
+            data: data,
+            ok: response.ok
+        };
+    } catch (error) {
+        console.error('Request failed:', error);
+        return {
+            status: 0,
+            data: { error: 'Network Error', message: error.message },
+            ok: false
+        };
+    }
+}
+```
+
+**frontend-test/app.js**:
+```javascript
+// Authentication Tests
+async function testRegister() {
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const firstName = document.getElementById('register-firstname').value;
+
+    const result = await apiRequest('/users/register/', {
+        method: 'POST',
+        body: JSON.stringify({
+            email: email,
+            password: password,
+            first_name: firstName
+        }),
+        skipAuth: true
+    });
+
+    displayResult('register-output', result);
+}
+
+async function testLogin() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
+    const result = await apiRequest('/users/login/', {
+        method: 'POST',
+        body: JSON.stringify({
+            email: email,
+            password: password
+        }),
+        skipAuth: true
+    });
+
+    if (result.ok && result.data.data) {
+        const tokens = result.data.data;
+        if (tokens.access && tokens.refresh) {
+            saveTokens(tokens.access, tokens.refresh);
+        }
+    }
+
+    displayResult('login-output', result);
+}
+
+async function testTokenRefresh() {
+    if (!refreshToken) {
+        displayResult('refresh-output', {
+            status: 0,
+            data: { error: 'No refresh token', message: 'Please login first' },
+            ok: false
+        });
+        return;
+    }
+
+    const result = await apiRequest('/users/token/refresh/', {
+        method: 'POST',
+        body: JSON.stringify({
+            refresh: refreshToken
+        }),
+        skipAuth: true
+    });
+
+    if (result.ok && result.data.data && result.data.data.access) {
+        accessToken = result.data.data.access;
+        localStorage.setItem('access_token', accessToken);
+        updateTokenDisplay();
+    }
+
+    displayResult('refresh-output', result);
+}
+
+async function testProfile() {
+    const result = await apiRequest('/users/profile/', {
+        method: 'GET'
+    });
+
+    displayResult('profile-output', result);
+}
+
+// Display Helper
+function displayResult(elementId, result) {
+    const output = document.getElementById(elementId);
+    const statusClass = result.ok ? 'success' : 'error';
+    
+    output.innerHTML = `<span class="${statusClass}">Status: ${result.status}</span>\n${JSON.stringify(result.data, null, 2)}`;
+}
+```
+
+## Checklist de Validación para Django/DRF
+
+### CORS Configuration
+
+**Verificar en Chrome DevTools:**
+- Preflight OPTIONS request con headers:
+  - `Access-Control-Request-Method`
+  - `Access-Control-Request-Headers`
+- Response debe incluir:
+  - `Access-Control-Allow-Origin`
+  - `Access-Control-Allow-Methods`
+  - `Access-Control-Allow-Headers`
+  - `Access-Control-Allow-Credentials` (si usa cookies)
+
+**Fix en Django (si falta)**:
+```python
+# config/settings.py
+INSTALLED_APPS = [
+    'corsheaders',
+    # ...
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    # ...
+]
+
+# Development
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Production
+CORS_ALLOWED_ORIGINS = [
+    "https://yourdomain.com",
+]
+```
+
+### JWT Token Flow
+
+**Verificar en Chrome DevTools:**
+1. **Login Request** (`POST /api/users/login/`):
+   - Response contiene `access` y `refresh` tokens
+   - Status: 200
+   - Content-Type: `application/json`
+
+2. **Token Storage**:
+   - Verificar en Application > Local Storage
+   - Debe existir `access_token` y `refresh_token`
+
+3. **Protected Request** (`GET /api/users/profile/`):
+   - Header: `Authorization: Bearer <access_token>`
+   - Status: 200 si token válido
+   - Status: 401 si token inválido/expirado
+
+4. **Token Refresh** (`POST /api/users/token/refresh/`):
+   - Body: `{"refresh": "<refresh_token>"}`
+   - Response: nuevo `access` token
+   - Status: 200 si refresh válido
+   - Status: 401 si refresh inválido
+
+**Common Issues:**
+- **401 Unauthorized**: Token expirado o formato incorrecto
+- **403 Forbidden**: Token válido pero sin permisos
+- **400 Bad Request**: Formato de token incorrecto en request
+
+### Response Format Validation
+
+**Standard Success Response**:
+```json
+{
+    "data": { /* payload */ },
+    "request": {
+        "method": "GET",
+        "path": "/api/endpoint/",
+        "host": "localhost:8000"
+    },
+    "message": "Success message (optional)"
+}
+```
+
+**Standard Error Response**:
+```json
+{
+    "error": "Error Type",
+    "message": "Human-readable error message",
+    "request": {
+        "method": "POST",
+        "path": "/api/endpoint/",
+        "host": "localhost:8000"
+    }
+}
+```
+
+**Verificar en Chrome DevTools:**
+- Network > Response tab debe mostrar formato consistente
+- Console no debe mostrar errores JSON parse
+- Response Content-Type: `application/json`
+
+### Performance Baselines
+
+**Verificar en Chrome DevTools (Network tab):**
+- Authentication endpoints: < 200ms
+- Simple GET requests: < 100ms
+- Complex queries: < 500ms
+- File uploads: Variable (depends on size)
+
+**Bottlenecks comunes:**
+- N+1 queries (usar `select_related`, `prefetch_related`)
+- Serializers sin optimización
+- Falta de índices en base de datos
+- Carga de relaciones innecesarias
+
+## AI Prompts para MCP Integration
+
+Cuando uses Chrome DevTools MCP con este proyecto Django:
+
+### Setup
+```
+Conecta a Chrome DevTools en el puerto 9222 y abre la página http://localhost:8000/frontend-test/index.html
+```
+
+### Inspection
+```
+Inspecciona la petición POST /api/users/login/ en la pestaña Network. Verifica:
+1. Request headers (Content-Type, Origin)
+2. Response status y headers (CORS)
+3. Response body format
+4. Tiempo de respuesta
+Reporta cualquier issue encontrado
+```
+
+```
+Monitorea la consola mientras hago click en "Get Profile". Captura cualquier error JavaScript o warnings relacionados con CORS o autenticación.
+```
+
+```
+Mide el tiempo de respuesta de todas las peticiones a /api/users/ durante 1 minuto. Identifica endpoints lentos (>500ms).
+```
+
+### Debugging
+```
+Inspecciona el localStorage y verifica que los tokens JWT estén almacenados correctamente después del login. Valida el formato de los tokens.
+```
+
+```
+Captura un screenshot de la página actual y de la pestaña Network mostrando el error 401 en /api/users/profile/
+```
+
+## Integration con AIDD Workflow
+
+### En fase Builder
+
+Después de implementar endpoints de autenticación:
+```bash
+make migrate
+python manage.py runserver
+```
+
+Luego solicitar a la IA:
+```
+Usa Chrome DevTools MCP para validar el flujo completo de registro y login de usuarios. Crea la test page si no existe y verifica:
+1. CORS configurado correctamente
+2. Tokens JWT en formato correcto
+3. Response format según estándares del proyecto
+4. Sin errores en consola
+Documenta los issues en docs/features/user-auth/integration-issues.md
+```
+
+### En fase Craftsman
+
+Antes de escribir tests formales:
+```
+Revisa docs/features/user-auth/integration-issues.md y asegura que los test cases cubran todos los issues encontrados en la fase Inspector.
+```
+
+## Notas Importantes
+
+- Chrome debe estar corriendo con `--remote-debugging-port=9222` ANTES de conectar MCP
+- El servidor Django debe estar corriendo en `localhost:8000`
+- La test page es solo para validación, NO es el frontend de producción
+- Los issues encontrados deben documentarse y luego convertirse en test cases
+- Usar esta integración especialmente después de cambios en autenticación o CORS

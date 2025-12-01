@@ -40,6 +40,10 @@ The Architect role is responsible for defining requirements, features, and domai
 
 The Builder role is responsible for planning and implementing features.
 
+**Note**: After implementing features that interact with browsers (APIs, authentication, etc.), consider using the optional **Inspector** phase before moving to Craftsman.
+
+The Builder role is responsible for planning and implementing features.
+
 #### Input Files:
 
 - `.ai/builder/b-1.plan.instructions.md`: Instructions for planning feature implementation.
@@ -62,6 +66,41 @@ The Builder role is responsible for planning and implementing features.
 - Implement code following architectural patterns
 - Ensure code meets quality standards
 - Update feature states in GitHub issues
+
+### Inspector (Optional)
+
+The Inspector role is responsible for validating backend APIs from a real browser perspective.
+
+#### Input Files:
+
+- `.ai/inspector/i-1.browser-integration.instructions.md`: Instructions for browser-based integration testing.
+- Implemented API endpoints from Builder phase
+- Test pages or API testing tools
+
+#### Output Deliverables:
+
+- `docs/features/{feature-slug}/integration-issues.md`: Documentation of integration issues found.
+- Updated implementation with fixes
+- Performance baseline metrics
+- Integration validation report
+
+#### Key Responsibilities:
+
+- Connect to browser developer tools for real-time inspection
+- Validate CORS, authentication, and response formats
+- Monitor console for errors and warnings
+- Measure API performance from client perspective
+- Document integration issues with evidence
+- Suggest backend fixes for issues found
+
+#### When to Use:
+
+- After implementing authentication/authorization endpoints
+- When APIs are consumed by frontend applications
+- Before deploying to production
+- When debugging browser-specific integration issues
+
+**Note**: This phase is optional and should be used strategically. Skip it for backend-only features or internal services not accessed by browsers.
 
 ### Craftsman
 
@@ -126,6 +165,18 @@ BUILDER PHASE
                 │
                 ▼
         [State: implemented]
+                │
+                ▼
+INSPECTOR PHASE (Optional)
+    │
+    ├─► Browser DevTools Inspection ┐
+    │   (Quality Gate 5.5)           │
+    │                                 │
+    └─► Integration Validation ──────┼──► Integration Issues Report
+        (Quality Gate 5.5)           │
+                │
+                ▼
+        [State: validated]
                 │
                 ▼
 CRAFTSMAN PHASE
