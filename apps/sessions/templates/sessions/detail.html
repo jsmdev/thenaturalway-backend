@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Sesión del {{ session.date|date:"d/m/Y" }} - The Natural Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    .session-detail {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    .session-header {
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .session-header h1 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+    .session-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .meta-item strong {
+        color: #666;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .badge-routine {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    .session-section {
+        margin-bottom: 2rem;
+    }
+    .session-section h2 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    .session-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+    }
+    .exercises-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .exercise-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        border-left: 4px solid #2c3e50;
+    }
+    .exercise-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    .exercise-item-header h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    .exercise-item-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+    .exercise-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .exercise-item-meta strong {
+        color: #333;
+    }
+    .exercise-item-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .empty-exercises {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="session-detail">
+    <div class="session-header">
+        <h1>Sesión del {{ session.date|date:"d/m/Y" }}</h1>
+        <div class="session-meta">
+            {% if session.routine %}
+                <div class="meta-item">
+                    <strong>Rutina:</strong>
+                    <a href="{% url 'routines:detail' pk=session.routineId %}" class="badge badge-routine">{{ session.routine }}</a>
+                </div>
+            {% endif %}
+            {% if session.startTime %}
+                <div class="meta-item">
+                    <strong>Inicio:</strong>
+                    <span>{{ session.startTime|date:"H:i" }}</span>
+                </div>
+            {% endif %}
+            {% if session.endTime %}
+                <div class="meta-item">
+                    <strong>Fin:</strong>
+                    <span>{{ session.endTime|date:"H:i" }}</span>
+                </div>
+            {% endif %}
+            {% if session.durationMinutes %}
+                <div class="meta-item">
+                    <strong>Duración:</strong>
+                    <span>{{ session.durationMinutes }} minutos</span>
+                </div>
+            {% endif %}
+            {% if session.rpe %}
+                <div class="meta-item">
+                    <strong>RPE:</strong>
+                    <span>{{ session.rpe }}/10</span>
+                </div>
+            {% endif %}
+            {% if session.energyLevel %}
+                <div class="meta-item">
+                    <strong>Nivel de Energía:</strong>
+                    <span>{{ session.energyLevel|title }}</span>
+                </div>
+            {% endif %}
+            {% if session.sleepHours %}
+                <div class="meta-item">
+                    <strong>Horas de Sueño:</strong>
+                    <span>{{ session.sleepHours }}h</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if session.notes %}
+    <div class="session-section">
+        <h2>Notas</h2>
+        <p>{{ session.notes|linebreaks }}</p>
+    </div>
+    {% endif %}
+
+    <div class="session-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Ejercicios Realizados</h2>
+            <a href="{% url 'sessions:exercise-create' pk=session.id %}" class="btn btn-primary">Añadir Ejercicio</a>
+        </div>
+        
+        {% if session.sessionExercises %}
+            <div class="exercises-list">
+                {% for exercise in session.sessionExercises %}
+                <div class="exercise-item">
+                    <div class="exercise-item-header">
+                        <div>
+                                    <h3>
+                                <a href="{% url 'exercises:detail' pk=exercise.exerciseId %}" style="color: #2c3e50; text-decoration: none;">{{ exercise.exercise.name }}</a>
+                            </h3>
+                            {% if exercise.exercise.primaryMuscleGroup %}
+                                <span style="color: #666; font-size: 0.875rem;">{{ exercise.exercise.primaryMuscleGroup|title }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="exercise-item-actions">
+                            <a href="{% url 'sessions:exercise-update' pk=session.id exerciseId=exercise.id %}" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">Editar</a>
+                            <form method="post" action="{% url 'sessions:exercise-delete' pk=session.id exerciseId=exercise.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;" onclick="return confirm('¿Estás seguro de que deseas eliminar este ejercicio?');">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="exercise-item-meta">
+                        {% if exercise.order %}
+                            <span><strong>Orden:</strong> {{ exercise.order }}</span>
+                        {% endif %}
+                        {% if exercise.setsCompleted %}
+                            <span><strong>Series:</strong> {{ exercise.setsCompleted }}</span>
+                        {% endif %}
+                        {% if exercise.repetitions %}
+                            <span><strong>Repeticiones:</strong> {{ exercise.repetitions }}</span>
+                        {% endif %}
+                        {% if exercise.weight %}
+                            <span><strong>Peso:</strong> {{ exercise.weight }} kg</span>
+                        {% endif %}
+                        {% if exercise.rpe %}
+                            <span><strong>RPE:</strong> {{ exercise.rpe }}/10</span>
+                        {% endif %}
+                        {% if exercise.restSeconds %}
+                            <span><strong>Descanso:</strong> {{ exercise.restSeconds }}s</span>
+                        {% endif %}
+                    </div>
+                    {% if exercise.notes %}
+                        <p style="margin-top: 1rem; margin-bottom: 0; color: #666; font-size: 0.875rem;">{{ exercise.notes|linebreaks }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-exercises">
+                <p>No hay ejercicios registrados en esta sesión.</p>
+                <a href="{% url 'sessions:exercise-create' pk=session.id %}" class="btn btn-primary">Añadir Primer Ejercicio</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="session-actions">
+        <a href="{% url 'sessions:list' %}" class="btn btn-secondary">Volver a la Lista</a>
+        <a href="{% url 'sessions:update' pk=session.id %}" class="btn btn-primary">Editar Sesión</a>
+        <form method="post" action="{% url 'sessions:delete' pk=session.id %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary" onclick="return confirm('¿Estás seguro de que deseas eliminar esta sesión?');">Eliminar Sesión</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

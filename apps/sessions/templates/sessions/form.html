@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if action == 'create' %}Crear Sesión{% else %}Editar Sesión{% endif %} - The Natural Way{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 800px;">
+    <h1>{% if action == 'create' %}Crear Nueva Sesión{% else %}Editar Sesión{% endif %}</h1>
+    <p>{% if action == 'create' %}Completa el formulario para registrar una nueva sesión de entrenamiento.{% else %}Modifica los campos que desees actualizar.{% endif %}</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.date.id_for_label }}">
+                {{ form.date.label }}
+                <span class="required">*</span>
+            </label>
+            {{ form.date }}
+            {% if form.date.errors %}
+                <div class="field-errors">{{ form.date.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.routine.id_for_label }}">{{ form.routine.label }}</label>
+            {{ form.routine }}
+            {% if form.routine.errors %}
+                <div class="field-errors">{{ form.routine.errors }}</div>
+            {% endif %}
+            {% if form.routine.help_text %}
+                <small class="help-text">{{ form.routine.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.start_time.id_for_label }}">{{ form.start_time.label }}</label>
+                {{ form.start_time }}
+                {% if form.start_time.errors %}
+                    <div class="field-errors">{{ form.start_time.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.end_time.id_for_label }}">{{ form.end_time.label }}</label>
+                {{ form.end_time }}
+                {% if form.end_time.errors %}
+                    <div class="field-errors">{{ form.end_time.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+                <div class="field-errors">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div class="form-group">
+                <label for="{{ form.rpe.id_for_label }}">{{ form.rpe.label }}</label>
+                {{ form.rpe }}
+                {% if form.rpe.errors %}
+                    <div class="field-errors">{{ form.rpe.errors }}</div>
+                {% endif %}
+                {% if form.rpe.help_text %}
+                    <small class="help-text">{{ form.rpe.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.energy_level.id_for_label }}">{{ form.energy_level.label }}</label>
+                {{ form.energy_level }}
+                {% if form.energy_level.errors %}
+                    <div class="field-errors">{{ form.energy_level.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.sleep_hours.id_for_label }}">{{ form.sleep_hours.label }}</label>
+                {{ form.sleep_hours }}
+                {% if form.sleep_hours.errors %}
+                    <div class="field-errors">{{ form.sleep_hours.errors }}</div>
+                {% endif %}
+                {% if form.sleep_hours.help_text %}
+                    <small class="help-text">{{ form.sleep_hours.help_text }}</small>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">
+                {% if action == 'create' %}Crear Sesión{% else %}Actualizar Sesión{% endif %}
+            </button>
+            {% if action == 'update' and session %}
+                <a href="{% url 'sessions:detail' pk=session.id %}" class="btn btn-secondary">Cancelar</a>
+            {% else %}
+                <a href="{% url 'sessions:list' %}" class="btn btn-secondary">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}
+

@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Sesiones de Entrenamiento - The Natural Way{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sessions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .filters-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    .filter-group label {
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    .sessions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .session-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .session-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    .session-header h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    .session-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+    .session-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .session-meta strong {
+        color: #333;
+    }
+    .session-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .badge-routine {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .empty-state p {
+        color: #666;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sessions-header">
+    <div>
+        <h1>Sesiones de Entrenamiento</h1>
+        <p>Registra y gestiona tus sesiones de entrenamiento</p>
+    </div>
+    {% if user.is_authenticated %}
+    <a href="{% url 'sessions:create' %}" class="btn btn-primary">Nueva Sesión</a>
+    {% endif %}
+</div>
+
+<div class="filters-container">
+    <h3 style="margin-top: 0;">Filtros</h3>
+    <form method="get" action="{% url 'sessions:list' %}">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label for="routineId">Rutina</label>
+                <select name="routineId" id="routineId" class="form-control">
+                    <option value="">Todas</option>
+                    {% for routine in routines %}
+                        <option value="{{ routine.id }}" {% if routine_id == routine.id %}selected{% endif %}>{{ routine.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="date">Fecha</label>
+                <input type="date" name="date" id="date" class="form-control" value="{{ date_filter }}">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+            <a href="{% url 'sessions:list' %}" class="btn btn-secondary">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+{% if sessions %}
+    <div class="sessions-list">
+        {% for session in sessions %}
+        <div class="session-card">
+            <div class="session-header">
+                <div>
+                    <h3>Sesión del {{ session.date|date:"d/m/Y" }}</h3>
+                    {% if session.routine %}
+                        <span class="badge badge-routine">{{ session.routine }}</span>
+                    {% endif %}
+                </div>
+                <div class="session-actions">
+                    <a href="{% url 'sessions:detail' pk=session.id %}" class="btn btn-primary">Ver Detalle</a>
+                </div>
+            </div>
+            <div class="session-meta">
+                {% if session.startTime %}
+                    <span><strong>Inicio:</strong> {{ session.startTime|date:"H:i" }}</span>
+                {% endif %}
+                {% if session.endTime %}
+                    <span><strong>Fin:</strong> {{ session.endTime|date:"H:i" }}</span>
+                {% endif %}
+                {% if session.durationMinutes %}
+                    <span><strong>Duración:</strong> {{ session.durationMinutes }} min</span>
+                {% endif %}
+                {% if session.rpe %}
+                    <span><strong>RPE:</strong> {{ session.rpe }}/10</span>
+                {% endif %}
+                {% if session.energyLevel %}
+                    <span><strong>Energía:</strong> {{ session.energyLevel|title }}</span>
+                {% endif %}
+                {% if session.sleepHours %}
+                    <span><strong>Sueño:</strong> {{ session.sleepHours }}h</span>
+                {% endif %}
+            </div>
+            {% if session.notes %}
+                <p style="color: #666; margin-bottom: 0;">{{ session.notes|truncatewords:20 }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <h3>No se encontraron sesiones</h3>
+        <p>Comienza registrando tu primera sesión de entrenamiento.</p>
+        {% if user.is_authenticated %}
+            <a href="{% url 'sessions:create' %}" class="btn btn-primary">Crear Primera Sesión</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
+
