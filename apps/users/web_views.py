@@ -186,3 +186,4 @@ class UserProfileView(View):
             return render(request, "users/profile.html", {"profile": profile_data, "form": form})
 
 
+

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.exercises',
     'apps.routines',
+    'apps.sessions',
 ]
 
 # Custom User Model
