@@ -232,6 +232,75 @@ Gestiona la biblioteca de ejercicios disponibles en el sistema.
 - `update_exercise_repository()` - Actualiza en base de datos
 - `delete_exercise_repository()` - Marca como inactivo
 
+#### `apps/sessions/` - Sesiones de Entrenamiento
+
+Gestiona el registro y seguimiento de sesiones de entrenamiento realizadas por los usuarios.
+
+**Modelos:**
+- `Session`: Modelo principal con campos para usuario, rutina (opcional), fecha, duración, notas, RPE, nivel de energía, horas de sueño.
+- `SessionExercise`: Ejercicios realizados en una sesión con datos reales (series completadas, repeticiones, peso, RPE, descanso).
+
+**Endpoints API REST (`/api/sessions/`):**
+- `GET /api/sessions/` - Lista sesiones con filtros por rutina y fecha (requiere autenticación)
+- `POST /api/sessions/` - Crea una nueva sesión (requiere autenticación)
+- `GET /api/sessions/{id}/` - Obtiene detalle de una sesión (requiere autenticación + ser propietario)
+- `PUT /api/sessions/{id}/` - Actualiza una sesión (requiere autenticación + ser propietario)
+- `DELETE /api/sessions/{id}/` - Elimina una sesión físicamente (requiere autenticación + ser propietario)
+- `GET /api/sessions/{id}/full/` - Obtiene sesión con ejercicios (requiere autenticación + ser propietario)
+- `GET /api/sessions/{id}/exercises/` - Lista ejercicios de una sesión (requiere autenticación + ser propietario)
+- `POST /api/sessions/{id}/exercises/` - Añade ejercicio a sesión (requiere autenticación + ser propietario)
+- `GET /api/sessions/exercises/{id}/` - Obtiene detalle de ejercicio de sesión (requiere autenticación + ser propietario)
+- `PUT /api/sessions/exercises/{id}/` - Actualiza ejercicio de sesión (requiere autenticación + ser propietario)
+- `DELETE /api/sessions/exercises/{id}/` - Elimina ejercicio de sesión (requiere autenticación + ser propietario)
+
+**Endpoints Web (`/sessions/`):**
+- `GET /sessions/` - Lista sesiones con filtros (vista web)
+- `GET /sessions/{id}/` - Detalle de sesión con ejercicios (vista web)
+- `GET /sessions/create/` - Formulario de creación de sesión
+- `GET /sessions/{id}/update/` - Formulario de actualización de sesión
+- `GET /sessions/{id}/delete/` - Confirmación de eliminación de sesión
+- `GET /sessions/{id}/exercise/create/` - Formulario para añadir ejercicio a sesión
+- `GET /sessions/exercise/{id}/update/` - Formulario de actualización de ejercicio
+- `GET /sessions/exercise/{id}/delete/` - Confirmación de eliminación de ejercicio
+
+**Características:**
+- Filtrado por rutina y fecha
+- Vinculación opcional con rutinas
+- Registro detallado de ejercicios realizados con datos reales
+- Cálculo automático de duración entre startTime y endTime
+- Validación de permisos: solo el propietario puede ver/editar sus sesiones
+- RPE (Rate of Perceived Exertion) a nivel de sesión y ejercicio
+- Métricas de contexto: nivel de energía, horas de sueño
+- TypedDict para seguridad de tipos en validated_data
+- Validaciones centralizadas en modelos con clean() y save()
+- Optimización de consultas con select_related y prefetch_related
+
+**Servicios principales:**
+- `list_sessions_service()` - Lista sesiones con filtros
+- `get_session_service()` - Obtiene una sesión por ID
+- `get_session_full_service()` - Obtiene sesión con ejercicios precargados
+- `create_session_service()` - Crea una nueva sesión
+- `update_session_service()` - Actualiza una sesión
+- `delete_session_service()` - Elimina una sesión
+- `list_session_exercises_service()` - Lista ejercicios de una sesión
+- `get_session_exercise_service()` - Obtiene ejercicio de sesión por ID
+- `create_session_exercise_service()` - Añade ejercicio a sesión
+- `update_session_exercise_service()` - Actualiza ejercicio de sesión
+- `delete_session_exercise_service()` - Elimina ejercicio de sesión
+
+**Repositorios principales:**
+- `list_sessions_repository()` - Consulta con filtros
+- `get_session_by_id_repository()` - Obtiene por ID
+- `get_session_full_repository()` - Obtiene con ejercicios precargados
+- `create_session_repository()` - Crea en base de datos
+- `update_session_repository()` - Actualiza en base de datos
+- `delete_session_repository()` - Elimina físicamente
+- `list_session_exercises_repository()` - Lista ejercicios de sesión
+- `get_session_exercise_by_id_repository()` - Obtiene ejercicio por ID
+- `create_session_exercise_repository()` - Crea ejercicio en sesión
+- `update_session_exercise_repository()` - Actualiza ejercicio
+- `delete_session_exercise_repository()` - Elimina ejercicio físicamente
+
 ## Autenticación
 
 ### API REST
@@ -255,8 +324,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('apps.users.api_urls')),      # API REST
     path('api/exercises/', include('apps.exercises.api_urls')),  # API REST
+    path('api/routines/', include('apps.routines.api_urls')),    # API REST
+    path('api/sessions/', include('apps.sessions.api_urls')),    # API REST
     path('users/', include('apps.users.web_urls')),         # Web
     path('exercises/', include('apps.exercises.web_urls')), # Web
+    path('routines/', include('apps.routines.web_urls')),   # Web
+    path('sessions/', include('apps.sessions.web_urls')),   # Web
 ]
 ```
 

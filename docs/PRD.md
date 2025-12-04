@@ -30,7 +30,8 @@
 
 - Registrar y documentar sesiones de entrenamiento completadas con datos detallados
 - [4_registrar_sesiones_de_entrenamiento#5](https://github.com/jsmdev/thenaturalway-backend/issues/5)
-- Estado: defined
+- Estado: builder-implemented
+- [Plan de Implementación](./features/4_registrar_sesiones_de_entrenamiento/plan.md)
 
 ### 5. SEGUIMIENTO DE PROGRESO
 

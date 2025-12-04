@@ -156,6 +156,7 @@ El proyecto usa JWT authentication:
 - **users** - Gestión de usuarios y autenticación
 - **exercises** - Biblioteca de ejercicios
 - **routines** - Rutinas de entrenamiento personalizadas
+- **sessions** - Registro y seguimiento de sesiones de entrenamiento
 
 ## 🐳 Docker (Opcional)
 
