@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import ClassVar
+
 from django.contrib import admin
 
 from apps.sessions.models import Session, SessionExercise
@@ -8,7 +12,7 @@ class SessionExerciseInline(admin.TabularInline):
 
     model = SessionExercise
     extra = 0
-    fields = [
+    fields: ClassVar[list[str]] = [
         "exercise",
         "order",
         "sets_completed",
@@ -18,12 +22,12 @@ class SessionExerciseInline(admin.TabularInline):
         "rest_seconds",
         "notes",
     ]
-    readonly_fields = ["created_at", "updated_at"]
+    readonly_fields: ClassVar[list[str]] = ["created_at", "updated_at"]
 
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
-    list_display = [
+    list_display: ClassVar[list[str]] = [
         "id",
         "user",
         "routine",
@@ -33,11 +37,11 @@ class SessionAdmin(admin.ModelAdmin):
         "energy_level",
         "created_at",
     ]
-    list_filter = ["user", "routine", "date", "energy_level", "created_at"]
-    search_fields = ["user__username", "routine__name", "notes"]
-    readonly_fields = ["id", "created_at", "updated_at"]
-    inlines = [SessionExerciseInline]
-    fieldsets = (
+    list_filter: ClassVar[list[str]] = ["user", "routine", "date", "energy_level", "created_at"]
+    search_fields: ClassVar[list[str]] = ["user__username", "routine__name", "notes"]
+    readonly_fields: ClassVar[list[str]] = ["id", "created_at", "updated_at"]
+    inlines: ClassVar[list] = [SessionExerciseInline]
+    fieldsets: ClassVar[tuple] = (
         ("Información Básica", {"fields": ("user", "routine", "date")}),
         ("Tiempo", {"fields": ("start_time", "end_time", "duration_minutes")}),
         ("Métricas", {"fields": ("rpe", "energy_level", "sleep_hours")}),
@@ -48,7 +52,7 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(SessionExercise)
 class SessionExerciseAdmin(admin.ModelAdmin):
-    list_display = [
+    list_display: ClassVar[list[str]] = [
         "id",
         "session",
         "exercise",
@@ -58,10 +62,10 @@ class SessionExerciseAdmin(admin.ModelAdmin):
         "rpe",
         "created_at",
     ]
-    list_filter = ["session__user", "session__date", "exercise", "created_at"]
-    search_fields = ["session__user__username", "exercise__name", "notes"]
-    readonly_fields = ["id", "created_at", "updated_at"]
-    fieldsets = (
+    list_filter: ClassVar[list[str]] = ["session__user", "session__date", "exercise", "created_at"]
+    search_fields: ClassVar[list[str]] = ["session__user__username", "exercise__name", "notes"]
+    readonly_fields: ClassVar[list[str]] = ["id", "created_at", "updated_at"]
+    fieldsets: ClassVar[tuple] = (
         ("Relaciones", {"fields": ("session", "exercise", "order")}),
         (
             "Ejecución",

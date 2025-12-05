@@ -75,7 +75,6 @@ from apps.routines.services import (
 )
 
 if TYPE_CHECKING:
-    from apps.exercises.models import Exercise
     from apps.users.models import User
 
 User = get_user_model()

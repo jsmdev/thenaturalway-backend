@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from rest_framework.exceptions import ValidationError
 
@@ -19,12 +19,12 @@ def register_user_service(
     username: str,
     email: str,
     password: str,
-    first_name: Optional[str] = None,
-    last_name: Optional[str] = None,
-    date_of_birth: Optional[str] = None,
-    gender: Optional[str] = None,
-    height: Optional[float] = None,
-    weight: Optional[float] = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    date_of_birth: str | None = None,
+    gender: str | None = None,
+    height: float | None = None,
+    weight: float | None = None,
 ) -> User:
     """Servicio para registrar un nuevo usuario."""
     # Validar unicidad de username
@@ -55,7 +55,7 @@ def register_user_service(
     return user
 
 
-def authenticate_user_service(username: str, password: str) -> Optional[User]:
+def authenticate_user_service(username: str, password: str) -> User | None:
     """Servicio para autenticar un usuario."""
     user = get_user_by_username_repository(username=username)
 
@@ -91,12 +91,12 @@ def get_user_profile_service(user: User) -> dict[str, Any]:
 
 def update_user_profile_service(
     user: User,
-    first_name: Optional[str] = None,
-    last_name: Optional[str] = None,
-    date_of_birth: Optional[str] = None,
-    gender: Optional[str] = None,
-    height: Optional[float] = None,
-    weight: Optional[float] = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    date_of_birth: str | None = None,
+    gender: str | None = None,
+    height: float | None = None,
+    weight: float | None = None,
 ) -> User:
     """Servicio para actualizar el perfil de un usuario."""
     # Validar gender si se proporciona

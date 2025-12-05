@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class UserRegisterAPIView(APIView):
     """Endpoint para registro de nuevos usuarios."""
 
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     def post(self, request: Request) -> Response:
         """Registra un nuevo usuario y retorna tokens JWT."""
@@ -104,7 +104,7 @@ class UserRegisterAPIView(APIView):
 class UserLoginAPIView(APIView):
     """Endpoint para inicio de sesión."""
 
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     def post(self, request: Request) -> Response:
         """Autentica un usuario y retorna tokens JWT."""
@@ -185,12 +185,12 @@ class UserLoginAPIView(APIView):
 class UserLogoutAPIView(TokenBlacklistView):
     """Endpoint para cerrar sesión."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def post(self, request: Request) -> Response:
         """Invalida el refresh token."""
         try:
-            response = super().post(request)
+            super().post(request)
             return Response(
                 {
                     "message": "Sesión cerrada correctamente",
@@ -220,7 +220,7 @@ class UserLogoutAPIView(TokenBlacklistView):
 class UserProfileAPIView(APIView):
     """Endpoint para obtener y actualizar el perfil del usuario autenticado."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
         """Retorna el perfil del usuario autenticado."""
@@ -311,7 +311,7 @@ class UserProfileAPIView(APIView):
 class UserTokenRefreshAPIView(TokenRefreshView):
     """Endpoint para refrescar el access token."""
 
-    permission_classes = [AllowAny]
+    permission_classes: ClassVar[list] = [AllowAny]
 
     def post(self, request: Request) -> Response:
         """Refresca el access token usando el refresh token."""

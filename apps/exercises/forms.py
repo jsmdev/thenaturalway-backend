@@ -25,25 +25,25 @@ class ExerciseForm(forms.Form):
         ),
     )
     movement_type = forms.ChoiceField(
-        choices=[("", "---------")] + Exercise.MOVEMENT_TYPE_CHOICES,
+        choices=[("", "---------"), *Exercise.MOVEMENT_TYPE_CHOICES],
         required=False,
         label="Tipo de movimiento",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     primary_muscle_group = forms.ChoiceField(
-        choices=[("", "---------")] + Exercise.PRIMARY_MUSCLE_GROUP_CHOICES,
+        choices=[("", "---------"), *Exercise.PRIMARY_MUSCLE_GROUP_CHOICES],
         required=False,
         label="Grupo muscular principal",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     equipment = forms.ChoiceField(
-        choices=[("", "---------")] + Exercise.EQUIPMENT_CHOICES,
+        choices=[("", "---------"), *Exercise.EQUIPMENT_CHOICES],
         required=False,
         label="Equipamiento",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
     difficulty = forms.ChoiceField(
-        choices=[("", "---------")] + Exercise.DIFFICULTY_CHOICES,
+        choices=[("", "---------"), *Exercise.DIFFICULTY_CHOICES],
         required=False,
         label="Dificultad",
         widget=forms.Select(attrs={"class": "form-control"}),

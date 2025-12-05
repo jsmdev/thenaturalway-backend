@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -25,7 +27,7 @@ class Routine(models.Model):
         db_table = "routines"
         verbose_name = "Routine"
         verbose_name_plural = "Routines"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["name"]),
             models.Index(fields=["created_by"]),
             models.Index(fields=["is_active"]),
@@ -50,12 +52,12 @@ class Week(models.Model):
         db_table = "weeks"
         verbose_name = "Week"
         verbose_name_plural = "Weeks"
-        unique_together = [["routine", "week_number"]]
-        indexes = [
+        unique_together: ClassVar[list[list[str]]] = [["routine", "week_number"]]
+        indexes: ClassVar[list] = [
             models.Index(fields=["routine"]),
             models.Index(fields=["week_number"]),
         ]
-        ordering = ["week_number"]
+        ordering: ClassVar[list[str]] = ["week_number"]
 
     def __str__(self) -> str:
         return f"Week {self.week_number} - {self.routine.name}"
@@ -91,12 +93,12 @@ class Day(models.Model):
         db_table = "days"
         verbose_name = "Day"
         verbose_name_plural = "Days"
-        unique_together = [["week", "day_number"]]
-        indexes = [
+        unique_together: ClassVar[list[list[str]]] = [["week", "day_number"]]
+        indexes: ClassVar[list] = [
             models.Index(fields=["week"]),
             models.Index(fields=["day_number"]),
         ]
-        ordering = ["day_number"]
+        ordering: ClassVar[list[str]] = ["day_number"]
 
     def __str__(self) -> str:
         day_name = self.name or f"Día {self.day_number}"
@@ -133,11 +135,11 @@ class Block(models.Model):
         db_table = "blocks"
         verbose_name = "Block"
         verbose_name_plural = "Blocks"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["day"]),
             models.Index(fields=["order"]),
         ]
-        ordering = ["order", "id"]
+        ordering: ClassVar[list[str]] = ["order", "id"]
 
     def __str__(self) -> str:
         return f"{self.name} - {self.day}"
@@ -179,12 +181,12 @@ class RoutineExercise(models.Model):
         db_table = "routine_exercises"
         verbose_name = "Routine Exercise"
         verbose_name_plural = "Routine Exercises"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["block"]),
             models.Index(fields=["exercise"]),
             models.Index(fields=["order"]),
         ]
-        ordering = ["order", "id"]
+        ordering: ClassVar[list[str]] = ["order", "id"]
 
     def __str__(self) -> str:
         return f"{self.exercise.name} - {self.block}"

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -9,7 +11,7 @@ User = get_user_model()
 class Exercise(models.Model):
     """Modelo de ejercicio según el dominio."""
 
-    MOVEMENT_TYPE_CHOICES = [
+    MOVEMENT_TYPE_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("push", "Push"),
         ("pull", "Pull"),
         ("squat", "Squat"),
@@ -18,7 +20,7 @@ class Exercise(models.Model):
         ("other", "Other"),
     ]
 
-    PRIMARY_MUSCLE_GROUP_CHOICES = [
+    PRIMARY_MUSCLE_GROUP_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("chest", "Chest"),
         ("back", "Back"),
         ("shoulders", "Shoulders"),
@@ -29,7 +31,7 @@ class Exercise(models.Model):
         ("other", "Other"),
     ]
 
-    EQUIPMENT_CHOICES = [
+    EQUIPMENT_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("barbell", "Barbell"),
         ("dumbbell", "Dumbbell"),
         ("cable", "Cable"),
@@ -39,7 +41,7 @@ class Exercise(models.Model):
         ("other", "Other"),
     ]
 
-    DIFFICULTY_CHOICES = [
+    DIFFICULTY_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("beginner", "Beginner"),
         ("intermediate", "Intermediate"),
         ("advanced", "Advanced"),
@@ -74,7 +76,7 @@ class Exercise(models.Model):
         db_table = "exercises"
         verbose_name = "Exercise"
         verbose_name_plural = "Exercises"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["name"]),
             models.Index(fields=["primary_muscle_group"]),
             models.Index(fields=["equipment"]),

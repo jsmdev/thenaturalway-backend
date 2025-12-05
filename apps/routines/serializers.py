@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from rest_framework import serializers
 
@@ -24,7 +24,7 @@ class RoutineSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Routine
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "name",
             "description",
@@ -35,7 +35,7 @@ class RoutineSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "createdAt", "updatedAt"]
 
     def get_createdBy(self, obj: Routine) -> Any:
         """Retorna el username o id del creador."""
@@ -87,8 +87,15 @@ class WeekSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Week
-        fields = ["id", "routineId", "weekNumber", "notes", "createdAt", "updatedAt"]
-        read_only_fields = ["id", "routineId", "createdAt", "updatedAt"]
+        fields: ClassVar[list[str]] = [
+            "id",
+            "routineId",
+            "weekNumber",
+            "notes",
+            "createdAt",
+            "updatedAt",
+        ]
+        read_only_fields: ClassVar[list[str]] = ["id", "routineId", "createdAt", "updatedAt"]
 
 
 class WeekCreateSerializer(serializers.Serializer):
@@ -109,7 +116,7 @@ class DaySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Day
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "weekId",
             "dayNumber",
@@ -118,7 +125,7 @@ class DaySerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "weekId", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "weekId", "createdAt", "updatedAt"]
 
 
 class DayCreateSerializer(serializers.Serializer):
@@ -139,8 +146,16 @@ class BlockSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Block
-        fields = ["id", "dayId", "name", "order", "notes", "createdAt", "updatedAt"]
-        read_only_fields = ["id", "dayId", "createdAt", "updatedAt"]
+        fields: ClassVar[list[str]] = [
+            "id",
+            "dayId",
+            "name",
+            "order",
+            "notes",
+            "createdAt",
+            "updatedAt",
+        ]
+        read_only_fields: ClassVar[list[str]] = ["id", "dayId", "createdAt", "updatedAt"]
 
 
 class BlockCreateSerializer(serializers.Serializer):
@@ -173,7 +188,7 @@ class RoutineExerciseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RoutineExercise
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "blockId",
             "exerciseId",
@@ -189,7 +204,7 @@ class RoutineExerciseSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = [
+        read_only_fields: ClassVar[list[str]] = [
             "id",
             "blockId",
             "exerciseId",
@@ -237,7 +252,7 @@ class RoutineFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Routine
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "name",
             "description",
@@ -249,7 +264,7 @@ class RoutineFullSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "createdAt", "updatedAt"]
 
     def get_createdBy(self, obj: Routine) -> Any:
         """Retorna el username o id del creador."""

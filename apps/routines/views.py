@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 class RoutineListAPIView(APIView):
     """Endpoint para listar y crear rutinas."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
         """Lista rutinas del usuario autenticado."""
@@ -142,7 +142,7 @@ class RoutineListAPIView(APIView):
 class RoutineDetailAPIView(APIView):
     """Endpoint para obtener, actualizar y eliminar una rutina específica."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request, pk: int) -> Response:
         """Obtiene el detalle de una rutina (opcionalmente con jerarquía completa)."""
@@ -346,7 +346,7 @@ class RoutineDetailAPIView(APIView):
 class WeekCreateAPIView(APIView):
     """Endpoint para crear una semana en una rutina."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def post(self, request: Request, pk: int) -> Response:
         """Crea una nueva semana en la rutina."""
@@ -441,7 +441,7 @@ class WeekCreateAPIView(APIView):
 class DayCreateAPIView(APIView):
     """Endpoint para crear un día en una semana."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def post(self, request: Request, pk: int, weekId: int) -> Response:
         """Crea un nuevo día en la semana."""
@@ -536,7 +536,7 @@ class DayCreateAPIView(APIView):
 class BlockCreateAPIView(APIView):
     """Endpoint para crear un bloque en un día."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def post(self, request: Request, pk: int, dayId: int) -> Response:
         """Crea un nuevo bloque en el día."""
@@ -618,7 +618,7 @@ class BlockCreateAPIView(APIView):
 class RoutineExerciseCreateAPIView(APIView):
     """Endpoint para crear un ejercicio en un bloque."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def post(self, request: Request, pk: int, blockId: int) -> Response:
         """Crea un nuevo ejercicio en el bloque."""

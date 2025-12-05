@@ -501,7 +501,7 @@ def generate_html(stats):
 
     # Seguridad (full width)
     if security:
-        total = security["total_issues"]
+        security["total_issues"]
         high = security["distribution"].get("HIGH", 0)
         medium = security["distribution"].get("MEDIUM", 0)
         low = security["distribution"].get("LOW", 0)

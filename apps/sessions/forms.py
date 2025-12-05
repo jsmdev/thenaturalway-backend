@@ -55,7 +55,7 @@ class SessionCreateForm(forms.Form):
         help_text="Escala de 1 a 10",
     )
     energy_level = forms.ChoiceField(
-        choices=[("", "---------")] + Session.ENERGY_LEVEL_CHOICES,
+        choices=[("", "---------"), *Session.ENERGY_LEVEL_CHOICES],
         required=False,
         label="Nivel de energía",
         widget=forms.Select(attrs={"class": "form-control"}),
@@ -100,11 +100,10 @@ class SessionCreateForm(forms.Form):
         start_time = cleaned_data.get("start_time")
         end_time = cleaned_data.get("end_time")
 
-        if start_time and end_time:
-            if end_time <= start_time:
-                raise ValidationError(
-                    {"end_time": "La hora de finalización debe ser posterior a la hora de inicio"}
-                )
+        if start_time and end_time and end_time <= start_time:
+            raise ValidationError(
+                {"end_time": "La hora de finalización debe ser posterior a la hora de inicio"}
+            )
 
         return cleaned_data
 

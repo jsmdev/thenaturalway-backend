@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 UserModel = get_user_model()
 
 
-def get_user_by_id_repository(user_id: int) -> Optional[User]:
+def get_user_by_id_repository(user_id: int) -> User | None:
     """Obtiene un usuario por su ID."""
     try:
         return UserModel.objects.get(id=user_id)
@@ -19,7 +19,7 @@ def get_user_by_id_repository(user_id: int) -> Optional[User]:
         return None
 
 
-def get_user_by_username_repository(username: str) -> Optional[User]:
+def get_user_by_username_repository(username: str) -> User | None:
     """Obtiene un usuario por su username."""
     try:
         return UserModel.objects.get(username=username)
@@ -27,7 +27,7 @@ def get_user_by_username_repository(username: str) -> Optional[User]:
         return None
 
 
-def get_user_by_email_repository(email: str) -> Optional[User]:
+def get_user_by_email_repository(email: str) -> User | None:
     """Obtiene un usuario por su email."""
     try:
         return UserModel.objects.get(email=email)
@@ -39,12 +39,12 @@ def create_user_repository(
     username: str,
     email: str,
     password: str,
-    first_name: Optional[str] = None,
-    last_name: Optional[str] = None,
-    date_of_birth: Optional[str] = None,
-    gender: Optional[str] = None,
-    height: Optional[float] = None,
-    weight: Optional[float] = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    date_of_birth: str | None = None,
+    gender: str | None = None,
+    height: float | None = None,
+    weight: float | None = None,
 ) -> User:
     """Crea un nuevo usuario."""
     # Convertir date_of_birth de string a date si es necesario
@@ -70,12 +70,12 @@ def create_user_repository(
 
 def update_user_repository(
     user: User,
-    first_name: Optional[str] = None,
-    last_name: Optional[str] = None,
-    date_of_birth: Optional[str] = None,
-    gender: Optional[str] = None,
-    height: Optional[float] = None,
-    weight: Optional[float] = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    date_of_birth: str | None = None,
+    gender: str | None = None,
+    height: float | None = None,
+    weight: float | None = None,
 ) -> User:
     """Actualiza los datos de un usuario."""
     if first_name is not None:

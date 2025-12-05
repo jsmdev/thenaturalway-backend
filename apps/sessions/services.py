@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Optional, TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
@@ -27,60 +27,60 @@ class SessionCreateData(TypedDict, total=False):
     """Estructura de datos para crear una sesión."""
 
     date: date
-    routineId: Optional[int]
-    startTime: Optional[datetime]
-    endTime: Optional[datetime]
-    durationMinutes: Optional[int]
-    notes: Optional[str]
-    rpe: Optional[int]
-    energyLevel: Optional[str]
-    sleepHours: Optional[float]
+    routineId: int | None
+    startTime: datetime | None
+    endTime: datetime | None
+    durationMinutes: int | None
+    notes: str | None
+    rpe: int | None
+    energyLevel: str | None
+    sleepHours: float | None
 
 
 class SessionUpdateData(TypedDict, total=False):
     """Estructura de datos para actualizar una sesión."""
 
     date: date
-    routineId: Optional[int]
-    startTime: Optional[datetime]
-    endTime: Optional[datetime]
-    durationMinutes: Optional[int]
-    notes: Optional[str]
-    rpe: Optional[int]
-    energyLevel: Optional[str]
-    sleepHours: Optional[float]
+    routineId: int | None
+    startTime: datetime | None
+    endTime: datetime | None
+    durationMinutes: int | None
+    notes: str | None
+    rpe: int | None
+    energyLevel: str | None
+    sleepHours: float | None
 
 
 class SessionExerciseCreateData(TypedDict, total=False):
     """Estructura de datos para crear un ejercicio de sesión."""
 
     exerciseId: int
-    order: Optional[int]
-    setsCompleted: Optional[int]
-    repetitions: Optional[str]
-    weight: Optional[float]
-    rpe: Optional[int]
-    restSeconds: Optional[int]
-    notes: Optional[str]
+    order: int | None
+    setsCompleted: int | None
+    repetitions: str | None
+    weight: float | None
+    rpe: int | None
+    restSeconds: int | None
+    notes: str | None
 
 
 class SessionExerciseUpdateData(TypedDict, total=False):
     """Estructura de datos para actualizar un ejercicio de sesión."""
 
-    exerciseId: Optional[int]
-    order: Optional[int]
-    setsCompleted: Optional[int]
-    repetitions: Optional[str]
-    weight: Optional[float]
-    rpe: Optional[int]
-    restSeconds: Optional[int]
-    notes: Optional[str]
+    exerciseId: int | None
+    order: int | None
+    setsCompleted: int | None
+    repetitions: str | None
+    weight: float | None
+    rpe: int | None
+    restSeconds: int | None
+    notes: str | None
 
 
 def list_sessions_service(
     user: User,
-    routine_id: Optional[int] = None,
-    date_filter: Optional[date] = None,
+    routine_id: int | None = None,
+    date_filter: date | None = None,
 ) -> list[Session]:
     """
     Servicio para listar sesiones del usuario con filtros.
@@ -158,7 +158,7 @@ def create_session_service(validated_data: SessionCreateData, user: User) -> Ses
         raise ValidationError({"date": "La fecha es requerida"})
 
     # Validación temprana de energyLevel (también validado en el modelo)
-    if "energyLevel" in validated_data and validated_data["energyLevel"]:
+    if validated_data.get("energyLevel"):
         valid_energy_levels = [choice[0] for choice in Session.ENERGY_LEVEL_CHOICES]
         if validated_data["energyLevel"] not in valid_energy_levels:
             raise ValidationError(
@@ -166,7 +166,7 @@ def create_session_service(validated_data: SessionCreateData, user: User) -> Ses
             )
 
     # Validar que si se proporciona routineId, la rutina pertenezca al usuario
-    if "routineId" in validated_data and validated_data["routineId"]:
+    if validated_data.get("routineId"):
         from apps.routines.repositories import get_routine_by_id_repository
 
         routine = get_routine_by_id_repository(routine_id=validated_data["routineId"])
@@ -228,7 +228,7 @@ def update_session_service(
         raise PermissionDenied("Solo puedes actualizar tus propias sesiones")
 
     # Validar routineId si se proporciona
-    if "routineId" in validated_data and validated_data["routineId"]:
+    if validated_data.get("routineId"):
         from apps.routines.repositories import get_routine_by_id_repository
 
         routine = get_routine_by_id_repository(routine_id=validated_data["routineId"])
@@ -445,7 +445,7 @@ def update_session_exercise_service(
         raise PermissionDenied("Solo puedes actualizar ejercicios en tus propias sesiones")
 
     # Validar exerciseId si se proporciona
-    if "exerciseId" in validated_data and validated_data["exerciseId"]:
+    if validated_data.get("exerciseId"):
         from apps.exercises.repositories import get_exercise_by_id_repository
 
         exercise = get_exercise_by_id_repository(exercise_id=validated_data["exerciseId"])

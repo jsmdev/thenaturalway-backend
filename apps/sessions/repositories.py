@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from django.db.models import Prefetch, QuerySet
 
@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 
 def list_sessions_repository(
     user: User,
-    routine_id: Optional[int] = None,
-    date_filter: Optional[date] = None,
+    routine_id: int | None = None,
+    date_filter: date | None = None,
 ) -> QuerySet[Session]:
     """
     Lista sesiones con filtros por usuario, rutina y fecha.
@@ -42,7 +42,7 @@ def list_sessions_repository(
     return queryset
 
 
-def get_session_by_id_repository(session_id: int) -> Optional[Session]:
+def get_session_by_id_repository(session_id: int) -> Session | None:
     """
     Obtiene una sesión por su ID.
 
@@ -58,7 +58,7 @@ def get_session_by_id_repository(session_id: int) -> Optional[Session]:
         return None
 
 
-def get_session_full_repository(session_id: int) -> Optional[Session]:
+def get_session_full_repository(session_id: int) -> Session | None:
     """
     Obtiene una sesión por su ID con ejercicios precargados.
 
@@ -178,7 +178,7 @@ def delete_session_repository(session: Session) -> None:
 
 
 def list_session_exercises_repository(
-    session: Session, ordering: Optional[str] = None
+    session: Session, ordering: str | None = None
 ) -> QuerySet[SessionExercise]:
     """
     Lista ejercicios de una sesión ordenados por order.
@@ -191,14 +191,11 @@ def list_session_exercises_repository(
         QuerySet de ejercicios de la sesión ordenados
     """
     queryset = SessionExercise.objects.select_related("exercise").filter(session=session)
-    if ordering:
-        queryset = queryset.order_by(ordering)
-    else:
-        queryset = queryset.order_by("order", "id")
+    queryset = queryset.order_by(ordering) if ordering else queryset.order_by("order", "id")
     return queryset
 
 
-def get_session_exercise_by_id_repository(session_exercise_id: int) -> Optional[SessionExercise]:
+def get_session_exercise_by_id_repository(session_exercise_id: int) -> SessionExercise | None:
     """
     Obtiene un ejercicio de sesión por su ID.
 

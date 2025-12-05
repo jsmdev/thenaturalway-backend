@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import ClassVar
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
@@ -8,7 +12,7 @@ from apps.users.models import User
 class UserAdmin(BaseUserAdmin):
     """Configuración del admin para el modelo User."""
 
-    list_display = [
+    list_display: ClassVar[list[str]] = [
         "username",
         "email",
         "first_name",
@@ -17,12 +21,18 @@ class UserAdmin(BaseUserAdmin):
         "is_staff",
         "created_at",
     ]
-    list_filter = ["is_active", "is_staff", "is_superuser", "gender", "created_at"]
-    search_fields = ["username", "email", "first_name", "last_name"]
-    ordering = ["-created_at"]
-    filter_horizontal = ["groups", "user_permissions"]
+    list_filter: ClassVar[list[str]] = [
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "gender",
+        "created_at",
+    ]
+    search_fields: ClassVar[list[str]] = ["username", "email", "first_name", "last_name"]
+    ordering: ClassVar[list[str]] = ["-created_at"]
+    filter_horizontal: ClassVar[tuple[str, str]] = ("groups", "user_permissions")
 
-    fieldsets = (
+    fieldsets: ClassVar[tuple] = (
         (None, {"fields": ("username", "password")}),
         (
             "Personal info",
@@ -36,7 +46,7 @@ class UserAdmin(BaseUserAdmin):
         ("Important dates", {"fields": ("last_login", "created_at", "updated_at")}),
     )
 
-    add_fieldsets = (
+    add_fieldsets: ClassVar[tuple] = (
         (
             None,
             {
@@ -46,4 +56,4 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
 
-    readonly_fields = ["created_at", "updated_at", "last_login"]
+    readonly_fields: ClassVar[list[str]] = ["created_at", "updated_at", "last_login"]

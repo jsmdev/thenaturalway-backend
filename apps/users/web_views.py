@@ -170,7 +170,7 @@ class UserProfileView(View):
 
         try:
             # Actualizar usuario usando el servicio
-            updated_user = update_user_profile_service(
+            update_user_profile_service(
                 user=request.user,
                 first_name=form.cleaned_data.get("first_name") or None,
                 last_name=form.cleaned_data.get("last_name") or None,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
@@ -18,10 +18,10 @@ if TYPE_CHECKING:
 
 
 def list_exercises_service(
-    filters: Optional[dict[str, Any]] = None,
-    search: Optional[str] = None,
-    ordering: Optional[str] = None,
-    user: Optional[User] = None,
+    filters: dict[str, Any] | None = None,
+    search: str | None = None,
+    ordering: str | None = None,
+    user: User | None = None,
 ) -> list[Exercise]:
     """
     Servicio para listar ejercicios con filtros y búsqueda.
@@ -129,9 +129,7 @@ def get_exercise_service(exercise_id: int) -> Exercise:
     return exercise
 
 
-def create_exercise_service(
-    validated_data: dict[str, Any], user: Optional[User] = None
-) -> Exercise:
+def create_exercise_service(validated_data: dict[str, Any], user: User | None = None) -> Exercise:
     """
     Servicio para crear un nuevo ejercicio.
 
@@ -224,7 +222,7 @@ def create_exercise_service(
 
 
 def update_exercise_service(
-    exercise_id: int, validated_data: dict[str, Any], user: Optional[User] = None
+    exercise_id: int, validated_data: dict[str, Any], user: User | None = None
 ) -> Exercise:
     """
     Servicio para actualizar un ejercicio existente.
@@ -326,7 +324,7 @@ def update_exercise_service(
     return updated_exercise
 
 
-def delete_exercise_service(exercise_id: int, user: Optional[User] = None) -> Exercise:
+def delete_exercise_service(exercise_id: int, user: User | None = None) -> Exercise:
     """
     Servicio para eliminar un ejercicio (soft delete).
 

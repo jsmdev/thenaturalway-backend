@@ -32,7 +32,7 @@ from apps.routines.repositories import (
 )
 
 if TYPE_CHECKING:
-    from apps.routines.models import Block, Day, Routine, RoutineExercise, Week
+    from apps.routines.models import Block, Routine, RoutineExercise
     from apps.users.models import User
 
 

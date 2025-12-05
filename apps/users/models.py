@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
@@ -41,7 +43,7 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Modelo de usuario personalizado según el dominio."""
 
-    GENDER_CHOICES = [
+    GENDER_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("male", "Male"),
         ("female", "Female"),
         ("other", "Other"),
@@ -64,13 +66,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email"]
+    REQUIRED_FIELDS: ClassVar[list[str]] = ["email"]
 
     class Meta:
         db_table = "users"
         verbose_name = "User"
         verbose_name_plural = "Users"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["username"]),
             models.Index(fields=["email"]),
         ]

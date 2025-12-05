@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from rest_framework import serializers
 
@@ -52,7 +52,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Exercise
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "name",
             "description",
@@ -69,7 +69,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "createdAt", "updatedAt"]
 
     def get_createdBy(self, obj: Exercise) -> Any:
         """Retorna el username o id del creador."""

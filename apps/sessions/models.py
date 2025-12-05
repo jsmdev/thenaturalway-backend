@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -10,7 +12,7 @@ User = get_user_model()
 class Session(models.Model):
     """Modelo de sesión de entrenamiento según el dominio."""
 
-    ENERGY_LEVEL_CHOICES = [
+    ENERGY_LEVEL_CHOICES: ClassVar[list[tuple[str, str]]] = [
         ("very_low", "Very Low"),
         ("low", "Low"),
         ("medium", "Medium"),
@@ -50,13 +52,13 @@ class Session(models.Model):
         db_table = "training_sessions"
         verbose_name = "Session"
         verbose_name_plural = "Sessions"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["user"]),
             models.Index(fields=["routine"]),
             models.Index(fields=["date"]),
             models.Index(fields=["energy_level"]),
         ]
-        ordering = ["-date", "-created_at"]
+        ordering: ClassVar[list[str]] = ["-date", "-created_at"]
 
     def __str__(self) -> str:
         routine_name = f" - {self.routine.name}" if self.routine else ""
@@ -71,11 +73,8 @@ class Session(models.Model):
             errors["rpe"] = "RPE debe estar entre 1 y 10"
 
         # Validar que end_time sea posterior a start_time
-        if self.start_time and self.end_time:
-            if self.end_time <= self.start_time:
-                errors[
-                    "end_time"
-                ] = "La hora de finalización debe ser posterior a la hora de inicio"
+        if self.start_time and self.end_time and self.end_time <= self.start_time:
+            errors["end_time"] = "La hora de finalización debe ser posterior a la hora de inicio"
 
         # Calcular duración automáticamente si se proporcionan start_time y end_time
         if self.start_time and self.end_time and not self.duration_minutes:
@@ -119,12 +118,12 @@ class SessionExercise(models.Model):
         db_table = "session_exercises"
         verbose_name = "Session Exercise"
         verbose_name_plural = "Session Exercises"
-        indexes = [
+        indexes: ClassVar[list] = [
             models.Index(fields=["session"]),
             models.Index(fields=["exercise"]),
             models.Index(fields=["order"]),
         ]
-        ordering = ["order", "id"]
+        ordering: ClassVar[list[str]] = ["order", "id"]
 
     def __str__(self) -> str:
         return f"{self.exercise.name} - {self.session}"

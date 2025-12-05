@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, ClassVar
 
 from rest_framework import serializers
 
@@ -36,7 +36,7 @@ class SessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Session
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "userId",
             "user",
@@ -53,7 +53,7 @@ class SessionSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "userId", "user", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "userId", "user", "createdAt", "updatedAt"]
 
 
 class SessionCreateSerializer(serializers.Serializer):
@@ -140,7 +140,7 @@ class SessionExerciseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SessionExercise
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "sessionId",
             "exerciseId",
@@ -155,7 +155,13 @@ class SessionExerciseSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "sessionId", "exerciseId", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = [
+            "id",
+            "sessionId",
+            "exerciseId",
+            "createdAt",
+            "updatedAt",
+        ]
 
     def get_exercise(self, obj: SessionExercise) -> dict[str, Any]:
         """Retorna información básica del ejercicio."""
@@ -194,7 +200,7 @@ class SessionFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Session
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "userId",
             "user",
@@ -212,7 +218,7 @@ class SessionFullSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "userId", "user", "createdAt", "updatedAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "userId", "user", "createdAt", "updatedAt"]
 
     def get_sessionExercises(self, obj: Session) -> list[dict[str, Any]]:
         """Retorna la lista de ejercicios de la sesión."""

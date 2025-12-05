@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from django.db.models import Prefetch, QuerySet
 
@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 
 
 def list_routines_repository(
-    user: Optional[User] = None,
-    filters: Optional[dict[str, Any]] = None,
+    user: User | None = None,
+    filters: dict[str, Any] | None = None,
 ) -> QuerySet[Routine]:
     """
     Lista rutinas con filtros por usuario.
@@ -29,16 +29,15 @@ def list_routines_repository(
     if user:
         queryset = queryset.filter(created_by=user)
 
-    if filters:
-        if filters.get("isActive") is not None:
-            queryset = queryset.filter(is_active=filters["isActive"])
+    if filters and filters.get("isActive") is not None:
+        queryset = queryset.filter(is_active=filters["isActive"])
 
     queryset = queryset.order_by("-created_at")
 
     return queryset
 
 
-def get_routine_by_id_repository(routine_id: int) -> Optional[Routine]:
+def get_routine_by_id_repository(routine_id: int) -> Routine | None:
     """
     Obtiene una rutina por su ID.
 
@@ -135,7 +134,7 @@ def list_weeks_by_routine_repository(routine_id: int) -> QuerySet[Week]:
     return Week.objects.filter(routine_id=routine_id).order_by("week_number")
 
 
-def get_week_by_id_repository(week_id: int) -> Optional[Week]:
+def get_week_by_id_repository(week_id: int) -> Week | None:
     """
     Obtiene una semana por su ID.
 
@@ -217,7 +216,7 @@ def list_days_by_week_repository(week_id: int) -> QuerySet[Day]:
     return Day.objects.filter(week_id=week_id).order_by("day_number")
 
 
-def get_day_by_id_repository(day_id: int) -> Optional[Day]:
+def get_day_by_id_repository(day_id: int) -> Day | None:
     """
     Obtiene un día por su ID.
 
@@ -302,7 +301,7 @@ def list_blocks_by_day_repository(day_id: int) -> QuerySet[Block]:
     return Block.objects.filter(day_id=day_id).order_by("order", "id")
 
 
-def get_block_by_id_repository(block_id: int) -> Optional[Block]:
+def get_block_by_id_repository(block_id: int) -> Block | None:
     """
     Obtiene un bloque por su ID.
 
@@ -397,7 +396,7 @@ def list_routine_exercises_by_block_repository(
 
 def get_routine_exercise_by_id_repository(
     routine_exercise_id: int,
-) -> Optional[RoutineExercise]:
+) -> RoutineExercise | None:
     """
     Obtiene un ejercicio en rutina por su ID.
 
@@ -491,7 +490,7 @@ def delete_routine_exercise_repository(routine_exercise: RoutineExercise) -> Non
     routine_exercise.delete()
 
 
-def get_routine_full_repository(routine_id: int) -> Optional[Routine]:
+def get_routine_full_repository(routine_id: int) -> Routine | None:
     """
     Obtiene una rutina completa con toda su jerarquía optimizada.
 

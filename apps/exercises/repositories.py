@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from django.db.models import Q, QuerySet
 
@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
 
 def list_exercises_repository(
-    filters: Optional[dict[str, Any]] = None,
-    search: Optional[str] = None,
-    ordering: Optional[str] = None,
+    filters: dict[str, Any] | None = None,
+    search: str | None = None,
+    ordering: str | None = None,
 ) -> QuerySet[Exercise]:
     """
     Lista ejercicios con filtros, búsqueda y ordenamiento.
@@ -46,15 +46,12 @@ def list_exercises_repository(
         queryset = queryset.filter(Q(name__icontains=search) | Q(description__icontains=search))
 
     # Aplicar ordenamiento
-    if ordering:
-        queryset = queryset.order_by(ordering)
-    else:
-        queryset = queryset.order_by("name")
+    queryset = queryset.order_by(ordering) if ordering else queryset.order_by("name")
 
     return queryset
 
 
-def get_exercise_by_id_repository(exercise_id: int) -> Optional[Exercise]:
+def get_exercise_by_id_repository(exercise_id: int) -> Exercise | None:
     """
     Obtiene un ejercicio por su ID.
 
@@ -71,7 +68,7 @@ def get_exercise_by_id_repository(exercise_id: int) -> Optional[Exercise]:
 
 
 def create_exercise_repository(
-    validated_data: dict[str, Any], user: Optional[User] = None
+    validated_data: dict[str, Any], user: User | None = None
 ) -> Exercise:
     """
     Crea un nuevo ejercicio.

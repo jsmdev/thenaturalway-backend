@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -47,7 +47,7 @@ class SessionListAPIView(APIView):
     - POST: Requiere autenticación (IsAuthenticated)
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
         """
@@ -239,7 +239,7 @@ class SessionDetailAPIView(APIView):
     - Todos los métodos: Requiere autenticación + ser el propietario de la sesión
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request, pk: int) -> Response:
         """
@@ -502,7 +502,7 @@ class SessionExerciseListAPIView(APIView):
     - Todos los métodos: Requiere autenticación + ser el propietario de la sesión
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request, sessionId: int) -> Response:
         """
@@ -705,7 +705,7 @@ class SessionExerciseDetailAPIView(APIView):
     - Todos los métodos: Requiere autenticación + ser el propietario de la sesión
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes: ClassVar[list] = [IsAuthenticated]
 
     def get(self, request: Request, sessionId: int, pk: int) -> Response:
         """

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 from rest_framework import serializers
 
 from apps.users.models import User
@@ -59,7 +61,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "username",
             "email",
@@ -73,7 +75,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "createdAt",
             "updatedAt",
         ]
-        read_only_fields = ["id", "username", "email", "createdAt", "updatedAt", "isActive"]
+        read_only_fields: ClassVar[list[str]] = [
+            "id",
+            "username",
+            "email",
+            "createdAt",
+            "updatedAt",
+            "isActive",
+        ]
 
     def get_dateOfBirth(self, obj: User) -> str | None:
         """Retorna dateOfBirth en formato ISO."""
