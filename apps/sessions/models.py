@@ -64,6 +64,11 @@ class Session(models.Model):
         routine_name = f" - {self.routine.name}" if self.routine else ""
         return f"{self.date} - {self.user.username}{routine_name}"
 
+    def save(self, *args, **kwargs) -> None:
+        """Sobrescribe save para ejecutar validación y calcular duración."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def clean(self) -> None:
         """Valida que los datos sean consistentes."""
         errors = {}
@@ -83,11 +88,6 @@ class Session(models.Model):
 
         if errors:
             raise ValidationError(errors)
-
-    def save(self, *args, **kwargs) -> None:
-        """Sobrescribe save para ejecutar validación y calcular duración."""
-        self.full_clean()
-        super().save(*args, **kwargs)
 
 
 class SessionExercise(models.Model):
@@ -128,17 +128,6 @@ class SessionExercise(models.Model):
     def __str__(self) -> str:
         return f"{self.exercise.name} - {self.session}"
 
-    def clean(self) -> None:
-        """Valida que los datos sean consistentes."""
-        errors = {}
-
-        # Validar RPE entre 1-10
-        if self.rpe is not None and (self.rpe < 1 or self.rpe > 10):
-            errors["rpe"] = "RPE debe estar entre 1 y 10"
-
-        if errors:
-            raise ValidationError(errors)
-
     def save(self, *args, **kwargs) -> None:
         """Asigna order automáticamente si no se proporciona."""
         if not self.order and self.session_id:
@@ -149,3 +138,14 @@ class SessionExercise(models.Model):
 
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def clean(self) -> None:
+        """Valida que los datos sean consistentes."""
+        errors = {}
+
+        # Validar RPE entre 1-10
+        if self.rpe is not None and (self.rpe < 1 or self.rpe > 10):
+            errors["rpe"] = "RPE debe estar entre 1 y 10"
+
+        if errors:
+            raise ValidationError(errors)

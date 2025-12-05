@@ -51,6 +51,9 @@ ignore = [
     "S311",   # random no es seguro (OK para desarrollo)
     "DJ001",  # Django model sin __str__ (a veces intencional)
     "T201",   # print() statements (útil para debugging)
+    "N815",   # mixedCase en serializers - API usa camelCase intencionalmente
+    "N802",   # Nombres de métodos en serializers - API usa camelCase
+    "N803",   # Argumentos en views - API usa camelCase para parámetros de URL
 ]
 
 # Permitir fix automático para estas reglas
@@ -61,7 +64,7 @@ unfixable = []
 # Ignorar reglas específicas en ciertos archivos
 "**/tests.py" = ["S101", "S105", "S106"]  # Asserts y hardcoded passwords OK en tests
 "**/test_*.py" = ["S101", "S105", "S106"]
-"**/settings.py" = ["F405"]  # Star imports OK en settings
+"**/settings.py" = ["F405", "S104", "S105", "E402"]  # Star imports, bind all, secrets, imports order OK en desarrollo
 "**/migrations/*.py" = ["ALL"]  # No lint migrations
 
 [tool.ruff.lint.isort]

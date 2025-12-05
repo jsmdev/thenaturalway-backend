@@ -133,8 +133,13 @@ class SessionCreateView(View):
                 routine = get_routine_by_id_repository(routine_id=int(routine_id))
                 if routine and routine.created_by.id == request.user.id:
                     form.fields["routine"].initial = routine.id
-            except Exception:
-                pass  # Si no se puede obtener la rutina, simplemente no pre-seleccionar
+            except Exception as e:
+                # Si no se puede obtener la rutina, simplemente no pre-seleccionar
+                # Log para debugging en desarrollo
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.debug(f"Could not pre-select routine: {e}")
 
         return render(request, "sessions/form.html", {"form": form, "action": "create"})
 

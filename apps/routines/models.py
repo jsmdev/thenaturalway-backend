@@ -62,6 +62,11 @@ class Week(models.Model):
     def __str__(self) -> str:
         return f"Week {self.week_number} - {self.routine.name}"
 
+    def save(self, *args, **kwargs) -> None:
+        """Sobrescribe save para ejecutar validación."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def clean(self) -> None:
         """Valida que week_number sea único por rutina."""
         if self.routine_id and self.week_number:
@@ -72,11 +77,6 @@ class Week(models.Model):
                 raise ValidationError(
                     {"week_number": "Ya existe una semana con este número en esta rutina"}
                 )
-
-    def save(self, *args, **kwargs) -> None:
-        """Sobrescribe save para ejecutar validación."""
-        self.full_clean()
-        super().save(*args, **kwargs)
 
 
 class Day(models.Model):
@@ -104,6 +104,11 @@ class Day(models.Model):
         day_name = self.name or f"Día {self.day_number}"
         return f"{day_name} - {self.week}"
 
+    def save(self, *args, **kwargs) -> None:
+        """Sobrescribe save para ejecutar validación."""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def clean(self) -> None:
         """Valida que day_number sea único por semana."""
         if self.week_id and self.day_number:
@@ -114,11 +119,6 @@ class Day(models.Model):
                 raise ValidationError(
                     {"day_number": "Ya existe un día con este número en esta semana"}
                 )
-
-    def save(self, *args, **kwargs) -> None:
-        """Sobrescribe save para ejecutar validación."""
-        self.full_clean()
-        super().save(*args, **kwargs)
 
 
 class Block(models.Model):

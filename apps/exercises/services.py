@@ -97,8 +97,8 @@ def list_exercises_service(
         if "createdBy" in filters:
             try:
                 valid_filters["createdBy"] = int(filters["createdBy"])
-            except (ValueError, TypeError):
-                raise ValidationError({"createdBy": "Debe ser un número entero"})
+            except (ValueError, TypeError) as e:
+                raise ValidationError({"createdBy": "Debe ser un número entero"}) from e
 
         filters = valid_filters
 
