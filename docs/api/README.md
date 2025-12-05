@@ -123,4 +123,3 @@ La API utiliza autenticación JWT (JSON Web Tokens). Para autenticarte:
 - [Arquitectura del Proyecto](../ARCHITECTURE.md)
 - [Modelo de Dominio](../DOMAIN.md)
 - [Documento de Requerimientos](../PRD.md)
-

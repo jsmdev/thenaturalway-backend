@@ -550,4 +550,3 @@ Implementar la funcionalidad completa para diseñar y configurar rutinas de entr
 - Navegación fluida entre apps
 
 > Fin del Plan de Implementación para `3_crear_rutinas_de_entrenamiento`
-

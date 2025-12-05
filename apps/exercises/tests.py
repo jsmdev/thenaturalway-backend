@@ -1,35 +1,35 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+from django.test import TestCase
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-from unittest.mock import patch, MagicMock
+from rest_framework.test import APIClient
 
+from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
 from apps.exercises.models import Exercise
-from apps.exercises.services import (
-    list_exercises_service,
-    get_exercise_service,
-    create_exercise_service,
-    update_exercise_service,
-    delete_exercise_service,
-)
 from apps.exercises.repositories import (
-    list_exercises_repository,
-    get_exercise_by_id_repository,
     create_exercise_repository,
-    update_exercise_repository,
     delete_exercise_repository,
+    get_exercise_by_id_repository,
+    list_exercises_repository,
+    update_exercise_repository,
 )
 from apps.exercises.serializers import (
-    ExerciseSerializer,
     ExerciseCreateSerializer,
+    ExerciseSerializer,
     ExerciseUpdateSerializer,
 )
-from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
+from apps.exercises.services import (
+    create_exercise_service,
+    delete_exercise_service,
+    get_exercise_service,
+    list_exercises_service,
+    update_exercise_service,
+)
 
 if TYPE_CHECKING:
     from apps.users.models import User

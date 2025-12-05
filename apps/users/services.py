@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from rest_framework.exceptions import ValidationError
 
 from apps.users.repositories import (
-    get_user_by_username_repository,
-    get_user_by_email_repository,
     create_user_repository,
+    get_user_by_email_repository,
+    get_user_by_username_repository,
     update_user_repository,
 )
 
@@ -71,7 +71,7 @@ def authenticate_user_service(username: str, password: str) -> Optional[User]:
     return user
 
 
-def get_user_profile_service(user: User) -> Dict[str, Any]:
+def get_user_profile_service(user: User) -> dict[str, Any]:
     """Servicio para obtener el perfil de un usuario."""
     return {
         "id": user.id,
@@ -103,7 +103,9 @@ def update_user_profile_service(
     if gender is not None:
         valid_genders = ["male", "female", "other"]
         if gender not in valid_genders:
-            raise ValidationError({"gender": f"El género debe ser uno de: {', '.join(valid_genders)}"})
+            raise ValidationError(
+                {"gender": f"El género debe ser uno de: {', '.join(valid_genders)}"}
+            )
 
     # Actualizar usuario
     updated_user = update_user_repository(
@@ -117,4 +119,3 @@ def update_user_profile_service(
     )
 
     return updated_user
-

@@ -5,22 +5,22 @@
 {% block content %}
 <div class="form-container">
     <h1>{% if action == 'create' %}Crear Nueva Rutina{% else %}Editar Rutina{% endif %}</h1>
-    
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }}">{{ message }}</div>
         {% endfor %}
     {% endif %}
-    
+
     <form method="post">
         {% csrf_token %}
-        
+
         {% if form.non_field_errors %}
             <div class="alert alert-error">
                 {{ form.non_field_errors }}
             </div>
         {% endif %}
-        
+
         <div class="form-group">
             <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
             {{ form.name }}
@@ -28,7 +28,7 @@
                 <div class="field-errors">{{ form.name.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
             {{ form.description }}
@@ -36,7 +36,7 @@
                 <div class="field-errors">{{ form.description.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             <label for="{{ form.duration_weeks.id_for_label }}">{{ form.duration_weeks.label }}</label>
             {{ form.duration_weeks }}
@@ -44,7 +44,7 @@
                 <div class="field-errors">{{ form.duration_weeks.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             <label for="{{ form.duration_months.id_for_label }}">{{ form.duration_months.label }}</label>
             {{ form.duration_months }}
@@ -52,7 +52,7 @@
                 <div class="field-errors">{{ form.duration_months.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             <label>
                 {{ form.is_active }}
@@ -62,7 +62,7 @@
                 <div class="field-errors">{{ form.is_active.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
             <a href="{% if routine %}{% url 'routines:detail' pk=routine.id %}{% else %}{% url 'routines:list' %}{% endif %}" class="btn btn-secondary">Cancelar</a>
             <button type="submit" class="btn btn-primary">{% if action == 'create' %}Crear{% else %}Guardar{% endif %}</button>
@@ -70,4 +70,3 @@
     </form>
 </div>
 {% endblock %}
-

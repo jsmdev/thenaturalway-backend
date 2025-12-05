@@ -122,12 +122,12 @@ from apps.users.models import User
 
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
-    
+
     class Meta:
         model = User
         fields = ["id", "email", "username", "created_at"]
         read_only_fields = ["id", "created_at"]
-    
+
     def validate_email(self, value: str) -> str:
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Email already exists")
@@ -153,7 +153,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.select_related("category")
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated]
-    
+
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None):
         exercise = self.get_object()

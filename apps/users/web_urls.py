@@ -1,10 +1,10 @@
 from django.urls import path
 
 from apps.users.web_views import (
-    UserRegisterView,
     UserLoginView,
     UserLogoutView,
     UserProfileView,
+    UserRegisterView,
 )
 
 app_name = "users"
@@ -15,5 +15,3 @@ urlpatterns = [
     path("logout/", UserLogoutView.as_view(), name="logout"),
     path("profile/", UserProfileView.as_view(), name="profile"),
 ]
-
-

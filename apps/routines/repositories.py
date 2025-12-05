@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Any, List
+from typing import TYPE_CHECKING, Any, Optional
 
-from django.db.models import QuerySet, Prefetch
+from django.db.models import Prefetch, QuerySet
 
-from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
+from apps.routines.models import Block, Day, Routine, RoutineExercise, Week
 
 if TYPE_CHECKING:
     from apps.users.models import User
-    from apps.exercises.models import Exercise
 
 
 def list_routines_repository(
     user: Optional[User] = None,
-    filters: Optional[Dict[str, Any]] = None,
+    filters: Optional[dict[str, Any]] = None,
 ) -> QuerySet[Routine]:
     """
     Lista rutinas con filtros por usuario.
@@ -55,9 +54,7 @@ def get_routine_by_id_repository(routine_id: int) -> Optional[Routine]:
         return None
 
 
-def create_routine_repository(
-    validated_data: Dict[str, Any], user: User
-) -> Routine:
+def create_routine_repository(validated_data: dict[str, Any], user: User) -> Routine:
     """
     Crea una nueva rutina.
 
@@ -83,9 +80,7 @@ def create_routine_repository(
     return Routine.objects.create(**routine_data)
 
 
-def update_routine_repository(
-    routine: Routine, validated_data: Dict[str, Any]
-) -> Routine:
+def update_routine_repository(routine: Routine, validated_data: dict[str, Any]) -> Routine:
     """
     Actualiza una rutina existente.
 
@@ -156,9 +151,7 @@ def get_week_by_id_repository(week_id: int) -> Optional[Week]:
         return None
 
 
-def create_week_repository(
-    routine_id: int, validated_data: Dict[str, Any]
-) -> Week:
+def create_week_repository(routine_id: int, validated_data: dict[str, Any]) -> Week:
     """
     Crea una nueva semana.
 
@@ -180,7 +173,7 @@ def create_week_repository(
     return Week.objects.create(**week_data)
 
 
-def update_week_repository(week: Week, validated_data: Dict[str, Any]) -> Week:
+def update_week_repository(week: Week, validated_data: dict[str, Any]) -> Week:
     """
     Actualiza una semana existente.
 
@@ -240,7 +233,7 @@ def get_day_by_id_repository(day_id: int) -> Optional[Day]:
         return None
 
 
-def create_day_repository(week_id: int, validated_data: Dict[str, Any]) -> Day:
+def create_day_repository(week_id: int, validated_data: dict[str, Any]) -> Day:
     """
     Crea un nuevo día.
 
@@ -263,7 +256,7 @@ def create_day_repository(week_id: int, validated_data: Dict[str, Any]) -> Day:
     return Day.objects.create(**day_data)
 
 
-def update_day_repository(day: Day, validated_data: Dict[str, Any]) -> Day:
+def update_day_repository(day: Day, validated_data: dict[str, Any]) -> Day:
     """
     Actualiza un día existente.
 
@@ -320,15 +313,14 @@ def get_block_by_id_repository(block_id: int) -> Optional[Block]:
         Block o None si no existe
     """
     try:
-        return (
-            Block.objects.select_related("day", "day__week", "day__week__routine")
-            .get(id=block_id)
+        return Block.objects.select_related("day", "day__week", "day__week__routine").get(
+            id=block_id
         )
     except Block.DoesNotExist:
         return None
 
 
-def create_block_repository(day_id: int, validated_data: Dict[str, Any]) -> Block:
+def create_block_repository(day_id: int, validated_data: dict[str, Any]) -> Block:
     """
     Crea un nuevo bloque.
 
@@ -351,7 +343,7 @@ def create_block_repository(day_id: int, validated_data: Dict[str, Any]) -> Bloc
     return Block.objects.create(**block_data)
 
 
-def update_block_repository(block: Block, validated_data: Dict[str, Any]) -> Block:
+def update_block_repository(block: Block, validated_data: dict[str, Any]) -> Block:
     """
     Actualiza un bloque existente.
 
@@ -396,9 +388,11 @@ def list_routine_exercises_by_block_repository(
     Returns:
         QuerySet de ejercicios en rutina
     """
-    return RoutineExercise.objects.filter(block_id=block_id).select_related(
-        "exercise"
-    ).order_by("order", "id")
+    return (
+        RoutineExercise.objects.filter(block_id=block_id)
+        .select_related("exercise")
+        .order_by("order", "id")
+    )
 
 
 def get_routine_exercise_by_id_repository(
@@ -414,18 +408,15 @@ def get_routine_exercise_by_id_repository(
         RoutineExercise o None si no existe
     """
     try:
-        return (
-            RoutineExercise.objects.select_related(
-                "exercise", "block", "block__day", "block__day__week", "block__day__week__routine"
-            )
-            .get(id=routine_exercise_id)
-        )
+        return RoutineExercise.objects.select_related(
+            "exercise", "block", "block__day", "block__day__week", "block__day__week__routine"
+        ).get(id=routine_exercise_id)
     except RoutineExercise.DoesNotExist:
         return None
 
 
 def create_routine_exercise_repository(
-    block_id: int, exercise_id: int, validated_data: Dict[str, Any]
+    block_id: int, exercise_id: int, validated_data: dict[str, Any]
 ) -> RoutineExercise:
     """
     Crea un nuevo ejercicio en rutina.
@@ -451,15 +442,13 @@ def create_routine_exercise_repository(
         "notes": validated_data.get("notes"),
     }
 
-    routine_exercise_data = {
-        k: v for k, v in routine_exercise_data.items() if v is not None
-    }
+    routine_exercise_data = {k: v for k, v in routine_exercise_data.items() if v is not None}
 
     return RoutineExercise.objects.create(**routine_exercise_data)
 
 
 def update_routine_exercise_repository(
-    routine_exercise: RoutineExercise, validated_data: Dict[str, Any]
+    routine_exercise: RoutineExercise, validated_data: dict[str, Any]
 ) -> RoutineExercise:
     """
     Actualiza un ejercicio en rutina existente.
@@ -542,4 +531,3 @@ def get_routine_full_repository(routine_id: int) -> Optional[Routine]:
         )
     except Routine.DoesNotExist:
         return None
-

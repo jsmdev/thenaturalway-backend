@@ -1,11 +1,11 @@
 from django.urls import path
 
 from apps.exercises.web_views import (
-    ExerciseListView,
-    ExerciseDetailView,
     ExerciseCreateView,
-    ExerciseUpdateView,
     ExerciseDeleteView,
+    ExerciseDetailView,
+    ExerciseListView,
+    ExerciseUpdateView,
 )
 
 app_name = "exercises"
@@ -17,4 +17,3 @@ urlpatterns = [
     path("<int:pk>/update/", ExerciseUpdateView.as_view(), name="update"),
     path("<int:pk>/delete/", ExerciseDeleteView.as_view(), name="delete"),
 ]
-

@@ -2,23 +2,24 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView, TokenBlacklistView
+from rest_framework_simplejwt.views import TokenBlacklistView, TokenRefreshView
 
 from apps.users.serializers import (
-    UserRegisterSerializer,
     UserLoginSerializer,
     UserProfileSerializer,
+    UserRegisterSerializer,
     UserUpdateSerializer,
 )
 from apps.users.services import (
-    register_user_service,
     authenticate_user_service,
     get_user_profile_service,
+    register_user_service,
     update_user_profile_service,
 )
 
@@ -340,4 +341,3 @@ class UserTokenRefreshAPIView(TokenRefreshView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-

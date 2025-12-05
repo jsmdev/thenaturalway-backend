@@ -224,10 +224,10 @@ Assert: Verify the expected outcome
 
 ### Test Double Patterns
 
-**Dummy**: Placeholder objects passed but never used  
-**Fake**: Working implementation with simplified behavior  
-**Stub**: Returns predetermined responses  
-**Mock**: Verifies interactions and expectations  
+**Dummy**: Placeholder objects passed but never used
+**Fake**: Working implementation with simplified behavior
+**Stub**: Returns predetermined responses
+**Mock**: Verifies interactions and expectations
 **Spy**: Records interactions for later verification
 
 **When to Use**:
@@ -447,4 +447,3 @@ GET /items?cursor=abc123&limit=20
 - Combine patterns when appropriate
 - Document pattern usage in your project
 - Review and refactor to improve pattern implementation
-

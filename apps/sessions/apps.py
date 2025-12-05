@@ -2,8 +2,7 @@ from django.apps import AppConfig
 
 
 class SessionsConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.sessions'
-    label = 'training_sessions'  # Evitar conflicto con django.contrib.sessions
-    verbose_name = 'Training Sessions'
-
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.sessions"
+    label = "training_sessions"  # Evitar conflicto con django.contrib.sessions
+    verbose_name = "Training Sessions"

@@ -5,22 +5,22 @@
 {% block content %}
 <div class="form-container">
     <h1>Añadir Semana a {{ routine_name|default:"Rutina" }}</h1>
-    
+
     {% if messages %}
         {% for message in messages %}
             <div class="alert alert-{{ message.tags }}">{{ message }}</div>
         {% endfor %}
     {% endif %}
-    
+
     <form method="post">
         {% csrf_token %}
-        
+
         {% if form.non_field_errors %}
             <div class="alert alert-error">
                 {{ form.non_field_errors }}
             </div>
         {% endif %}
-        
+
         <div class="form-group">
             <label for="{{ form.week_number.id_for_label }}">{{ form.week_number.label }}</label>
             {{ form.week_number }}
@@ -28,7 +28,7 @@
                 <div class="field-errors">{{ form.week_number.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
             {{ form.notes }}
@@ -36,7 +36,7 @@
                 <div class="field-errors">{{ form.notes.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
             <a href="{% url 'routines:detail' pk=routine_id %}" class="btn btn-secondary">Cancelar</a>
             <button type="submit" class="btn btn-primary">Crear Semana</button>
@@ -44,4 +44,3 @@
     </form>
 </div>
 {% endblock %}
-

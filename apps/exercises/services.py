@@ -1,28 +1,28 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Any, List
+from typing import TYPE_CHECKING, Any, Optional
 
-from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from apps.exercises.repositories import (
-    list_exercises_repository,
-    get_exercise_by_id_repository,
     create_exercise_repository,
-    update_exercise_repository,
     delete_exercise_repository,
+    get_exercise_by_id_repository,
+    list_exercises_repository,
+    update_exercise_repository,
 )
 
 if TYPE_CHECKING:
-    from apps.users.models import User
     from apps.exercises.models import Exercise
+    from apps.users.models import User
 
 
 def list_exercises_service(
-    filters: Optional[Dict[str, Any]] = None,
+    filters: Optional[dict[str, Any]] = None,
     search: Optional[str] = None,
     ordering: Optional[str] = None,
     user: Optional[User] = None,
-) -> List[Exercise]:
+) -> list[Exercise]:
     """
     Servicio para listar ejercicios con filtros y búsqueda.
 
@@ -129,7 +129,9 @@ def get_exercise_service(exercise_id: int) -> Exercise:
     return exercise
 
 
-def create_exercise_service(validated_data: Dict[str, Any], user: Optional[User] = None) -> Exercise:
+def create_exercise_service(
+    validated_data: dict[str, Any], user: Optional[User] = None
+) -> Exercise:
     """
     Servicio para crear un nuevo ejercicio.
 
@@ -152,9 +154,7 @@ def create_exercise_service(validated_data: Dict[str, Any], user: Optional[User]
         valid_movement_types = ["push", "pull", "squat", "hinge", "carry", "other"]
         if validated_data["movementType"] not in valid_movement_types:
             raise ValidationError(
-                {
-                    "movementType": f"Debe ser uno de: {', '.join(valid_movement_types)}"
-                }
+                {"movementType": f"Debe ser uno de: {', '.join(valid_movement_types)}"}
             )
 
     if "primaryMuscleGroup" in validated_data:
@@ -170,9 +170,7 @@ def create_exercise_service(validated_data: Dict[str, Any], user: Optional[User]
         ]
         if validated_data["primaryMuscleGroup"] not in valid_primary_muscle_groups:
             raise ValidationError(
-                {
-                    "primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"
-                }
+                {"primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"}
             )
 
     if "equipment" in validated_data:
@@ -186,23 +184,17 @@ def create_exercise_service(validated_data: Dict[str, Any], user: Optional[User]
             "other",
         ]
         if validated_data["equipment"] not in valid_equipment:
-            raise ValidationError(
-                {"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"}
-            )
+            raise ValidationError({"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"})
 
     if "difficulty" in validated_data:
         valid_difficulty = ["beginner", "intermediate", "advanced"]
         if validated_data["difficulty"] not in valid_difficulty:
-            raise ValidationError(
-                {"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"}
-            )
+            raise ValidationError({"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"})
 
     # Validar secondaryMuscleGroups si se proporciona
     if "secondaryMuscleGroups" in validated_data:
         if not isinstance(validated_data["secondaryMuscleGroups"], list):
-            raise ValidationError(
-                {"secondaryMuscleGroups": "Debe ser un array de strings"}
-            )
+            raise ValidationError({"secondaryMuscleGroups": "Debe ser un array de strings"})
         valid_secondary_groups = [
             "chest",
             "back",
@@ -232,7 +224,7 @@ def create_exercise_service(validated_data: Dict[str, Any], user: Optional[User]
 
 
 def update_exercise_service(
-    exercise_id: int, validated_data: Dict[str, Any], user: Optional[User] = None
+    exercise_id: int, validated_data: dict[str, Any], user: Optional[User] = None
 ) -> Exercise:
     """
     Servicio para actualizar un ejercicio existente.
@@ -265,9 +257,7 @@ def update_exercise_service(
         valid_movement_types = ["push", "pull", "squat", "hinge", "carry", "other"]
         if validated_data["movementType"] not in valid_movement_types:
             raise ValidationError(
-                {
-                    "movementType": f"Debe ser uno de: {', '.join(valid_movement_types)}"
-                }
+                {"movementType": f"Debe ser uno de: {', '.join(valid_movement_types)}"}
             )
 
     if "primaryMuscleGroup" in validated_data:
@@ -283,9 +273,7 @@ def update_exercise_service(
         ]
         if validated_data["primaryMuscleGroup"] not in valid_primary_muscle_groups:
             raise ValidationError(
-                {
-                    "primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"
-                }
+                {"primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"}
             )
 
     if "equipment" in validated_data:
@@ -299,23 +287,17 @@ def update_exercise_service(
             "other",
         ]
         if validated_data["equipment"] not in valid_equipment:
-            raise ValidationError(
-                {"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"}
-            )
+            raise ValidationError({"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"})
 
     if "difficulty" in validated_data:
         valid_difficulty = ["beginner", "intermediate", "advanced"]
         if validated_data["difficulty"] not in valid_difficulty:
-            raise ValidationError(
-                {"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"}
-            )
+            raise ValidationError({"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"})
 
     # Validar secondaryMuscleGroups si se proporciona
     if "secondaryMuscleGroups" in validated_data:
         if not isinstance(validated_data["secondaryMuscleGroups"], list):
-            raise ValidationError(
-                {"secondaryMuscleGroups": "Debe ser un array de strings"}
-            )
+            raise ValidationError({"secondaryMuscleGroups": "Debe ser un array de strings"})
         valid_secondary_groups = [
             "chest",
             "back",
@@ -339,9 +321,7 @@ def update_exercise_service(
                 )
 
     # Actualizar ejercicio
-    updated_exercise = update_exercise_repository(
-        exercise=exercise, validated_data=validated_data
-    )
+    updated_exercise = update_exercise_repository(exercise=exercise, validated_data=validated_data)
 
     return updated_exercise
 
@@ -375,4 +355,3 @@ def delete_exercise_service(exercise_id: int, user: Optional[User] = None) -> Ex
     deleted_exercise = delete_exercise_repository(exercise=exercise)
 
     return deleted_exercise
-

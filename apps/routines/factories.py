@@ -3,9 +3,9 @@ from __future__ import annotations
 import factory
 from factory.django import DjangoModelFactory
 
-from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
-from apps.users.factories import UserFactory
 from apps.exercises.factories import ExerciseFactory
+from apps.routines.models import Block, Day, Routine, RoutineExercise, Week
+from apps.users.factories import UserFactory
 
 
 class RoutineFactory(DjangoModelFactory):

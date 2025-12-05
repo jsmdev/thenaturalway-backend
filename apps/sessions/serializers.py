@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from rest_framework import serializers
 
 from apps.sessions.models import Session, SessionExercise
-
-if TYPE_CHECKING:
-    pass
 
 
 class SessionSerializer(serializers.ModelSerializer):
@@ -22,12 +19,18 @@ class SessionSerializer(serializers.ModelSerializer):
     userId = serializers.IntegerField(source="user.id", read_only=True)
     user = serializers.CharField(source="user.username", read_only=True)
     routineId = serializers.IntegerField(source="routine.id", required=False, allow_null=True)
-    routine = serializers.CharField(source="routine.name", required=False, allow_null=True, read_only=True)
+    routine = serializers.CharField(
+        source="routine.name", required=False, allow_null=True, read_only=True
+    )
     startTime = serializers.DateTimeField(source="start_time", required=False, allow_null=True)
     endTime = serializers.DateTimeField(source="end_time", required=False, allow_null=True)
-    durationMinutes = serializers.IntegerField(source="duration_minutes", required=False, allow_null=True)
+    durationMinutes = serializers.IntegerField(
+        source="duration_minutes", required=False, allow_null=True
+    )
     energyLevel = serializers.CharField(source="energy_level", required=False, allow_null=True)
-    sleepHours = serializers.DecimalField(source="sleep_hours", max_digits=4, decimal_places=2, required=False, allow_null=True)
+    sleepHours = serializers.DecimalField(
+        source="sleep_hours", max_digits=4, decimal_places=2, required=False, allow_null=True
+    )
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
 
@@ -128,7 +131,9 @@ class SessionExerciseSerializer(serializers.ModelSerializer):
     exerciseId = serializers.IntegerField(source="exercise.id", read_only=True)
     exercise = serializers.SerializerMethodField()
     sessionId = serializers.IntegerField(source="session.id", read_only=True)
-    setsCompleted = serializers.IntegerField(source="sets_completed", required=False, allow_null=True)
+    setsCompleted = serializers.IntegerField(
+        source="sets_completed", required=False, allow_null=True
+    )
     restSeconds = serializers.IntegerField(source="rest_seconds", required=False, allow_null=True)
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
@@ -171,12 +176,18 @@ class SessionFullSerializer(serializers.ModelSerializer):
     userId = serializers.IntegerField(source="user.id", read_only=True)
     user = serializers.CharField(source="user.username", read_only=True)
     routineId = serializers.IntegerField(source="routine.id", required=False, allow_null=True)
-    routine = serializers.CharField(source="routine.name", required=False, allow_null=True, read_only=True)
+    routine = serializers.CharField(
+        source="routine.name", required=False, allow_null=True, read_only=True
+    )
     startTime = serializers.DateTimeField(source="start_time", required=False, allow_null=True)
     endTime = serializers.DateTimeField(source="end_time", required=False, allow_null=True)
-    durationMinutes = serializers.IntegerField(source="duration_minutes", required=False, allow_null=True)
+    durationMinutes = serializers.IntegerField(
+        source="duration_minutes", required=False, allow_null=True
+    )
     energyLevel = serializers.CharField(source="energy_level", required=False, allow_null=True)
-    sleepHours = serializers.DecimalField(source="sleep_hours", max_digits=4, decimal_places=2, required=False, allow_null=True)
+    sleepHours = serializers.DecimalField(
+        source="sleep_hours", max_digits=4, decimal_places=2, required=False, allow_null=True
+    )
     sessionExercises = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
     updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
@@ -229,7 +240,9 @@ class SessionExerciseCreateSerializer(serializers.Serializer):
     exerciseId = serializers.IntegerField(required=True)
     order = serializers.IntegerField(required=False, allow_null=True, min_value=0)
     setsCompleted = serializers.IntegerField(required=False, allow_null=True, min_value=0)
-    repetitions = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=50)
+    repetitions = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, max_length=50
+    )
     weight = serializers.DecimalField(
         max_digits=8, decimal_places=2, required=False, allow_null=True, min_value=0
     )
@@ -254,7 +267,9 @@ class SessionExerciseUpdateSerializer(serializers.Serializer):
     exerciseId = serializers.IntegerField(required=False)
     order = serializers.IntegerField(required=False, allow_null=True, min_value=0)
     setsCompleted = serializers.IntegerField(required=False, allow_null=True, min_value=0)
-    repetitions = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=50)
+    repetitions = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True, max_length=50
+    )
     weight = serializers.DecimalField(
         max_digits=8, decimal_places=2, required=False, allow_null=True, min_value=0
     )
@@ -267,4 +282,3 @@ class SessionExerciseUpdateSerializer(serializers.Serializer):
         if value is not None and (value < 1 or value > 10):
             raise serializers.ValidationError("RPE debe estar entre 1 y 10")
         return value
-

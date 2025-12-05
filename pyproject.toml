@@ -22,7 +22,7 @@ exclude = [
 ]
 
 # Python version
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 # Reglas a activar (equivalente a flake8, isort, black, etc.)

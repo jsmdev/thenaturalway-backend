@@ -2,33 +2,32 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.sessions.serializers import (
-    SessionSerializer,
     SessionCreateSerializer,
-    SessionUpdateSerializer,
-    SessionFullSerializer,
-    SessionExerciseSerializer,
     SessionExerciseCreateSerializer,
+    SessionExerciseSerializer,
     SessionExerciseUpdateSerializer,
+    SessionFullSerializer,
+    SessionSerializer,
+    SessionUpdateSerializer,
 )
 from apps.sessions.services import (
-    list_sessions_service,
-    get_session_service,
-    get_session_full_service,
-    create_session_service,
-    update_session_service,
-    delete_session_service,
-    list_session_exercises_service,
-    get_session_exercise_service,
     create_session_exercise_service,
-    update_session_exercise_service,
+    create_session_service,
     delete_session_exercise_service,
+    delete_session_service,
+    get_session_exercise_service,
+    get_session_full_service,
+    list_session_exercises_service,
+    list_sessions_service,
+    update_session_exercise_service,
+    update_session_service,
 )
 
 if TYPE_CHECKING:
@@ -50,7 +49,7 @@ class SessionListAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request: "Request") -> Response:
+    def get(self, request: Request) -> Response:
         """
         Lista sesiones del usuario autenticado con filtros.
 
@@ -88,6 +87,7 @@ class SessionListAPIView(APIView):
             if request.query_params.get("date"):
                 try:
                     from datetime import datetime
+
                     date_filter = datetime.strptime(
                         request.query_params.get("date"), "%Y-%m-%d"
                     ).date()
@@ -140,7 +140,7 @@ class SessionListAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def post(self, request: "Request") -> Response:
+    def post(self, request: Request) -> Response:
         """
         Crea una nueva sesión (requiere autenticación).
 
@@ -241,7 +241,7 @@ class SessionDetailAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request: "Request", pk: int) -> Response:
+    def get(self, request: Request, pk: int) -> Response:
         """
         Obtiene el detalle completo de una sesión con ejercicios asociados.
 
@@ -312,7 +312,7 @@ class SessionDetailAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def put(self, request: "Request", pk: int) -> Response:
+    def put(self, request: Request, pk: int) -> Response:
         """
         Actualiza una sesión existente (requiere autenticación y ser el propietario).
 
@@ -421,7 +421,7 @@ class SessionDetailAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def delete(self, request: "Request", pk: int) -> Response:
+    def delete(self, request: Request, pk: int) -> Response:
         """
         Elimina una sesión (requiere autenticación y ser el propietario).
 
@@ -504,7 +504,7 @@ class SessionExerciseListAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request: "Request", sessionId: int) -> Response:
+    def get(self, request: Request, sessionId: int) -> Response:
         """
         Lista ejercicios de una sesión.
 
@@ -519,9 +519,7 @@ class SessionExerciseListAPIView(APIView):
         """
         try:
             # Llamar al servicio
-            exercises = list_session_exercises_service(
-                session_id=sessionId, user=request.user
-            )
+            exercises = list_session_exercises_service(session_id=sessionId, user=request.user)
 
             # Serializar datos
             serializer = SessionExerciseSerializer(exercises, many=True)
@@ -577,7 +575,7 @@ class SessionExerciseListAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def post(self, request: "Request", sessionId: int) -> Response:
+    def post(self, request: Request, sessionId: int) -> Response:
         """
         Añade un ejercicio a una sesión.
 
@@ -709,7 +707,7 @@ class SessionExerciseDetailAPIView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    def get(self, request: "Request", sessionId: int, pk: int) -> Response:
+    def get(self, request: Request, sessionId: int, pk: int) -> Response:
         """
         Obtiene el detalle de un ejercicio de sesión.
 
@@ -798,7 +796,7 @@ class SessionExerciseDetailAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def put(self, request: "Request", sessionId: int, pk: int) -> Response:
+    def put(self, request: Request, sessionId: int, pk: int) -> Response:
         """
         Actualiza un ejercicio de sesión existente.
 
@@ -926,7 +924,7 @@ class SessionExerciseDetailAPIView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def delete(self, request: "Request", sessionId: int, pk: int) -> Response:
+    def delete(self, request: Request, sessionId: int, pk: int) -> Response:
         """
         Elimina un ejercicio de sesión.
 
@@ -1012,4 +1010,3 @@ class SessionExerciseDetailAPIView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-

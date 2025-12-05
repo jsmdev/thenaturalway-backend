@@ -4,21 +4,21 @@ from typing import TYPE_CHECKING
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.views import View
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
 from apps.exercises.models import Exercise
-from apps.exercises.services import (
-    list_exercises_service,
-    get_exercise_service,
-    create_exercise_service,
-    update_exercise_service,
-    delete_exercise_service,
-)
 from apps.exercises.serializers import ExerciseSerializer
-from rest_framework.exceptions import NotFound, PermissionDenied
+from apps.exercises.services import (
+    create_exercise_service,
+    delete_exercise_service,
+    get_exercise_service,
+    list_exercises_service,
+    update_exercise_service,
+)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -34,15 +34,15 @@ class ExerciseListView(View):
         primary_muscle_group = request.GET.get("primaryMuscleGroup", "").strip()
         if primary_muscle_group:
             filters["primaryMuscleGroup"] = primary_muscle_group
-        
+
         equipment = request.GET.get("equipment", "").strip()
         if equipment:
             filters["equipment"] = equipment
-        
+
         difficulty = request.GET.get("difficulty", "").strip()
         if difficulty:
             filters["difficulty"] = difficulty
-        
+
         is_active_param = request.GET.get("isActive", "").strip()
         if is_active_param:
             is_active_str = is_active_param.lower()
@@ -86,7 +86,7 @@ class ExerciseListView(View):
             return render(request, "exercises/list.html", context)
 
         except Exception as error:
-            messages.error(request, f"Error al cargar ejercicios: {str(error)}")
+            messages.error(request, f"Error al cargar ejercicios: {error!s}")
             # Preparar contexto mínimo en caso de error
             context_filters = {
                 "primaryMuscleGroup": request.GET.get("primaryMuscleGroup", ""),
@@ -94,15 +94,19 @@ class ExerciseListView(View):
                 "difficulty": request.GET.get("difficulty", ""),
                 "isActive": None,
             }
-            return render(request, "exercises/list.html", {
-                "exercises": [],
-                "filters": context_filters,
-                "search": request.GET.get("search", ""),
-                "movement_types": [("", "---------")] + Exercise.MOVEMENT_TYPE_CHOICES,
-                "muscle_groups": Exercise.PRIMARY_MUSCLE_GROUP_CHOICES,
-                "equipment_choices": Exercise.EQUIPMENT_CHOICES,
-                "difficulty_choices": Exercise.DIFFICULTY_CHOICES,
-            })
+            return render(
+                request,
+                "exercises/list.html",
+                {
+                    "exercises": [],
+                    "filters": context_filters,
+                    "search": request.GET.get("search", ""),
+                    "movement_types": [("", "---------")] + Exercise.MOVEMENT_TYPE_CHOICES,
+                    "muscle_groups": Exercise.PRIMARY_MUSCLE_GROUP_CHOICES,
+                    "equipment_choices": Exercise.EQUIPMENT_CHOICES,
+                    "difficulty_choices": Exercise.DIFFICULTY_CHOICES,
+                },
+            )
 
 
 class ExerciseDetailView(View):
@@ -136,7 +140,7 @@ class ExerciseDetailView(View):
             messages.error(request, "Ejercicio no encontrado.")
             return redirect("exercises:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar ejercicio: {str(error)}")
+            messages.error(request, f"Error al cargar ejercicio: {error!s}")
             return redirect("exercises:list")
 
 
@@ -160,7 +164,7 @@ class ExerciseCreateView(View):
         try:
             # Preparar datos para el servicio (solo incluir campos con valores)
             validated_data = {"name": form.cleaned_data["name"]}
-            
+
             if form.cleaned_data.get("description"):
                 validated_data["description"] = form.cleaned_data["description"]
             if form.cleaned_data.get("movement_type"):
@@ -177,7 +181,7 @@ class ExerciseCreateView(View):
                 validated_data["imageUrl"] = form.cleaned_data["image_url"]
             if form.cleaned_data.get("video_url"):
                 validated_data["videoUrl"] = form.cleaned_data["video_url"]
-            
+
             validated_data["isActive"] = form.cleaned_data.get("is_active", True)
 
             # Crear ejercicio usando el servicio
@@ -187,7 +191,7 @@ class ExerciseCreateView(View):
             return redirect("exercises:detail", pk=exercise.id)
 
         except Exception as error:
-            messages.error(request, f"Error al crear ejercicio: {str(error)}")
+            messages.error(request, f"Error al crear ejercicio: {error!s}")
             return render(request, "exercises/form.html", {"form": form, "action": "create"})
 
 
@@ -238,7 +242,7 @@ class ExerciseUpdateView(View):
             messages.error(request, "Ejercicio no encontrado.")
             return redirect("exercises:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar ejercicio: {str(error)}")
+            messages.error(request, f"Error al cargar ejercicio: {error!s}")
             return redirect("exercises:list")
 
     @method_decorator(login_required)
@@ -254,7 +258,9 @@ class ExerciseUpdateView(View):
             except Exception:
                 exercise_data = {}
             return render(
-                request, "exercises/form.html", {"form": form, "exercise": exercise_data, "action": "update"}
+                request,
+                "exercises/form.html",
+                {"form": form, "exercise": exercise_data, "action": "update"},
             )
 
         try:
@@ -275,7 +281,9 @@ class ExerciseUpdateView(View):
             if form.cleaned_data.get("movement_type"):
                 validated_data["movementType"] = form.cleaned_data["movement_type"] or None
             if form.cleaned_data.get("primary_muscle_group"):
-                validated_data["primaryMuscleGroup"] = form.cleaned_data["primary_muscle_group"] or None
+                validated_data["primaryMuscleGroup"] = (
+                    form.cleaned_data["primary_muscle_group"] or None
+                )
             if form.cleaned_data.get("equipment"):
                 validated_data["equipment"] = form.cleaned_data["equipment"] or None
             if form.cleaned_data.get("difficulty"):
@@ -294,7 +302,9 @@ class ExerciseUpdateView(View):
                 exercise_id=pk, validated_data=validated_data, user=request.user
             )
 
-            messages.success(request, f"Ejercicio '{updated_exercise.name}' actualizado correctamente.")
+            messages.success(
+                request, f"Ejercicio '{updated_exercise.name}' actualizado correctamente."
+            )
             return redirect("exercises:detail", pk=pk)
 
         except NotFound:
@@ -304,7 +314,7 @@ class ExerciseUpdateView(View):
             messages.error(request, "No tienes permisos para editar este ejercicio.")
             return redirect("exercises:list")
         except Exception as error:
-            messages.error(request, f"Error al actualizar ejercicio: {str(error)}")
+            messages.error(request, f"Error al actualizar ejercicio: {error!s}")
             return redirect("exercises:detail", pk=pk)
 
 
@@ -336,6 +346,5 @@ class ExerciseDeleteView(View):
             messages.error(request, "No tienes permisos para eliminar este ejercicio.")
             return redirect("exercises:list")
         except Exception as error:
-            messages.error(request, f"Error al eliminar ejercicio: {str(error)}")
+            messages.error(request, f"Error al eliminar ejercicio: {error!s}")
             return redirect("exercises:detail", pk=pk)
-

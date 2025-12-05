@@ -475,4 +475,3 @@ While these practices are technology-agnostic, always follow:
 - Balance best practices with pragmatism
 - Document deviations and rationale
 - Continuously improve your practices
-

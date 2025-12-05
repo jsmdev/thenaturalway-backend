@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
 from django.contrib.auth import get_user_model
 
@@ -97,4 +97,3 @@ def update_user_repository(
 
     user.save()
     return user
-

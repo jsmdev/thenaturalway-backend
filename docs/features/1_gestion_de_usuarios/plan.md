@@ -133,4 +133,3 @@ Implementar el sistema completo de gestión de usuarios con registro, inicio de 
 - [x] 37. Registrar URLs web en config/urls.py: añadir path('users/', include('apps.users.web_urls')) al urlpatterns principal (separado de API)
 
 > Fin del Plan de Implementación para `1_gestion_de_usuarios`
-

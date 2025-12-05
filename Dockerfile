@@ -15,4 +15,4 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . /app/
 
 # Expose port
-EXPOSE 8000 
+EXPOSE 8000

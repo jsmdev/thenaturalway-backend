@@ -1,10 +1,10 @@
 from django.urls import path
 
 from apps.sessions.views import (
-    SessionListAPIView,
     SessionDetailAPIView,
-    SessionExerciseListAPIView,
     SessionExerciseDetailAPIView,
+    SessionExerciseListAPIView,
+    SessionListAPIView,
 )
 
 app_name = "sessions_api"
@@ -23,4 +23,3 @@ urlpatterns = [
         name="session-exercise-detail",
     ),
 ]
-

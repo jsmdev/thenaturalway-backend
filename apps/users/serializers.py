@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from rest_framework import serializers
 
 from apps.users.models import User
-from apps.users.repositories import get_user_by_username_repository, get_user_by_email_repository
-
-if TYPE_CHECKING:
-    pass
+from apps.users.repositories import get_user_by_email_repository, get_user_by_username_repository
 
 
 class UserRegisterSerializer(serializers.Serializer):
@@ -17,12 +12,20 @@ class UserRegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True, min_length=8)
-    firstName = serializers.CharField(max_length=150, required=False, allow_blank=True, allow_null=True)
-    lastName = serializers.CharField(max_length=150, required=False, allow_blank=True, allow_null=True)
+    firstName = serializers.CharField(
+        max_length=150, required=False, allow_blank=True, allow_null=True
+    )
+    lastName = serializers.CharField(
+        max_length=150, required=False, allow_blank=True, allow_null=True
+    )
     dateOfBirth = serializers.DateField(required=False, allow_null=True)
     gender = serializers.ChoiceField(choices=User.GENDER_CHOICES, required=False, allow_null=True)
-    height = serializers.DecimalField(max_digits=5, decimal_places=2, required=False, allow_null=True)
-    weight = serializers.DecimalField(max_digits=5, decimal_places=2, required=False, allow_null=True)
+    height = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, allow_null=True
+    )
+    weight = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, allow_null=True
+    )
 
     def validate_username(self, value: str) -> str:
         """Valida que el username sea único."""
@@ -80,10 +83,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.Serializer):
     """Serializer para actualizar el perfil del usuario."""
 
-    firstName = serializers.CharField(max_length=150, required=False, allow_blank=True, allow_null=True)
-    lastName = serializers.CharField(max_length=150, required=False, allow_blank=True, allow_null=True)
+    firstName = serializers.CharField(
+        max_length=150, required=False, allow_blank=True, allow_null=True
+    )
+    lastName = serializers.CharField(
+        max_length=150, required=False, allow_blank=True, allow_null=True
+    )
     dateOfBirth = serializers.DateField(required=False, allow_null=True)
     gender = serializers.ChoiceField(choices=User.GENDER_CHOICES, required=False, allow_null=True)
-    height = serializers.DecimalField(max_digits=5, decimal_places=2, required=False, allow_null=True)
-    weight = serializers.DecimalField(max_digits=5, decimal_places=2, required=False, allow_null=True)
-
+    height = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, allow_null=True
+    )
+    weight = serializers.DecimalField(
+        max_digits=5, decimal_places=2, required=False, allow_null=True
+    )

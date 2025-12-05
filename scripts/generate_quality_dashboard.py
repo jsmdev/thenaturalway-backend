@@ -3,8 +3,8 @@
 Genera un dashboard HTML con todos los reportes de calidad de código.
 """
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Colores para los scores
 COLORS = {
@@ -92,20 +92,22 @@ def get_complexity_stats(data):
                 stats[rank] = stats.get(rank, 0) + 1
                 total_complexity += item["complexity"]
                 count += 1
-                
+
                 # Guardar detalles de funciones con complejidad >= C
                 if rank in ["C", "D", "E", "F"]:
-                    details.append({
-                        "file": filename,
-                        "name": item.get("name", "unknown"),
-                        "type": item.get("type", "F"),
-                        "lineno": item.get("lineno", 0),
-                        "complexity": item["complexity"],
-                        "rank": rank,
-                    })
+                    details.append(
+                        {
+                            "file": filename,
+                            "name": item.get("name", "unknown"),
+                            "type": item.get("type", "F"),
+                            "lineno": item.get("lineno", 0),
+                            "complexity": item["complexity"],
+                            "rank": rank,
+                        }
+                    )
 
     avg_complexity = total_complexity / count if count > 0 else 0
-    
+
     # Ordenar por complejidad descendente
     details.sort(key=lambda x: x["complexity"], reverse=True)
 
@@ -134,17 +136,19 @@ def get_maintainability_stats(data):
                 stats[rank] = stats.get(rank, 0) + 1
                 total_mi += item["mi"]
                 count += 1
-                
+
                 # Guardar archivos con baja mantenibilidad
                 if rank in ["B", "C"]:
-                    details.append({
-                        "file": filename,
-                        "mi": round(item["mi"], 2),
-                        "rank": rank,
-                    })
+                    details.append(
+                        {
+                            "file": filename,
+                            "mi": round(item["mi"], 2),
+                            "rank": rank,
+                        }
+                    )
 
     avg_mi = total_mi / count if count > 0 else 0
-    
+
     # Ordenar por MI ascendente (peores primero)
     details.sort(key=lambda x: x["mi"])
 
@@ -205,19 +209,21 @@ def get_ruff_stats(data):
             message = item.get("message", "")
             filename = item.get("filename", "")
             location = item.get("location", {})
-            
+
             # Clasificar por tipo
             if code.startswith(("E", "F")):  # Errores
                 stats["error"] += 1
             else:
                 stats["warning"] += 1
-            
-            details.append({
-                "code": code,
-                "message": message,
-                "file": filename,
-                "line": location.get("row", 0),
-            })
+
+            details.append(
+                {
+                    "code": code,
+                    "message": message,
+                    "file": filename,
+                    "line": location.get("row", 0),
+                }
+            )
 
     return {
         "total": len(data),
@@ -233,14 +239,14 @@ def get_dead_code_stats(filepath):
         with open(filepath) as f:
             content = f.read()
             lines = content.strip().split("\n")
-            
+
             # Filtrar líneas vacías y líneas con porcentajes
             details = []
             for line in lines:
                 if line.strip() and not line.startswith(("#", "//")):
                     # Formato: archivo:linea: mensaje (confianza%)
                     details.append(line.strip())
-            
+
             return {
                 "total": len(details),
                 "details": details[:30],  # Top 30
@@ -442,8 +448,10 @@ def generate_html(stats):
 
     # Mantenibilidad
     if maintainability:
-        mi_color = COLORS["A"] if maintainability["average"] >= 20 else (
-            COLORS["B"] if maintainability["average"] >= 10 else COLORS["C"]
+        mi_color = (
+            COLORS["A"]
+            if maintainability["average"] >= 20
+            else (COLORS["B"] if maintainability["average"] >= 10 else COLORS["C"])
         )
         html += f"""
             <div class="card">
@@ -472,8 +480,10 @@ def generate_html(stats):
 
     # Pylint Score
     if pylint_score:
-        score_color = COLORS["A"] if pylint_score >= 8 else (
-            COLORS["C"] if pylint_score >= 6 else COLORS["E"]
+        score_color = (
+            COLORS["A"]
+            if pylint_score >= 8
+            else (COLORS["C"] if pylint_score >= 6 else COLORS["E"])
         )
         html += f"""
             <div class="card">

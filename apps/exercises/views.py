@@ -2,23 +2,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.exercises.serializers import (
-    ExerciseSerializer,
     ExerciseCreateSerializer,
+    ExerciseSerializer,
     ExerciseUpdateSerializer,
 )
 from apps.exercises.services import (
-    list_exercises_service,
-    get_exercise_service,
     create_exercise_service,
-    update_exercise_service,
     delete_exercise_service,
+    get_exercise_service,
+    list_exercises_service,
+    update_exercise_service,
 )
 
 if TYPE_CHECKING:
@@ -616,4 +616,3 @@ class ExerciseDetailAPIView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-

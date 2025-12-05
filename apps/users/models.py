@@ -1,12 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
-
-if TYPE_CHECKING:
-    pass
 
 
 class UserManager(BaseUserManager):
@@ -97,4 +92,3 @@ class User(AbstractBaseUser, PermissionsMixin):
     def dateOfBirth(self) -> str | None:
         """Alias para date_of_birth (compatibilidad con dominio)."""
         return self.date_of_birth.isoformat() if self.date_of_birth else None
-

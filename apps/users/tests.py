@@ -1,38 +1,33 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.test import APIClient
 
-from apps.users.models import User
 from apps.users.repositories import (
+    create_user_repository,
+    get_user_by_email_repository,
     get_user_by_id_repository,
     get_user_by_username_repository,
-    get_user_by_email_repository,
-    create_user_repository,
     update_user_repository,
 )
-from apps.users.services import (
-    register_user_service,
-    authenticate_user_service,
-    get_user_profile_service,
-    update_user_profile_service,
-)
 from apps.users.serializers import (
-    UserRegisterSerializer,
     UserLoginSerializer,
     UserProfileSerializer,
+    UserRegisterSerializer,
     UserUpdateSerializer,
 )
-
-if TYPE_CHECKING:
-    pass
+from apps.users.services import (
+    authenticate_user_service,
+    get_user_profile_service,
+    register_user_service,
+    update_user_profile_service,
+)
 
 UserModel = get_user_model()
 
@@ -719,6 +714,7 @@ class UserAPITestCase(TestCase):
         self.client.force_authenticate(user=self.test_user)
         # Obtener refresh token
         from rest_framework_simplejwt.tokens import RefreshToken
+
         refresh = RefreshToken.for_user(self.test_user)
         data = {"refresh": str(refresh)}
 
@@ -736,12 +732,15 @@ class UserAPITestCase(TestCase):
 
         # Assert
         # TokenBlacklistView retorna 403 cuando no hay autenticación
-        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(
+            response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
+        )
 
     def test_token_refresh_endpoint_should_return_new_access_token(self) -> None:
         """Test: Debe retornar nuevo access token con refresh token válido."""
         # Arrange
         from rest_framework_simplejwt.tokens import RefreshToken
+
         refresh = RefreshToken.for_user(self.test_user)
         data = {"refresh": str(refresh)}
 

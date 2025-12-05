@@ -4,14 +4,14 @@ info:
   version: 1.0.0
   description: |
     API REST para la gestión de ejercicios en The Natural Way.
-    
+
     Esta API permite:
     - Listar ejercicios con filtros y búsqueda avanzada
     - Obtener detalles de ejercicios específicos
     - Crear nuevos ejercicios (requiere autenticación)
     - Actualizar ejercicios existentes (requiere autenticación + ser creador)
     - Eliminar ejercicios mediante soft delete (requiere autenticación + ser creador)
-  
+
   contact:
     name: The Natural Way API Support
     email: support@thenaturalway.com
@@ -121,7 +121,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    
+
     post:
       tags:
         - exercises
@@ -201,7 +201,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    
+
     put:
       tags:
         - exercises
@@ -255,7 +255,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    
+
     delete:
       tags:
         - exercises
@@ -571,7 +571,7 @@ components:
               method: "POST"
               path: "/api/exercises/"
               host: "api.thenaturalway.com"
-    
+
     Unauthorized:
       description: No autenticado o token inválido
       content:
@@ -585,7 +585,7 @@ components:
               method: "POST"
               path: "/api/exercises/"
               host: "api.thenaturalway.com"
-    
+
     Forbidden:
       description: No tiene permisos para realizar la operación
       content:
@@ -599,7 +599,7 @@ components:
               method: "PUT"
               path: "/api/exercises/1/"
               host: "api.thenaturalway.com"
-    
+
     NotFound:
       description: Recurso no encontrado
       content:
@@ -613,7 +613,7 @@ components:
               method: "GET"
               path: "/api/exercises/999/"
               host: "api.thenaturalway.com"
-    
+
     InternalServerError:
       description: Error interno del servidor
       content:
@@ -627,4 +627,3 @@ components:
               method: "GET"
               path: "/api/exercises/"
               host: "api.thenaturalway.com"
-

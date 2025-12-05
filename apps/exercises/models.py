@@ -1,12 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from django.db import models
 from django.contrib.auth import get_user_model
-
-if TYPE_CHECKING:
-    pass
+from django.db import models
 
 User = get_user_model()
 
@@ -89,4 +84,3 @@ class Exercise(models.Model):
 
     def __str__(self) -> str:
         return self.name
-

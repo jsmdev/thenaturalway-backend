@@ -132,7 +132,7 @@
         {% if week.notes %}
             <p><em>{{ week.notes }}</em></p>
         {% endif %}
-        
+
         {% if week.days %}
             {% for day in week.days %}
             <div class="day-section">
@@ -145,7 +145,7 @@
                 {% if day.notes %}
                     <p><em>{{ day.notes }}</em></p>
                 {% endif %}
-                
+
                 {% if day.blocks %}
                     {% for block in day.blocks %}
                     <div class="block-section">
@@ -156,7 +156,7 @@
                         {% if is_owner %}
                         <a href="{% url 'routines:exercise-create' pk=routine.id blockId=block.id %}" class="btn btn-primary btn-sm add-button">Añadir Ejercicio</a>
                         {% endif %}
-                        
+
                         {% if block.exercises %}
                             {% for exercise in block.exercises %}
                             <div class="exercise-item">
@@ -191,4 +191,3 @@
     <a href="{% url 'exercises:list' %}" class="btn btn-secondary">Ver Biblioteca de Ejercicios</a>
 </div>
 {% endblock %}
-

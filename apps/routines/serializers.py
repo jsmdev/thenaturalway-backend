@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from rest_framework import serializers
 
-from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
-
-if TYPE_CHECKING:
-    pass
+from apps.routines.models import Block, Day, Routine, RoutineExercise, Week
 
 
 # Serializadores para Routine
@@ -208,7 +205,9 @@ class RoutineExerciseCreateSerializer(serializers.Serializer):
     exerciseId = serializers.IntegerField(required=True, min_value=1)
     order = serializers.IntegerField(required=False, allow_null=True, min_value=0)
     sets = serializers.IntegerField(required=False, allow_null=True, min_value=1)
-    repetitions = serializers.CharField(required=False, max_length=50, allow_blank=True, allow_null=True)
+    repetitions = serializers.CharField(
+        required=False, max_length=50, allow_blank=True, allow_null=True
+    )
     weight = serializers.DecimalField(
         required=False, max_digits=8, decimal_places=2, allow_null=True, min_value=0
     )
@@ -225,8 +224,12 @@ class RoutineFullSerializer(serializers.ModelSerializer):
     """Serializador para representar una rutina completa con toda su jerarquía."""
 
     createdBy = serializers.SerializerMethodField()
-    durationWeeks = serializers.IntegerField(source="duration_weeks", required=False, allow_null=True)
-    durationMonths = serializers.IntegerField(source="duration_months", required=False, allow_null=True)
+    durationWeeks = serializers.IntegerField(
+        source="duration_weeks", required=False, allow_null=True
+    )
+    durationMonths = serializers.IntegerField(
+        source="duration_months", required=False, allow_null=True
+    )
     isActive = serializers.BooleanField(source="is_active", required=False)
     weeks = serializers.SerializerMethodField()
     createdAt = serializers.DateTimeField(source="created_at", read_only=True)
@@ -310,4 +313,3 @@ class RoutineFullSerializer(serializers.ModelSerializer):
                 }
             )
         return weeks_data
-

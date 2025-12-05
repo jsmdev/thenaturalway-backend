@@ -238,4 +238,3 @@ La funcionalidad de Biblioteca de Ejercicios está completamente implementada y 
 - `ordering` - Ordenamiento por campo (por defecto: name)
 
 > Fin del Plan de Implementación para `2_biblioteca_de_ejercicios`
-

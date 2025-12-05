@@ -193,19 +193,19 @@ erDiagram
     Usuario ||--o{ Sesion : realiza
     Usuario ||--o{ Progreso : registra
     Usuario ||--o{ Ejercicio : crea
-    
+
     Rutina ||--o{ Semana : contiene
     Semana ||--o{ Dia : contiene
     Dia ||--o{ Bloque : contiene
     Bloque ||--o{ EjercicioEnRutina : contiene
     EjercicioEnRutina }o--|| Ejercicio : referencia
-    
+
     Sesion }o--o| Rutina : "puede estar vinculada a"
     Sesion ||--o{ EjercicioEnSesion : contiene
     EjercicioEnSesion }o--|| Ejercicio : referencia
-    
+
     Progreso }o--o| Ejercicio : "puede estar vinculada a"
-    
+
     Usuario {
         string id PK
         string username UK
@@ -221,7 +221,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Ejercicio {
         string id PK
         string name
@@ -239,7 +239,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Rutina {
         string id PK
         string name
@@ -251,7 +251,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Semana {
         string id PK
         string routineId FK
@@ -260,7 +260,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Dia {
         string id PK
         string weekId FK
@@ -270,7 +270,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Bloque {
         string id PK
         string dayId FK
@@ -280,7 +280,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     EjercicioEnRutina {
         string id PK
         string blockId FK
@@ -296,7 +296,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Sesion {
         string id PK
         string userId FK
@@ -312,7 +312,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     EjercicioEnSesion {
         string id PK
         string sessionId FK
@@ -327,7 +327,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Progreso {
         string id PK
         string userId FK
@@ -342,4 +342,3 @@ erDiagram
         datetime updatedAt
     }
 ```
-

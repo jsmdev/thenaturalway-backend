@@ -46,8 +46,8 @@ Usuario: "Mi login no funciona"
 IA: [conecta a Chrome DevTools]
     [inspecciona Network tab]
     [ve error real en Console]
-IA: "Veo un error 401 con mensaje 'Invalid token format'. 
-     El header Authorization está enviando 'Token abc' 
+IA: "Veo un error 401 con mensaje 'Invalid token format'.
+     El header Authorization está enviando 'Token abc'
      pero debería ser 'Bearer abc'. Aquí está el fix..."
       ↑ (Diagnostica con evidencia real)
 ```
@@ -194,29 +194,29 @@ La metodología AIDD ahora incluye una fase opcional **Inspector** entre Builder
 ARCHITECT
    ↓
    ├─► PRD.md
-   ├─► DOMAIN.md  
+   ├─► DOMAIN.md
    └─► GitHub Issues (state: defined)
-   
+
 BUILDER
    ↓
    ├─► Implementation Plan (docs/features/{feature}/plan.md)
    └─► Source Code (apps/)
        (state: implemented)
-   
+
 INSPECTOR ★ (OPCIONAL) ★
    ↓
    ├─► Browser DevTools Inspection (via MCP)
    ├─► Integration Validation
    └─► Integration Issues Report (docs/features/{feature}/integration-issues.md)
        (state: validated)
-   
+
 CRAFTSMAN
    ↓
    ├─► Unit & Integration Tests (apps/*/tests.py)
    ├─► Documentation
    └─► Coverage Report
        (state: documented)
-   
+
 DEPLOY
    ↓
    Production (state: deployed)
@@ -333,7 +333,7 @@ google-chrome \
   --user-data-dir=C:\Temp\chrome-debug
 ```
 
-**Importante**: 
+**Importante**:
 - `--remote-debugging-port=9222` abre el puerto para MCP
 - `--user-data-dir` usa perfil temporal para evitar conflictos
 
@@ -443,7 +443,7 @@ La IA responderá confirmando la conexión y mostrando las pestañas disponibles
 **Ejemplo de prompt completo**:
 
 ```
-Estoy en la fase Inspector del workflow AIDD después de implementar 
+Estoy en la fase Inspector del workflow AIDD después de implementar
 el feature de autenticación de usuarios.
 
 Usa Chrome DevTools MCP para:
@@ -512,18 +512,18 @@ Status: In Review
 **Browser Evidence**:
 ```
 Console Error:
-Access to fetch at 'http://localhost:8000/api/users/login/' from origin 'null' 
-has been blocked by CORS policy: Response to preflight request doesn't pass 
+Access to fetch at 'http://localhost:8000/api/users/login/' from origin 'null'
+has been blocked by CORS policy: Response to preflight request doesn't pass
 access control check: No 'Access-Control-Allow-Origin' header is present.
 
 Network Tab:
 OPTIONS /api/users/login/ - Status: 403
 ```
 
-**Current Behavior**: 
+**Current Behavior**:
 Login request fails with CORS error. OPTIONS preflight returns 403.
 
-**Expected Behavior**: 
+**Expected Behavior**:
 OPTIONS preflight should return 200 with CORS headers.
 
 **Suggested Fix**:
@@ -600,8 +600,8 @@ La IA verificará que el problema está resuelto y actualizará el documento.
 Una vez todos los issues críticos están resueltos:
 
 ```
-Todos los issues críticos están resueltos. 
-Transiciona a la fase Craftsman y genera test cases 
+Todos los issues críticos están resueltos.
+Transiciona a la fase Craftsman y genera test cases
 basados en los issues encontrados en integration-issues.md
 ```
 
@@ -619,7 +619,7 @@ Valida el flujo JWT completo:
 
 1. Abre frontend-test/index.html en Chrome
 2. Inspecciona el proceso de login:
-   - Click en "Login" 
+   - Click en "Login"
    - Verifica request body tiene email y password
    - Verifica response contiene access y refresh tokens
    - Verifica tokens se guardan en localStorage
@@ -807,7 +807,7 @@ Reporta issues en el flujo.
 └──────────────────────────────────────────────────────────────────┘
 
 Developer decide: ¿Necesita validación browser?
-  
+
   YES → Continúa a Inspector
   NO  → Salta a Craftsman
 
@@ -946,7 +946,7 @@ Feature state: "documented" → "deployed"
 
 ```
 👤 User:
-He implementado el login JWT pero cuando lo pruebo desde el navegador 
+He implementado el login JWT pero cuando lo pruebo desde el navegador
 me da 401. En Postman funciona perfectamente. ¿Puedes ayudarme?
 
 🤖 IA:
@@ -955,7 +955,7 @@ Voy a conectarme a Chrome DevTools para ver qué está pasando exactamente.
 [IA conecta a DevTools via MCP]
 [IA inspecciona Network tab]
 
-Encontré el problema. En la petición desde el navegador, el header 
+Encontré el problema. En la petición desde el navegador, el header
 Authorization está siendo enviado como:
 
   Authorization: Token eyJhbGc...
@@ -978,7 +978,7 @@ Sí, por favor
 🤖 IA:
 [IA edita frontend-test/auth.js]
 
-Listo. He cambiado "Token" por "Bearer". 
+Listo. He cambiado "Token" por "Bearer".
 Recarga la página y vuelve a intentar el login.
 
 [User recarga y hace login]
@@ -992,7 +992,7 @@ Perfecto. Ahora veo:
 ✅ Tokens guardados en localStorage
 ✅ GET /api/users/profile/ - Status 200 (con nuevo token)
 
-El issue está resuelto. Lo documento en integration-issues.md 
+El issue está resuelto. Lo documento en integration-issues.md
 para que se cree un test case en la fase Craftsman.
 ```
 
@@ -1004,7 +1004,7 @@ para que se cree un test case en la fase Craftsman.
 
 ```
 👤 User:
-El endpoint /api/users/profile/ se siente lento. 
+El endpoint /api/users/profile/ se siente lento.
 ¿Puedes medir cuánto tarda exactamente?
 
 🤖 IA:
@@ -1013,14 +1013,14 @@ El endpoint /api/users/profile/ se siente lento.
 
 Mediciones del endpoint GET /api/users/profile/:
 - Intento 1: 678ms
-- Intento 2: 645ms  
+- Intento 2: 645ms
 - Intento 3: 701ms
 - Intento 4: 663ms
 - Intento 5: 689ms
 
 Promedio: 675ms
 
-Esto es significativamente más lento que el threshold recomendado 
+Esto es significativamente más lento que el threshold recomendado
 de <200ms para endpoints simples de lectura.
 
 Voy a inspeccionar el código del endpoint para identificar el problema...
@@ -1036,7 +1036,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     routines = RoutineSerializer(many=True)  # ← Esto también
 ```
 
-Cada serializer de relación hace queries adicionales. Para un usuario 
+Cada serializer de relación hace queries adicionales. Para un usuario
 con 10 workouts y 5 routines, estás haciendo:
 - 1 query para el usuario
 - 10 queries para workouts
@@ -1100,7 +1100,7 @@ He terminado de implementar el feature de autenticación JWT.
 Estoy en la fase Inspector. Por favor valida el flujo completo.
 
 🤖 IA:
-Perfecto. Voy a validar el flujo de autenticación end-to-end usando 
+Perfecto. Voy a validar el flujo de autenticación end-to-end usando
 Chrome DevTools MCP.
 
 [IA conecta a DevTools]
@@ -1157,7 +1157,7 @@ FASE 4: Validación de CORS
 ⚠️ ISSUE DETECTADO: CORS no configurado
 
 Console Error:
-"Access to fetch at 'http://localhost:8000/api/users/login/' 
+"Access to fetch at 'http://localhost:8000/api/users/login/'
 from origin 'null' has been blocked by CORS policy"
 
 Explicación:
@@ -1191,7 +1191,7 @@ Fix aplicado. Recarga la página y vuelve a probar.
    OPTIONS /api/users/login/ - Status: 200
    Header Access-Control-Allow-Origin: * ✅
    Header Access-Control-Allow-Methods: POST, GET, OPTIONS ✅
-   
+
 FASE 5: Validación de Performance
 [IA mide tiempos]
 
@@ -1253,7 +1253,7 @@ Error: Unable to connect to Chrome DevTools on port 9222
    ```bash
    # Verificar si el puerto está abierto
    lsof -i :9222
-   
+
    # Si no hay output, Chrome no está en modo debug
    ```
 
@@ -1269,7 +1269,7 @@ Error: Unable to connect to Chrome DevTools on port 9222
    ```bash
    # Cerrar todos los procesos de Chrome
    killall "Google Chrome"
-   
+
    # Reiniciar con debugging
    /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
      --remote-debugging-port=9222 \
@@ -1303,7 +1303,7 @@ message: "Failed to fetch"
    ```bash
    # Verificar que Django está corriendo
    ps aux | grep "manage.py runserver"
-   
+
    # O intentar curl
    curl http://localhost:8000/api/
    ```
@@ -1337,7 +1337,7 @@ curl http://localhost:8000/api/users/
 
 **Síntoma**:
 ```
-Console: Access to fetch at 'http://localhost:8000/api/...' from origin 'null' 
+Console: Access to fetch at 'http://localhost:8000/api/...' from origin 'null'
 has been blocked by CORS policy
 ```
 
@@ -1424,7 +1424,7 @@ Inspecciona el proceso de login y verifica:
    ```javascript
    // auth.js espera:
    response.data.data.access  // ← Tres niveles
-   
+
    // Backend puede estar enviando:
    response.data.access       // ← Dos niveles
    ```
@@ -1546,10 +1546,10 @@ Reporta promedio, min, max, y percentil 95.
 [Console logs, network tab screenshots, etc.]
 ```
 
-**Current Behavior**: 
+**Current Behavior**:
 [Qué pasa ahora]
 
-**Expected Behavior**: 
+**Expected Behavior**:
 [Qué debería pasar]
 
 **Root Cause**:
@@ -1580,13 +1580,13 @@ Reporta promedio, min, max, y percentil 95.
 
 ✅ **Buenos prompts**:
 ```
-"Inspecciona el flujo de login y verifica que los tokens se guarden 
+"Inspecciona el flujo de login y verifica que los tokens se guarden
 en localStorage. Documenta cualquier issue encontrado."
 
-"Mide el tiempo de respuesta de GET /api/users/profile/ ejecutándolo 
+"Mide el tiempo de respuesta de GET /api/users/profile/ ejecutándolo
 10 veces. Reporta promedio, min, max y percentil 95."
 
-"Valida que todos los endpoints de autenticación sigan el formato 
+"Valida que todos los endpoints de autenticación sigan el formato
 de respuesta estándar del proyecto definido en WARP.md."
 ```
 
@@ -1604,7 +1604,7 @@ de respuesta estándar del proyecto definido en WARP.md."
 [Acción] + [Qué inspeccionar] + [Criterios de validación] + [Output esperado]
 
 Ejemplo:
-"Inspecciona [el flujo de login] verificando [que tokens se guarden] 
+"Inspecciona [el flujo de login] verificando [que tokens se guarden]
 según [formato JWT válido]. Documenta [issues en integration-issues.md]."
 ```
 
@@ -1726,7 +1726,7 @@ async function testListWorkouts() { }
 
 ---
 
-**Mantenido por**: The Natural Way Development Team  
-**Última actualización**: 2025-12-01  
-**Versión**: 1.0.0  
+**Mantenido por**: The Natural Way Development Team
+**Última actualización**: 2025-12-01
+**Versión**: 1.0.0
 **Estado**: Production Ready

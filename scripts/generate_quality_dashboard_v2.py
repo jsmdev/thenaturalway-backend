@@ -4,8 +4,8 @@ Genera un dashboard HTML completo con todos los reportes de calidad de código.
 Incluye explicaciones en español y valores óptimos para cada métrica.
 """
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Colores para los scores
 COLORS = {
@@ -102,14 +102,16 @@ def get_complexity_stats(data):
 
                 # Guardar detalles de funciones con complejidad >= C
                 if rank in ["C", "D", "E", "F"]:
-                    details.append({
-                        "file": filename,
-                        "name": item.get("name", "unknown"),
-                        "type": item.get("type", "F"),
-                        "lineno": item.get("lineno", 0),
-                        "complexity": item["complexity"],
-                        "rank": rank,
-                    })
+                    details.append(
+                        {
+                            "file": filename,
+                            "name": item.get("name", "unknown"),
+                            "type": item.get("type", "F"),
+                            "lineno": item.get("lineno", 0),
+                            "complexity": item["complexity"],
+                            "rank": rank,
+                        }
+                    )
 
     avg_complexity = total_complexity / count if count > 0 else 0
 
@@ -145,11 +147,13 @@ def get_maintainability_stats(data):
 
             # Guardar archivos con baja mantenibilidad
             if rank in ["B", "C"]:
-                details.append({
-                    "file": filename,
-                    "mi": round(file_data["mi"], 2),
-                    "rank": rank,
-                })
+                details.append(
+                    {
+                        "file": filename,
+                        "mi": round(file_data["mi"], 2),
+                        "rank": rank,
+                    }
+                )
 
     avg_mi = total_mi / count if count > 0 else 0
 
@@ -175,13 +179,15 @@ def get_security_stats(data):
     for result in data["results"]:
         severity = result.get("issue_severity", "LOW")
         stats[severity] = stats.get(severity, 0) + 1
-        issues.append({
-            "severity": severity,
-            "test_id": result.get("test_id", ""),
-            "issue_text": result.get("issue_text", ""),
-            "filename": result.get("filename", ""),
-            "line_number": result.get("line_number", 0),
-        })
+        issues.append(
+            {
+                "severity": severity,
+                "test_id": result.get("test_id", ""),
+                "issue_text": result.get("issue_text", ""),
+                "filename": result.get("filename", ""),
+                "line_number": result.get("line_number", 0),
+            }
+        )
 
     return {"distribution": stats, "total_issues": len(issues), "issues": issues[:15]}
 
@@ -195,35 +201,37 @@ def get_pylint_stats(data):
     if isinstance(data, list):
         stats = {"convention": 0, "warning": 0, "error": 0, "refactor": 0}
         details = []
-        
+
         for item in data:
             if isinstance(item, dict):
                 issue_type = item.get("type", "convention")
                 stats[issue_type] = stats.get(issue_type, 0) + 1
-                
-                details.append({
-                    "type": issue_type,
-                    "symbol": item.get("symbol", ""),
-                    "message": item.get("message", ""),
-                    "file": item.get("path", ""),
-                    "line": item.get("line", 0),
-                })
-        
+
+                details.append(
+                    {
+                        "type": issue_type,
+                        "symbol": item.get("symbol", ""),
+                        "message": item.get("message", ""),
+                        "file": item.get("path", ""),
+                        "line": item.get("line", 0),
+                    }
+                )
+
         # Calcular score simple: 10 - (total issues / 100)
         total_issues = sum(stats.values())
         score = max(0, 10 - (total_issues / 100))
-        
+
         return {
             "score": round(score, 2),
             "total_issues": total_issues,
             "stats": stats,
             "details": details[:30],  # Top 30
         }
-    
+
     # Si viene un dict con score (formato antiguo)
     if isinstance(data, dict):
         return {"score": data.get("score", 0), "total_issues": 0, "stats": {}, "details": []}
-    
+
     return None
 
 
@@ -248,12 +256,14 @@ def get_ruff_stats(data):
             else:
                 stats["warning"] += 1
 
-            details.append({
-                "code": code,
-                "message": message,
-                "file": filename,
-                "line": location.get("row", 0),
-            })
+            details.append(
+                {
+                    "code": code,
+                    "message": message,
+                    "file": filename,
+                    "line": location.get("row", 0),
+                }
+            )
 
     return {
         "total": len(data),
@@ -286,12 +296,16 @@ def get_dead_code_stats(filepath):
 
 def generate_metric_card(section_id, info, stats, details_html="", collapsible=True):
     """Genera una tarjeta de métrica con explicación."""
-    collapse_button = f"""
+    collapse_button = (
+        f"""
         <button class="collapse-btn" onclick="toggleSection('{section_id}')">
             <span class="collapse-icon" id="icon-{section_id}">▼</span>
         </button>
-    """ if collapsible else ""
-    
+    """
+        if collapsible
+        else ""
+    )
+
     return f"""
         <div id="{section_id}" class="card full-width section">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -658,7 +672,7 @@ def generate_html(stats):
         function toggleSection(sectionId) {{
             const content = document.getElementById(`content-${{sectionId}}`);
             const icon = document.getElementById(`icon-${{sectionId}}`);
-            
+
             if (content.classList.contains('collapsed')) {{
                 content.classList.remove('collapsed');
                 icon.classList.remove('collapsed');
@@ -671,7 +685,7 @@ def generate_html(stats):
                 }}, 10);
             }}
         }}
-        
+
         // Activar el link de navegación correspondiente al hacer scroll
         document.addEventListener('DOMContentLoaded', function() {{
             // Set initial max-height for all sections
@@ -680,7 +694,7 @@ def generate_html(stats):
             }});
             const sections = document.querySelectorAll('.section');
             const navLinks = document.querySelectorAll('.nav-link');
-            
+
             // Resaltar sección activa en el menú
             const observer = new IntersectionObserver((entries) => {{
                 entries.forEach(entry => {{
@@ -698,7 +712,7 @@ def generate_html(stats):
                 threshold: 0.3,
                 rootMargin: '-100px 0px -50% 0px'
             }});
-            
+
             sections.forEach(section => observer.observe(section));
         }});
     </script>
@@ -710,7 +724,7 @@ def generate_html(stats):
             📊 Quality Dashboard
         </div>
         <div class="sidebar-subtitle">The Natural Way Backend</div>
-        
+
         <ul class="sidebar-nav">
             <li><a href="#overview" class="nav-link"><span class="icon">📄</span> Resumen</a></li>
             <li><a href="#complexity" class="nav-link"><span class="icon">🔄</span> Complejidad</a></li>
@@ -829,8 +843,10 @@ def generate_html(stats):
     # 2. Mantenibilidad
     if maintainability:
         info = METRIC_INFO["maintainability"]
-        mi_color = COLORS["A"] if maintainability["average"] >= 20 else (
-            COLORS["B"] if maintainability["average"] >= 10 else COLORS["C"]
+        mi_color = (
+            COLORS["A"]
+            if maintainability["average"] >= 20
+            else (COLORS["B"] if maintainability["average"] >= 10 else COLORS["C"])
         )
         stats_html = f"""
             <div class="metric">
@@ -890,9 +906,7 @@ def generate_html(stats):
     if pylint:
         info = METRIC_INFO["pylint"]
         score = pylint.get("score", 0)
-        score_color = COLORS["A"] if score >= 8 else (
-            COLORS["C"] if score >= 6 else COLORS["E"]
-        )
+        score_color = COLORS["A"] if score >= 8 else (COLORS["C"] if score >= 6 else COLORS["E"])
         stats_html = f"""
             <div class="score-circle" style="background: {score_color}">
                 {score:.1f}
@@ -917,7 +931,7 @@ def generate_html(stats):
                 </div>
             </div>
         """
-        
+
         details_html = ""
         if pylint["details"]:
             details_html = """
@@ -935,7 +949,12 @@ def generate_html(stats):
                 <tbody>
             """
             for item in pylint["details"][:30]:
-                type_color = {"error": "#dc2626", "warning": "#f97316", "convention": "#eab308", "refactor": "#3b82f6"}.get(item["type"], "#6b7280")
+                type_color = {
+                    "error": "#dc2626",
+                    "warning": "#f97316",
+                    "convention": "#eab308",
+                    "refactor": "#3b82f6",
+                }.get(item["type"], "#6b7280")
                 details_html += f"""
                     <tr>
                         <td><span style="color: {type_color}; font-weight: bold;">{item['type']}</span></td>
@@ -949,7 +968,7 @@ def generate_html(stats):
                 </tbody>
             </table>
             """
-        
+
         html += generate_metric_card("pylint", info, stats_html, details_html)
 
     # 4. Ruff Linter

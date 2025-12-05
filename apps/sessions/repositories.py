@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Any
+from typing import TYPE_CHECKING, Any, Optional
 
-from django.db.models import QuerySet, Prefetch
+from django.db.models import Prefetch, QuerySet
 
 from apps.sessions.models import Session, SessionExercise
 
 if TYPE_CHECKING:
-    from apps.users.models import User
     from datetime import date
+
+    from apps.users.models import User
 
 
 def list_sessions_repository(
-    user: "User",
+    user: User,
     routine_id: Optional[int] = None,
-    date_filter: Optional["date"] = None,
+    date_filter: Optional[date] = None,
 ) -> QuerySet[Session]:
     """
     Lista sesiones con filtros por usuario, rutina y fecha.
@@ -85,7 +86,7 @@ def get_session_full_repository(session_id: int) -> Optional[Session]:
         return None
 
 
-def create_session_repository(validated_data: Dict[str, Any], user: "User") -> Session:
+def create_session_repository(validated_data: dict[str, Any], user: User) -> Session:
     """
     Crea una nueva sesión.
 
@@ -114,15 +115,24 @@ def create_session_repository(validated_data: Dict[str, Any], user: "User") -> S
     session_data = {
         k: v
         for k, v in session_data.items()
-        if v is not None or k in ["routine_id", "notes", "start_time", "end_time", "duration_minutes", "rpe", "energy_level", "sleep_hours"]
+        if v is not None
+        or k
+        in [
+            "routine_id",
+            "notes",
+            "start_time",
+            "end_time",
+            "duration_minutes",
+            "rpe",
+            "energy_level",
+            "sleep_hours",
+        ]
     }
 
     return Session.objects.create(**session_data)
 
 
-def update_session_repository(
-    session: Session, validated_data: Dict[str, Any]
-) -> Session:
+def update_session_repository(session: Session, validated_data: dict[str, Any]) -> Session:
     """
     Actualiza una sesión existente.
 
@@ -188,9 +198,7 @@ def list_session_exercises_repository(
     return queryset
 
 
-def get_session_exercise_by_id_repository(
-    session_exercise_id: int
-) -> Optional[SessionExercise]:
+def get_session_exercise_by_id_repository(session_exercise_id: int) -> Optional[SessionExercise]:
     """
     Obtiene un ejercicio de sesión por su ID.
 
@@ -209,7 +217,7 @@ def get_session_exercise_by_id_repository(
 
 
 def create_session_exercise_repository(
-    session: Session, validated_data: Dict[str, Any]
+    session: Session, validated_data: dict[str, Any]
 ) -> SessionExercise:
     """
     Crea un nuevo ejercicio en una sesión.
@@ -237,14 +245,15 @@ def create_session_exercise_repository(
     exercise_data = {
         k: v
         for k, v in exercise_data.items()
-        if v is not None or k in ["order", "sets_completed", "repetitions", "weight", "rpe", "rest_seconds", "notes"]
+        if v is not None
+        or k in ["order", "sets_completed", "repetitions", "weight", "rpe", "rest_seconds", "notes"]
     }
 
     return SessionExercise.objects.create(**exercise_data)
 
 
 def update_session_exercise_repository(
-    session_exercise: SessionExercise, validated_data: Dict[str, Any]
+    session_exercise: SessionExercise, validated_data: dict[str, Any]
 ) -> SessionExercise:
     """
     Actualiza un ejercicio de sesión existente.
@@ -285,4 +294,3 @@ def delete_session_exercise_repository(session_exercise: SessionExercise) -> Non
         session_exercise: Instancia del ejercicio a eliminar
     """
     session_exercise.delete()
-

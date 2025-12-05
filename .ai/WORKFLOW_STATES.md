@@ -17,8 +17,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 1. draft (borrador-arquitecto)
 
-**Role**: Architect  
-**Label**: `borrador-arquitecto`  
+**Role**: Architect
+**Label**: `borrador-arquitecto`
 **Description**: Initial state when a feature is first identified in the PRD.
 
 **Entry Conditions**:
@@ -38,8 +38,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 2. defined (definido-arquitecto)
 
-**Role**: Architect  
-**Label**: `definido-arquitecto`  
+**Role**: Architect
+**Label**: `definido-arquitecto`
 **Description**: Feature is fully defined with detailed requirements and acceptance criteria.
 
 **Entry Conditions**:
@@ -72,8 +72,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 3. planned (builder-planned)
 
-**Role**: Builder  
-**Label**: `builder-planned`  
+**Role**: Builder
+**Label**: `builder-planned`
 **Description**: Implementation plan is created with detailed tasks and dependencies.
 
 **Entry Conditions**:
@@ -109,8 +109,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 4. implemented (builder-implemented)
 
-**Role**: Builder  
-**Label**: `builder-implemented`  
+**Role**: Builder
+**Label**: `builder-implemented`
 **Description**: All code for the feature is implemented and meets quality standards.
 
 **Entry Conditions**:
@@ -144,8 +144,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 5. tested (craftsman-tested)
 
-**Role**: Craftsman  
-**Label**: `craftsman-tested`  
+**Role**: Craftsman
+**Label**: `craftsman-tested`
 **Description**: Comprehensive tests are written and all tests pass.
 
 **Entry Conditions**:
@@ -179,8 +179,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 6. documented (craftsman-documented)
 
-**Role**: Craftsman  
-**Label**: `craftsman-documented`  
+**Role**: Craftsman
+**Label**: `craftsman-documented`
 **Description**: All public APIs, interfaces, and architecture are documented.
 
 **Entry Conditions**:
@@ -215,8 +215,8 @@ Features in the AIDD methodology progress through a defined set of states manage
 
 ### 7. deployed
 
-**Role**: DevOps / Release Manager  
-**Label**: `deployed`  
+**Role**: DevOps / Release Manager
+**Label**: `deployed`
 **Description**: Feature is deployed to production environment.
 
 **Entry Conditions**:
@@ -324,4 +324,3 @@ When transitioning a feature to a new state:
 - PRD should always reflect current feature status
 - Quality gates must be passed before state transitions
 - Document any exceptions or special cases
-

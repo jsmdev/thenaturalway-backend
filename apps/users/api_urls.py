@@ -1,10 +1,10 @@
 from django.urls import path
 
 from apps.users.views import (
-    UserRegisterAPIView,
     UserLoginAPIView,
     UserLogoutAPIView,
     UserProfileAPIView,
+    UserRegisterAPIView,
     UserTokenRefreshAPIView,
 )
 
@@ -17,5 +17,3 @@ urlpatterns = [
     path("me/", UserProfileAPIView.as_view(), name="profile"),
     path("refresh/", UserTokenRefreshAPIView.as_view(), name="refresh"),
 ]
-
-

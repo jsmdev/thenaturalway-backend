@@ -19,13 +19,13 @@ class {ResourceName}APIView(APIView):
             # Extraer y validar parámetros
             query_params = request.query_params
             resource_id = pk or query_params.get("id")
-            
+
             # Llamar a la lógica de negocio
             data = run_{resource_name}_service(resource_id=resource_id)
-            
+
             # Serializar datos
             serializer = {ResourceName}Serializer(data)
-            
+
             # Devolver respuesta estructurada
             return Response({
                 "data": serializer.data,
@@ -50,16 +50,16 @@ from apps.{app_name}.models import {ResourceName}
 class {ResourceName}Serializer(serializers.ModelSerializer):
     # Campos personalizados si es necesario
     custom_field = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = {ResourceName}
         fields = ["id", "name", "description", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
-    
+
     def get_custom_field(self, obj) -> str:
         # Lógica para campos calculados
         return f"Custom value for {obj.id}"
-    
+
     def validate_name(self, value: str) -> str:
         # Validación personalizada
         if len(value) < 3:
@@ -79,14 +79,14 @@ def run_{resource_name}_service(
 ) -> Dict[str, Any]:
     """
     Lógica de negocio para {resource_name}.
-    
+
     Args:
         resource_id: Identificador del recurso (opcional)
         filters: Filtros adicionales para la consulta
-        
+
     Returns:
         Diccionario con los datos procesados
-        
+
     Raises:
         NotFound: Si el recurso no existe
         ValidationError: Si los datos no son válidos
@@ -94,13 +94,13 @@ def run_{resource_name}_service(
     # Validación de negocio
     if resource_id and resource_id < 1:
         raise ValidationError("El ID debe ser un número positivo")
-    
+
     # Llamar al repositorio
     result = get_{resource_name}_repository(resource_id=resource_id, filters=filters)
-    
+
     if not result:
         raise NotFound("Recurso no encontrado")
-    
+
     # Transformar y devolver datos
     return {
         "result": result,
@@ -120,28 +120,28 @@ def get_{resource_name}_repository(
 ) -> Optional[{ResourceName}]:
     """
     Acceso a datos para {resource_name}.
-    
+
     Args:
         resource_id: Identificador del recurso
         filters: Filtros adicionales para la consulta
-        
+
     Returns:
         Instancia del modelo o None si no se encuentra
     """
     # Lógica de acceso a datos
     # Consultas a base de datos, llamadas a APIs externas, etc.
-    
+
     queryset = {ResourceName}.objects.all()
-    
+
     if resource_id:
         queryset = queryset.filter(id=resource_id)
-    
+
     if filters:
         queryset = queryset.filter(**filters)
-    
+
     # Optimización de consultas
     queryset = queryset.select_related("related_field").prefetch_related("many_related_field")
-    
+
     return queryset.first() if resource_id else queryset
 ```
 
@@ -231,13 +231,13 @@ from apps.{app_name}.serializers import {ResourceName}CreateSerializer
 class {ResourceName}CreateAPIView(APIView):
     def post(self, request) -> Response:
         serializer = {ResourceName}CreateSerializer(data=request.data)
-        
+
         if not serializer.is_valid():
             return Response({
                 "error": "Validation error",
                 "message": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             data = create_{resource_name}_service(validated_data=serializer.validated_data)
             return Response({
@@ -267,13 +267,13 @@ from apps.{app_name}.serializers import {ResourceName}UpdateSerializer
 class {ResourceName}UpdateAPIView(APIView):
     def put(self, request, pk: int) -> Response:
         serializer = {ResourceName}UpdateSerializer(data=request.data)
-        
+
         if not serializer.is_valid():
             return Response({
                 "error": "Validation error",
                 "message": serializer.errors
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
             data = update_{resource_name}_service(
                 resource_id=pk,
@@ -349,54 +349,54 @@ class {ResourceName}ViewSet(viewsets.ModelViewSet):
     queryset = {ResourceName}.objects.select_related("related_field").prefetch_related("many_related_field")
     serializer_class = {ResourceName}Serializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_serializer_class(self):
         """Devuelve el serializador apropiado según la acción."""
         if self.action == "create":
             return {ResourceName}CreateSerializer
         return {ResourceName}Serializer
-    
+
     def create(self, request, *args, **kwargs) -> Response:
         """Crear un nuevo recurso."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         data = create_{resource_name}_service(
             validated_data=serializer.validated_data,
             user=request.user
         )
-        
+
         return Response({
             "data": {ResourceName}Serializer(data).data,
             "message": "Recurso creado correctamente"
         }, status=status.HTTP_201_CREATED)
-    
+
     def update(self, request, *args, **kwargs) -> Response:
         """Actualizar un recurso existente."""
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         data = update_{resource_name}_service(
             resource_id=instance.id,
             validated_data=serializer.validated_data,
             user=request.user
         )
-        
+
         return Response({
             "data": {ResourceName}Serializer(data).data,
             "message": "Recurso actualizado correctamente"
         }, status=status.HTTP_200_OK)
-    
+
     def destroy(self, request, *args, **kwargs) -> Response:
         """Eliminar un recurso."""
         instance = self.get_object()
         delete_{resource_name}_service(resource_id=instance.id, user=request.user)
-        
+
         return Response({
             "message": "Recurso eliminado correctamente"
         }, status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(detail=True, methods=["post"])
     def activate(self, request, pk=None) -> Response:
         """Acción personalizada para activar un recurso."""
@@ -404,7 +404,7 @@ class {ResourceName}ViewSet(viewsets.ModelViewSet):
         # Lógica de activación
         instance.is_active = True
         instance.save()
-        
+
         return Response({
             "data": {ResourceName}Serializer(instance).data,
             "message": "Recurso activado correctamente"

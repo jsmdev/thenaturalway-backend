@@ -1,28 +1,27 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.views import View
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
-
-from apps.sessions.forms import SessionCreateForm, SessionUpdateForm, SessionExerciseForm
-from apps.sessions.services import (
-    list_sessions_service,
-    get_session_full_service,
-    create_session_service,
-    update_session_service,
-    delete_session_service,
-    create_session_exercise_service,
-    update_session_exercise_service,
-    delete_session_exercise_service,
-    get_session_exercise_service,
-)
-from apps.sessions.serializers import SessionFullSerializer, SessionSerializer
+from django.views import View
 from rest_framework.exceptions import NotFound, PermissionDenied
+
+from apps.sessions.forms import SessionCreateForm, SessionExerciseForm, SessionUpdateForm
+from apps.sessions.serializers import SessionFullSerializer, SessionSerializer
+from apps.sessions.services import (
+    create_session_exercise_service,
+    create_session_service,
+    delete_session_exercise_service,
+    delete_session_service,
+    get_session_exercise_service,
+    get_session_full_service,
+    list_sessions_service,
+    update_session_exercise_service,
+    update_session_service,
+)
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -32,7 +31,7 @@ class SessionListView(View):
     """Vista para listar sesiones del usuario."""
 
     @method_decorator(login_required)
-    def get(self, request: "HttpRequest") -> "HttpResponse":
+    def get(self, request: HttpRequest) -> HttpResponse:
         """Muestra la lista de sesiones del usuario con filtros."""
         # Extraer filtros de query params
         routine_id = None
@@ -47,6 +46,7 @@ class SessionListView(View):
         if request.GET.get("date"):
             try:
                 from datetime import datetime
+
                 date_filter = datetime.strptime(request.GET.get("date"), "%Y-%m-%d").date()
             except ValueError:
                 messages.error(request, "Formato de fecha inválido. Use YYYY-MM-DD")
@@ -66,10 +66,12 @@ class SessionListView(View):
 
             # Obtener rutinas del usuario para el filtro
             from apps.routines.services import list_routines_service
+
             routines = list_routines_service(user=request.user)
             from apps.routines.serializers import RoutineSerializer
+
             routines_serializer = RoutineSerializer(routines, many=True)
-            
+
             context = {
                 "sessions": sessions_data,
                 "routines": routines_serializer.data,
@@ -80,7 +82,7 @@ class SessionListView(View):
             return render(request, "sessions/list.html", context)
 
         except Exception as error:
-            messages.error(request, f"Error al cargar sesiones: {str(error)}")
+            messages.error(request, f"Error al cargar sesiones: {error!s}")
             return render(request, "sessions/list.html", {"sessions": []})
 
 
@@ -88,7 +90,7 @@ class SessionDetailView(View):
     """Vista para ver el detalle de una sesión completa con ejercicios."""
 
     @method_decorator(login_required)
-    def get(self, request: "HttpRequest", pk: int) -> "HttpResponse":
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Muestra el detalle de una sesión con toda su información y ejercicios."""
         try:
             # Obtener sesión usando el servicio
@@ -109,7 +111,7 @@ class SessionDetailView(View):
             messages.error(request, "No tienes permisos para ver esta sesión.")
             return redirect("sessions:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar sesión: {str(error)}")
+            messages.error(request, f"Error al cargar sesión: {error!s}")
             return redirect("sessions:list")
 
 
@@ -117,16 +119,17 @@ class SessionCreateView(View):
     """Vista para crear una nueva sesión."""
 
     @method_decorator(login_required)
-    def get(self, request: "HttpRequest") -> "HttpResponse":
+    def get(self, request: HttpRequest) -> HttpResponse:
         """Muestra el formulario de creación."""
         # Obtener routine_id de query params si existe (para vincular desde rutina)
         routine_id = request.GET.get("routineId")
         form = SessionCreateForm(user=request.user)
-        
+
         # Pre-seleccionar rutina si se proporciona
         if routine_id:
             try:
                 from apps.routines.repositories import get_routine_by_id_repository
+
                 routine = get_routine_by_id_repository(routine_id=int(routine_id))
                 if routine and routine.created_by.id == request.user.id:
                     form.fields["routine"].initial = routine.id
@@ -136,7 +139,7 @@ class SessionCreateView(View):
         return render(request, "sessions/form.html", {"form": form, "action": "create"})
 
     @method_decorator(login_required)
-    def post(self, request: "HttpRequest") -> "HttpResponse":
+    def post(self, request: HttpRequest) -> HttpResponse:
         """Procesa el formulario de creación."""
         form = SessionCreateForm(request.POST, user=request.user)
 
@@ -169,7 +172,7 @@ class SessionCreateView(View):
             return redirect("sessions:detail", pk=session.id)
 
         except Exception as error:
-            messages.error(request, f"Error al crear sesión: {str(error)}")
+            messages.error(request, f"Error al crear sesión: {error!s}")
             return render(request, "sessions/form.html", {"form": form, "action": "create"})
 
 
@@ -177,7 +180,7 @@ class SessionUpdateView(View):
     """Vista para actualizar una sesión existente."""
 
     @method_decorator(login_required)
-    def get(self, request: "HttpRequest", pk: int) -> "HttpResponse":
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Muestra el formulario de actualización."""
         try:
             # Obtener sesión usando el servicio
@@ -215,11 +218,11 @@ class SessionUpdateView(View):
             messages.error(request, "No tienes permisos para editar esta sesión.")
             return redirect("sessions:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar sesión: {str(error)}")
+            messages.error(request, f"Error al cargar sesión: {error!s}")
             return redirect("sessions:list")
 
     @method_decorator(login_required)
-    def post(self, request: "HttpRequest", pk: int) -> "HttpResponse":
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Procesa el formulario de actualización."""
         form = SessionUpdateForm(request.POST, user=request.user)
 
@@ -265,7 +268,9 @@ class SessionUpdateView(View):
                 session_id=pk, validated_data=validated_data, user=request.user
             )
 
-            messages.success(request, f"Sesión del {updated_session.date} actualizada correctamente.")
+            messages.success(
+                request, f"Sesión del {updated_session.date} actualizada correctamente."
+            )
             return redirect("sessions:detail", pk=pk)
 
         except NotFound:
@@ -275,7 +280,7 @@ class SessionUpdateView(View):
             messages.error(request, "No tienes permisos para editar esta sesión.")
             return redirect("sessions:list")
         except Exception as error:
-            messages.error(request, f"Error al actualizar sesión: {str(error)}")
+            messages.error(request, f"Error al actualizar sesión: {error!s}")
             return redirect("sessions:detail", pk=pk)
 
 
@@ -283,7 +288,7 @@ class SessionDeleteView(View):
     """Vista para eliminar una sesión."""
 
     @method_decorator(login_required)
-    def post(self, request: "HttpRequest", pk: int) -> "HttpResponse":
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Elimina una sesión."""
         try:
             # Obtener sesión usando el servicio para verificar permisos
@@ -302,7 +307,7 @@ class SessionDeleteView(View):
             messages.error(request, "No tienes permisos para eliminar esta sesión.")
             return redirect("sessions:list")
         except Exception as error:
-            messages.error(request, f"Error al eliminar sesión: {str(error)}")
+            messages.error(request, f"Error al eliminar sesión: {error!s}")
             return redirect("sessions:detail", pk=pk)
 
 
@@ -310,7 +315,7 @@ class SessionExerciseCreateView(View):
     """Vista para crear un ejercicio en una sesión."""
 
     @method_decorator(login_required)
-    def get(self, request: "HttpRequest", pk: int) -> "HttpResponse":
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Muestra el formulario de creación de ejercicio en sesión."""
         try:
             # Verificar que la sesión existe y pertenece al usuario
@@ -332,11 +337,11 @@ class SessionExerciseCreateView(View):
             messages.error(request, "No tienes permisos para añadir ejercicios a esta sesión.")
             return redirect("sessions:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar sesión: {str(error)}")
+            messages.error(request, f"Error al cargar sesión: {error!s}")
             return redirect("sessions:list")
 
     @method_decorator(login_required)
-    def post(self, request: "HttpRequest", pk: int) -> "HttpResponse":
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         """Procesa el formulario de creación de ejercicio en sesión."""
         form = SessionExerciseForm(request.POST)
 
@@ -388,7 +393,7 @@ class SessionExerciseCreateView(View):
             messages.error(request, "No tienes permisos para añadir ejercicios a esta sesión.")
             return redirect("sessions:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al añadir ejercicio: {str(error)}")
+            messages.error(request, f"Error al añadir ejercicio: {error!s}")
             try:
                 session = get_session_full_service(session_id=pk, user=request.user)
                 serializer = SessionSerializer(session)
@@ -406,7 +411,7 @@ class SessionExerciseUpdateView(View):
     """Vista para actualizar un ejercicio en una sesión."""
 
     @method_decorator(login_required)
-    def get(self, request: "HttpRequest", pk: int, exerciseId: int) -> "HttpResponse":
+    def get(self, request: HttpRequest, pk: int, exerciseId: int) -> HttpResponse:
         """Muestra el formulario de actualización de ejercicio en sesión."""
         try:
             # Verificar que la sesión existe y pertenece al usuario
@@ -423,6 +428,7 @@ class SessionExerciseUpdateView(View):
                 return redirect("sessions:detail", pk=pk)
 
             from apps.sessions.serializers import SessionExerciseSerializer
+
             exercise_serializer = SessionExerciseSerializer(session_exercise)
             exercise_data = exercise_serializer.data
 
@@ -455,11 +461,11 @@ class SessionExerciseUpdateView(View):
             messages.error(request, "No tienes permisos para editar ejercicios de esta sesión.")
             return redirect("sessions:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al cargar ejercicio: {str(error)}")
+            messages.error(request, f"Error al cargar ejercicio: {error!s}")
             return redirect("sessions:detail", pk=pk)
 
     @method_decorator(login_required)
-    def post(self, request: "HttpRequest", pk: int, exerciseId: int) -> "HttpResponse":
+    def post(self, request: HttpRequest, pk: int, exerciseId: int) -> HttpResponse:
         """Procesa el formulario de actualización de ejercicio en sesión."""
         form = SessionExerciseForm(request.POST)
 
@@ -517,7 +523,7 @@ class SessionExerciseUpdateView(View):
             messages.error(request, "No tienes permisos para editar ejercicios de esta sesión.")
             return redirect("sessions:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al actualizar ejercicio: {str(error)}")
+            messages.error(request, f"Error al actualizar ejercicio: {error!s}")
             return redirect("sessions:detail", pk=pk)
 
 
@@ -525,7 +531,7 @@ class SessionExerciseDeleteView(View):
     """Vista para eliminar un ejercicio de una sesión."""
 
     @method_decorator(login_required)
-    def post(self, request: "HttpRequest", pk: int, exerciseId: int) -> "HttpResponse":
+    def post(self, request: HttpRequest, pk: int, exerciseId: int) -> HttpResponse:
         """Elimina un ejercicio de una sesión."""
         try:
             # Verificar que el ejercicio pertenece a la sesión
@@ -549,6 +555,5 @@ class SessionExerciseDeleteView(View):
             messages.error(request, "No tienes permisos para eliminar ejercicios de esta sesión.")
             return redirect("sessions:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al eliminar ejercicio: {str(error)}")
+            messages.error(request, f"Error al eliminar ejercicio: {error!s}")
             return redirect("sessions:detail", pk=pk)
-

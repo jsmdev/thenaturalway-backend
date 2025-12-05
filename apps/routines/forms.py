@@ -1,15 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django import forms
 from django.core.exceptions import ValidationError
 
-from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
 from apps.exercises.models import Exercise
-
-if TYPE_CHECKING:
-    pass
 
 
 class RoutineCreateForm(forms.Form):
@@ -203,9 +197,7 @@ class RoutineExerciseForm(forms.Form):
         max_length=50,
         required=False,
         label="Repeticiones",
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Ej: 8-12"}
-        ),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: 8-12"}),
     )
     weight = forms.DecimalField(
         required=False,
@@ -228,9 +220,7 @@ class RoutineExerciseForm(forms.Form):
         max_length=50,
         required=False,
         label="Tempo",
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Ej: 2-0-1-0"}
-        ),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: 2-0-1-0"}),
     )
     rest_seconds = forms.IntegerField(
         required=False,

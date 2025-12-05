@@ -2,7 +2,6 @@ from django.apps import AppConfig
 
 
 class RoutinesConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.routines'
-    verbose_name = 'Routines'
-
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.routines"
+    verbose_name = "Routines"

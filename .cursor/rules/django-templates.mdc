@@ -79,13 +79,13 @@ TEMPLATES = [
 </head>
 <body>
     {% include 'components/header.html' %}
-    
+
     <main>
         {% block content %}{% endblock %}
     </main>
-    
+
     {% include 'components/footer.html' %}
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>
@@ -379,13 +379,13 @@ def format_duration(seconds):
 ```html
 <form method="post" novalidate>
     {% csrf_token %}
-    
+
     {% if form.non_field_errors %}
         <div class="alert alert-error">
             {{ form.non_field_errors }}
         </div>
     {% endif %}
-    
+
     {% for field in form %}
         <div class="form-group">
             <label for="{{ field.id_for_label }}">
@@ -403,7 +403,7 @@ def format_duration(seconds):
             {% endif %}
         </div>
     {% endfor %}
-    
+
     <button type="submit">Enviar</button>
 </form>
 ```
@@ -640,16 +640,16 @@ class TemplateTestCase(TestCase):
                 <span>Duración: {{ exercise.duration|format_duration }}</span>
             </p>
         </header>
-        
+
         {% if messages %}
             {% include 'components/messages.html' %}
         {% endif %}
-        
+
         <section class="exercise-content">
             <div class="description">
                 {{ exercise.description|linebreaks }}
             </div>
-            
+
             {% if exercise.instructions %}
                 <div class="instructions">
                     <h2>Instrucciones</h2>
@@ -657,7 +657,7 @@ class TemplateTestCase(TestCase):
                 </div>
             {% endif %}
         </section>
-        
+
         <footer class="exercise-actions">
             <a href="{% url 'exercises:list' %}" class="btn btn-secondary">
                 Volver a la lista

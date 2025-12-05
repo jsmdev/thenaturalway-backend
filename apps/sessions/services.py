@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Any, List, TypedDict
 from datetime import date, datetime
+from typing import TYPE_CHECKING, Optional, TypedDict
 
-from django.db.models import Prefetch
-from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from apps.sessions.repositories import (
-    list_sessions_repository,
-    get_session_by_id_repository,
-    create_session_repository,
-    update_session_repository,
-    delete_session_repository,
-    list_session_exercises_repository,
-    get_session_exercise_by_id_repository,
-    create_session_exercise_repository,
-    update_session_exercise_repository,
-    delete_session_exercise_repository,
-)
 from apps.sessions.models import Session, SessionExercise
+from apps.sessions.repositories import (
+    create_session_exercise_repository,
+    create_session_repository,
+    delete_session_exercise_repository,
+    delete_session_repository,
+    get_session_by_id_repository,
+    get_session_exercise_by_id_repository,
+    list_session_exercises_repository,
+    list_sessions_repository,
+    update_session_exercise_repository,
+    update_session_repository,
+)
 
 if TYPE_CHECKING:
     from apps.users.models import User
@@ -26,6 +25,7 @@ if TYPE_CHECKING:
 
 class SessionCreateData(TypedDict, total=False):
     """Estructura de datos para crear una sesión."""
+
     date: date
     routineId: Optional[int]
     startTime: Optional[datetime]
@@ -39,6 +39,7 @@ class SessionCreateData(TypedDict, total=False):
 
 class SessionUpdateData(TypedDict, total=False):
     """Estructura de datos para actualizar una sesión."""
+
     date: date
     routineId: Optional[int]
     startTime: Optional[datetime]
@@ -52,6 +53,7 @@ class SessionUpdateData(TypedDict, total=False):
 
 class SessionExerciseCreateData(TypedDict, total=False):
     """Estructura de datos para crear un ejercicio de sesión."""
+
     exerciseId: int
     order: Optional[int]
     setsCompleted: Optional[int]
@@ -64,6 +66,7 @@ class SessionExerciseCreateData(TypedDict, total=False):
 
 class SessionExerciseUpdateData(TypedDict, total=False):
     """Estructura de datos para actualizar un ejercicio de sesión."""
+
     exerciseId: Optional[int]
     order: Optional[int]
     setsCompleted: Optional[int]
@@ -75,10 +78,10 @@ class SessionExerciseUpdateData(TypedDict, total=False):
 
 
 def list_sessions_service(
-    user: "User",
+    user: User,
     routine_id: Optional[int] = None,
     date_filter: Optional[date] = None,
-) -> List["Session"]:
+) -> list[Session]:
     """
     Servicio para listar sesiones del usuario con filtros.
 
@@ -89,13 +92,14 @@ def list_sessions_service(
 
     Returns:
         Lista de sesiones del usuario
-        
+
     Raises:
         ValidationError: Si la rutina no existe o no pertenece al usuario
     """
     # Validar que si se proporciona routine_id, la rutina existe y pertenece al usuario
     if routine_id is not None:
         from apps.routines.repositories import get_routine_by_id_repository
+
         routine = get_routine_by_id_repository(routine_id=routine_id)
         if not routine:
             raise ValidationError({"routineId": "Rutina no encontrada"})
@@ -103,14 +107,12 @@ def list_sessions_service(
             raise ValidationError(
                 {"routineId": "Solo puedes listar sesiones de tus propias rutinas"}
             )
-    
-    queryset = list_sessions_repository(
-        user=user, routine_id=routine_id, date_filter=date_filter
-    )
+
+    queryset = list_sessions_repository(user=user, routine_id=routine_id, date_filter=date_filter)
     return list(queryset)
 
 
-def get_session_service(session_id: int, user: "User") -> "Session":
+def get_session_service(session_id: int, user: User) -> Session:
     """
     Servicio para obtener una sesión por ID.
 
@@ -137,9 +139,7 @@ def get_session_service(session_id: int, user: "User") -> "Session":
     return session
 
 
-def create_session_service(
-    validated_data: SessionCreateData, user: "User"
-) -> "Session":
+def create_session_service(validated_data: SessionCreateData, user: User) -> Session:
     """
     Servicio para crear una nueva sesión.
 
@@ -162,14 +162,13 @@ def create_session_service(
         valid_energy_levels = [choice[0] for choice in Session.ENERGY_LEVEL_CHOICES]
         if validated_data["energyLevel"] not in valid_energy_levels:
             raise ValidationError(
-                {
-                    "energyLevel": f"Debe ser uno de: {', '.join(valid_energy_levels)}"
-                }
+                {"energyLevel": f"Debe ser uno de: {', '.join(valid_energy_levels)}"}
             )
 
     # Validar que si se proporciona routineId, la rutina pertenezca al usuario
     if "routineId" in validated_data and validated_data["routineId"]:
         from apps.routines.repositories import get_routine_by_id_repository
+
         routine = get_routine_by_id_repository(routine_id=validated_data["routineId"])
         if not routine:
             raise ValidationError({"routineId": "Rutina no encontrada"})
@@ -200,8 +199,8 @@ def create_session_service(
 
 
 def update_session_service(
-    session_id: int, validated_data: SessionUpdateData, user: "User"
-) -> "Session":
+    session_id: int, validated_data: SessionUpdateData, user: User
+) -> Session:
     """
     Servicio para actualizar una sesión existente.
 
@@ -231,6 +230,7 @@ def update_session_service(
     # Validar routineId si se proporciona
     if "routineId" in validated_data and validated_data["routineId"]:
         from apps.routines.repositories import get_routine_by_id_repository
+
         routine = get_routine_by_id_repository(routine_id=validated_data["routineId"])
         if not routine:
             raise ValidationError({"routineId": "Rutina no encontrada"})
@@ -255,14 +255,12 @@ def update_session_service(
         validated_data["durationMinutes"] = int(delta.total_seconds() / 60)
 
     # Actualizar sesión
-    updated_session = update_session_repository(
-        session=session, validated_data=validated_data
-    )
+    updated_session = update_session_repository(session=session, validated_data=validated_data)
 
     return updated_session
 
 
-def delete_session_service(session_id: int, user: "User") -> None:
+def delete_session_service(session_id: int, user: User) -> None:
     """
     Servicio para eliminar una sesión.
 
@@ -288,7 +286,7 @@ def delete_session_service(session_id: int, user: "User") -> None:
     delete_session_repository(session=session)
 
 
-def get_session_full_service(session_id: int, user: "User") -> "Session":
+def get_session_full_service(session_id: int, user: User) -> Session:
     """
     Servicio para obtener una sesión completa con ejercicios asociados.
 
@@ -314,6 +312,7 @@ def get_session_full_service(session_id: int, user: "User") -> "Session":
 
     # Precargar ejercicios con optimización usando prefetch_related
     from apps.sessions.repositories import get_session_full_repository
+
     session = get_session_full_repository(session_id=session_id)
 
     if not session:
@@ -322,9 +321,7 @@ def get_session_full_service(session_id: int, user: "User") -> "Session":
     return session
 
 
-def list_session_exercises_service(
-    session_id: int, user: "User"
-) -> List["SessionExercise"]:
+def list_session_exercises_service(session_id: int, user: User) -> list[SessionExercise]:
     """
     Servicio para listar ejercicios de una sesión.
 
@@ -347,9 +344,7 @@ def list_session_exercises_service(
     return list(queryset)
 
 
-def get_session_exercise_service(
-    session_exercise_id: int, user: "User"
-) -> "SessionExercise":
+def get_session_exercise_service(session_exercise_id: int, user: User) -> SessionExercise:
     """
     Servicio para obtener un ejercicio de sesión por ID.
 
@@ -379,8 +374,8 @@ def get_session_exercise_service(
 
 
 def create_session_exercise_service(
-    session_id: int, validated_data: SessionExerciseCreateData, user: "User"
-) -> "SessionExercise":
+    session_id: int, validated_data: SessionExerciseCreateData, user: User
+) -> SessionExercise:
     """
     Servicio para crear un nuevo ejercicio en una sesión.
 
@@ -406,9 +401,8 @@ def create_session_exercise_service(
 
     # Validar que el ejercicio existe
     from apps.exercises.repositories import get_exercise_by_id_repository
-    exercise = get_exercise_by_id_repository(
-        exercise_id=validated_data["exerciseId"]
-    )
+
+    exercise = get_exercise_by_id_repository(exercise_id=validated_data["exerciseId"])
     if not exercise:
         raise ValidationError({"exerciseId": "Ejercicio no encontrado"})
 
@@ -421,8 +415,8 @@ def create_session_exercise_service(
 
 
 def update_session_exercise_service(
-    session_exercise_id: int, validated_data: SessionExerciseUpdateData, user: "User"
-) -> "SessionExercise":
+    session_exercise_id: int, validated_data: SessionExerciseUpdateData, user: User
+) -> SessionExercise:
     """
     Servicio para actualizar un ejercicio de sesión existente.
 
@@ -445,7 +439,7 @@ def update_session_exercise_service(
     )
     if not session_exercise:
         raise NotFound("Ejercicio de sesión no encontrado")
-    
+
     # Verificar permisos
     if session_exercise.session.user.id != user.id:
         raise PermissionDenied("Solo puedes actualizar ejercicios en tus propias sesiones")
@@ -453,9 +447,8 @@ def update_session_exercise_service(
     # Validar exerciseId si se proporciona
     if "exerciseId" in validated_data and validated_data["exerciseId"]:
         from apps.exercises.repositories import get_exercise_by_id_repository
-        exercise = get_exercise_by_id_repository(
-            exercise_id=validated_data["exerciseId"]
-        )
+
+        exercise = get_exercise_by_id_repository(exercise_id=validated_data["exerciseId"])
         if not exercise:
             raise ValidationError({"exerciseId": "Ejercicio no encontrado"})
 
@@ -467,9 +460,7 @@ def update_session_exercise_service(
     return updated_exercise
 
 
-def delete_session_exercise_service(
-    session_exercise_id: int, user: "User"
-) -> None:
+def delete_session_exercise_service(session_exercise_id: int, user: User) -> None:
     """
     Servicio para eliminar un ejercicio de sesión.
 
@@ -488,4 +479,3 @@ def delete_session_exercise_service(
 
     # Eliminar ejercicio
     delete_session_exercise_repository(session_exercise=session_exercise)
-

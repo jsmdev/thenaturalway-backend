@@ -1,14 +1,14 @@
 from django.urls import path
 
 from apps.sessions.web_views import (
-    SessionListView,
-    SessionDetailView,
     SessionCreateView,
-    SessionUpdateView,
     SessionDeleteView,
+    SessionDetailView,
     SessionExerciseCreateView,
-    SessionExerciseUpdateView,
     SessionExerciseDeleteView,
+    SessionExerciseUpdateView,
+    SessionListView,
+    SessionUpdateView,
 )
 
 app_name = "sessions"
@@ -31,4 +31,3 @@ urlpatterns = [
         name="exercise-delete",
     ),
 ]
-

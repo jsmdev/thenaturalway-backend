@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-
-if TYPE_CHECKING:
-    pass
+from django.db import models
 
 User = get_user_model()
 
@@ -23,9 +18,7 @@ class Session(models.Model):
         ("very_high", "Very High"),
     ]
 
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="sessions", db_index=True
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sessions", db_index=True)
     routine = models.ForeignKey(
         "routines.Routine",
         on_delete=models.SET_NULL,
@@ -39,14 +32,16 @@ class Session(models.Model):
     end_time = models.DateTimeField(blank=True, null=True)
     duration_minutes = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    rpe = models.IntegerField(
-        blank=True, null=True, help_text="Rate of Perceived Exertion (1-10)"
-    )
+    rpe = models.IntegerField(blank=True, null=True, help_text="Rate of Perceived Exertion (1-10)")
     energy_level = models.CharField(
         max_length=20, choices=ENERGY_LEVEL_CHOICES, blank=True, null=True, db_index=True
     )
     sleep_hours = models.DecimalField(
-        max_digits=4, decimal_places=2, blank=True, null=True, help_text="Horas de sueño la noche anterior"
+        max_digits=4,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Horas de sueño la noche anterior",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -70,21 +65,23 @@ class Session(models.Model):
     def clean(self) -> None:
         """Valida que los datos sean consistentes."""
         errors = {}
-        
+
         # Validar RPE entre 1-10
         if self.rpe is not None and (self.rpe < 1 or self.rpe > 10):
             errors["rpe"] = "RPE debe estar entre 1 y 10"
-        
+
         # Validar que end_time sea posterior a start_time
         if self.start_time and self.end_time:
             if self.end_time <= self.start_time:
-                errors["end_time"] = "La hora de finalización debe ser posterior a la hora de inicio"
-        
+                errors[
+                    "end_time"
+                ] = "La hora de finalización debe ser posterior a la hora de inicio"
+
         # Calcular duración automáticamente si se proporcionan start_time y end_time
         if self.start_time and self.end_time and not self.duration_minutes:
             delta = self.end_time - self.start_time
             self.duration_minutes = int(delta.total_seconds() / 60)
-        
+
         if errors:
             raise ValidationError(errors)
 
@@ -112,9 +109,7 @@ class SessionExercise(models.Model):
     weight = models.DecimalField(
         max_digits=8, decimal_places=2, blank=True, null=True, help_text="Peso en kilogramos"
     )
-    rpe = models.IntegerField(
-        blank=True, null=True, help_text="Rate of Perceived Exertion (1-10)"
-    )
+    rpe = models.IntegerField(blank=True, null=True, help_text="Rate of Perceived Exertion (1-10)")
     rest_seconds = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -137,11 +132,11 @@ class SessionExercise(models.Model):
     def clean(self) -> None:
         """Valida que los datos sean consistentes."""
         errors = {}
-        
+
         # Validar RPE entre 1-10
         if self.rpe is not None and (self.rpe < 1 or self.rpe > 10):
             errors["rpe"] = "RPE debe estar entre 1 y 10"
-        
+
         if errors:
             raise ValidationError(errors)
 
@@ -152,7 +147,6 @@ class SessionExercise(models.Model):
                 max_order=models.Max("order")
             )["max_order"]
             self.order = (max_order or 0) + 1
-        
+
         self.full_clean()
         super().save(*args, **kwargs)
-

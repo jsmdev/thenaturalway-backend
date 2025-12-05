@@ -90,7 +90,7 @@ Response ← View ← Service ← Repository ← Database
 
 **Dependency Rules**:
 - Views depend on Services
-- Services depend on Repositories  
+- Services depend on Repositories
 - Repositories interact with Models/ORM
 - **Never** invert these dependencies
 - Only one level of dependencies (don't skip layers)
@@ -194,7 +194,7 @@ if TYPE_CHECKING:
 
 - Functions/methods: `snake_case` with verb prefix (`get_user`, `create_order`)
 - Classes: `PascalCase` (`UserService`, `PaymentProcessor`)
-- Constants: `UPPER_SNAKE_CASE` 
+- Constants: `UPPER_SNAKE_CASE`
 - Files: `snake_case.py`
 - Boolean variables: `is_active`, `has_permission`, `can_edit`
 
@@ -233,7 +233,7 @@ This project follows the AIDD methodology defined in `.ai/AIDD.metodology.md`:
 - Input: Feature plans in `.ai/builder/`, coding rules in `.cursor/rules/`
 - Output: Implementation plans in `docs/features/`, source code in `apps/`
 
-**Craftsman Phase**:  
+**Craftsman Phase**:
 - Input: Test instructions in `.ai/craftsman/`
 - Output: Tests in `apps/*/tests.py`, documentation
 

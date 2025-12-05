@@ -1,65 +1,61 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 from django.utils import timezone
-from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied
-from unittest.mock import patch, MagicMock
-from datetime import date, datetime, timedelta
+from rest_framework.test import APIClient
 
-from apps.sessions.models import Session, SessionExercise
-from apps.sessions.factories import SessionFactory, SessionExerciseFactory
 from apps.exercises.factories import ExerciseFactory
 from apps.routines.factories import RoutineFactory
-from apps.users.factories import UserFactory
-from apps.sessions.services import (
-    list_sessions_service,
-    get_session_service,
-    create_session_service,
-    update_session_service,
-    delete_session_service,
-    get_session_full_service,
-    create_session_exercise_service,
-    update_session_exercise_service,
-    delete_session_exercise_service,
-)
-from apps.sessions.repositories import (
-    list_sessions_repository,
-    get_session_by_id_repository,
-    create_session_repository,
-    update_session_repository,
-    delete_session_repository,
-    list_session_exercises_repository,
-    get_session_exercise_by_id_repository,
-    create_session_exercise_repository,
-    update_session_exercise_repository,
-    delete_session_exercise_repository,
-    get_session_full_repository,
-)
-from apps.sessions.serializers import (
-    SessionSerializer,
-    SessionCreateSerializer,
-    SessionUpdateSerializer,
-    SessionFullSerializer,
-    SessionExerciseSerializer,
-    SessionExerciseCreateSerializer,
-    SessionExerciseUpdateSerializer,
-)
+from apps.sessions.factories import SessionExerciseFactory, SessionFactory
 from apps.sessions.forms import (
     SessionCreateForm,
-    SessionUpdateForm,
     SessionExerciseForm,
+    SessionUpdateForm,
 )
+from apps.sessions.models import Session, SessionExercise
+from apps.sessions.repositories import (
+    create_session_exercise_repository,
+    create_session_repository,
+    delete_session_exercise_repository,
+    delete_session_repository,
+    get_session_by_id_repository,
+    get_session_exercise_by_id_repository,
+    get_session_full_repository,
+    list_session_exercises_repository,
+    list_sessions_repository,
+    update_session_exercise_repository,
+    update_session_repository,
+)
+from apps.sessions.serializers import (
+    SessionCreateSerializer,
+    SessionExerciseCreateSerializer,
+    SessionExerciseSerializer,
+    SessionExerciseUpdateSerializer,
+    SessionSerializer,
+    SessionUpdateSerializer,
+)
+from apps.sessions.services import (
+    create_session_exercise_service,
+    create_session_service,
+    delete_session_exercise_service,
+    delete_session_service,
+    get_session_service,
+    list_sessions_service,
+    update_session_exercise_service,
+    update_session_service,
+)
+from apps.users.factories import UserFactory
 
 if TYPE_CHECKING:
     from apps.users.models import User
-    from apps.exercises.models import Exercise
-    from apps.routines.models import Routine
 
 User = get_user_model()
 
@@ -313,9 +309,7 @@ class SessionExerciseModelTestCase(TestCase):
         """Test: Representación string del ejercicio de sesión."""
         # Arrange
         exercise = ExerciseFactory(name="Bench Press")
-        session_exercise = SessionExerciseFactory(
-            session=self.session, exercise=exercise
-        )
+        session_exercise = SessionExerciseFactory(session=self.session, exercise=exercise)
 
         # Act
         str_repr = str(session_exercise)
@@ -331,9 +325,7 @@ class SessionExerciseModelTestCase(TestCase):
         SessionExercise.objects.create(session=self.session, exercise=self.exercise, order=2)
 
         # Act
-        new_exercise = SessionExercise.objects.create(
-            session=self.session, exercise=self.exercise
-        )
+        new_exercise = SessionExercise.objects.create(session=self.session, exercise=self.exercise)
 
         # Assert
         self.assertEqual(new_exercise.order, 3)
@@ -341,9 +333,7 @@ class SessionExerciseModelTestCase(TestCase):
     def test_session_exercise_clean_validates_rpe_range(self):
         """Test: Validación de RPE entre 1-10."""
         # Arrange
-        session_exercise = SessionExercise(
-            session=self.session, exercise=self.exercise, rpe=11
-        )
+        session_exercise = SessionExercise(session=self.session, exercise=self.exercise, rpe=11)
 
         # Act & Assert
         with self.assertRaises(ValidationError):
@@ -352,9 +342,7 @@ class SessionExerciseModelTestCase(TestCase):
     def test_session_exercise_clean_validates_rpe_minimum(self):
         """Test: Validación de RPE mínimo."""
         # Arrange
-        session_exercise = SessionExercise(
-            session=self.session, exercise=self.exercise, rpe=0
-        )
+        session_exercise = SessionExercise(session=self.session, exercise=self.exercise, rpe=0)
 
         # Act & Assert
         with self.assertRaises(ValidationError):
@@ -363,9 +351,7 @@ class SessionExerciseModelTestCase(TestCase):
     def test_session_exercise_created_at_auto_now_add(self):
         """Test: created_at se establece automáticamente."""
         # Arrange & Act
-        session_exercise = SessionExerciseFactory(
-            session=self.session, exercise=self.exercise
-        )
+        session_exercise = SessionExerciseFactory(session=self.session, exercise=self.exercise)
 
         # Assert
         self.assertIsNotNone(session_exercise.created_at)
@@ -373,9 +359,7 @@ class SessionExerciseModelTestCase(TestCase):
     def test_session_exercise_updated_at_auto_now(self):
         """Test: updated_at se actualiza automáticamente."""
         # Arrange
-        session_exercise = SessionExerciseFactory(
-            session=self.session, exercise=self.exercise
-        )
+        session_exercise = SessionExerciseFactory(session=self.session, exercise=self.exercise)
         original_updated_at = session_exercise.updated_at
 
         # Act
@@ -399,15 +383,11 @@ class SessionRepositoryTestCase(TestCase):
         self.user = UserFactory()
         self.other_user = UserFactory()
         self.routine = RoutineFactory(created_by=self.user)
-        self.session1 = SessionFactory(
-            user=self.user, routine=self.routine, date=date.today()
-        )
+        self.session1 = SessionFactory(user=self.user, routine=self.routine, date=date.today())
         self.session2 = SessionFactory(
             user=self.user, routine=None, date=date.today() - timedelta(days=1)
         )
-        self.session3 = SessionFactory(
-            user=self.other_user, date=date.today()
-        )
+        self.session3 = SessionFactory(user=self.other_user, date=date.today())
 
     def test_list_sessions_repository_without_filters(self):
         """Test: Listar sesiones sin filtros."""
@@ -616,9 +596,7 @@ class SessionExerciseRepositoryTestCase(TestCase):
         ordering = "-order"
 
         # Act
-        queryset = list_session_exercises_repository(
-            session=self.session, ordering=ordering
-        )
+        queryset = list_session_exercises_repository(session=self.session, ordering=ordering)
 
         # Assert
         exercises = list(queryset)
@@ -649,9 +627,7 @@ class SessionExerciseRepositoryTestCase(TestCase):
     def test_get_session_exercise_by_id_repository_non_existing(self):
         """Test: Obtener ejercicio de sesión por ID inexistente."""
         # Arrange & Act
-        session_exercise = get_session_exercise_by_id_repository(
-            session_exercise_id=99999
-        )
+        session_exercise = get_session_exercise_by_id_repository(session_exercise_id=99999)
 
         # Assert
         self.assertIsNone(session_exercise)
@@ -707,9 +683,7 @@ class SessionExerciseRepositoryTestCase(TestCase):
         delete_session_exercise_repository(session_exercise=self.session_exercise1)
 
         # Assert
-        self.assertFalse(
-            SessionExercise.objects.filter(id=session_exercise_id).exists()
-        )
+        self.assertFalse(SessionExercise.objects.filter(id=session_exercise_id).exists())
 
 
 # ============================================================================
@@ -737,9 +711,7 @@ class SessionServiceTestCase(TestCase):
 
         # Assert
         self.assertEqual(len(result), 1)
-        mock_repository.assert_called_once_with(
-            user=self.user, routine_id=None, date_filter=None
-        )
+        mock_repository.assert_called_once_with(user=self.user, routine_id=None, date_filter=None)
 
     @patch("apps.sessions.services.list_sessions_repository")
     def test_list_sessions_service_with_routine_filter(self, mock_repository):
@@ -766,6 +738,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         from rest_framework.exceptions import ValidationError as DRFValidationError
+
         with self.assertRaises(DRFValidationError):
             list_sessions_service(user=self.user, routine_id=999)
 
@@ -781,6 +754,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         from rest_framework.exceptions import ValidationError as DRFValidationError
+
         with self.assertRaises(DRFValidationError):
             list_sessions_service(user=self.user, routine_id=routine.id)
 
@@ -844,6 +818,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         from rest_framework.exceptions import ValidationError as DRFValidationError
+
         with self.assertRaises(DRFValidationError):
             create_session_service(validated_data=validated_data, user=self.user)
 
@@ -857,6 +832,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         from rest_framework.exceptions import ValidationError as DRFValidationError
+
         with self.assertRaises(DRFValidationError):
             create_session_service(validated_data=validated_data, user=self.user)
 
@@ -872,6 +848,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         from rest_framework.exceptions import ValidationError as DRFValidationError
+
         with self.assertRaises(DRFValidationError):
             create_session_service(validated_data=validated_data, user=self.user)
 
@@ -888,6 +865,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         from rest_framework.exceptions import ValidationError as DRFValidationError
+
         with self.assertRaises(DRFValidationError):
             create_session_service(validated_data=validated_data, user=self.user)
 
@@ -922,9 +900,7 @@ class SessionServiceTestCase(TestCase):
 
         # Act & Assert
         with self.assertRaises(NotFound):
-            update_session_service(
-                session_id=999, validated_data=validated_data, user=self.user
-            )
+            update_session_service(session_id=999, validated_data=validated_data, user=self.user)
 
     @patch("apps.sessions.services.get_session_by_id_repository")
     def test_update_session_service_permission_denied(self, mock_repository):
@@ -997,9 +973,7 @@ class SessionExerciseServiceTestCase(TestCase):
         # Arrange
         mock_get_session.return_value = self.session
         mock_get_exercise.return_value = self.exercise
-        session_exercise = SessionExerciseFactory(
-            session=self.session, exercise=self.exercise
-        )
+        session_exercise = SessionExerciseFactory(session=self.session, exercise=self.exercise)
         mock_create.return_value = session_exercise
         validated_data = {"setsCompleted": 4}
 
@@ -1052,9 +1026,7 @@ class SessionExerciseServiceTestCase(TestCase):
 
     @patch("apps.sessions.services.update_session_exercise_repository")
     @patch("apps.sessions.services.get_session_exercise_by_id_repository")
-    def test_update_session_exercise_service_success(
-        self, mock_get_exercise, mock_update
-    ):
+    def test_update_session_exercise_service_success(self, mock_get_exercise, mock_update):
         """Test: Actualizar ejercicio de sesión exitosamente."""
         # Arrange
         session_exercise = SessionExercise.objects.create(
@@ -1073,9 +1045,7 @@ class SessionExerciseServiceTestCase(TestCase):
 
         # Assert
         self.assertIsNotNone(result)
-        mock_get_exercise.assert_called_once_with(
-            session_exercise_id=session_exercise.id
-        )
+        mock_get_exercise.assert_called_once_with(session_exercise_id=session_exercise.id)
         mock_update.assert_called_once_with(
             session_exercise=session_exercise, validated_data=validated_data
         )
@@ -1097,9 +1067,7 @@ class SessionExerciseServiceTestCase(TestCase):
 
     @patch("apps.sessions.services.delete_session_exercise_repository")
     @patch("apps.sessions.services.get_session_exercise_service")
-    def test_delete_session_exercise_service_success(
-        self, mock_get_service, mock_delete
-    ):
+    def test_delete_session_exercise_service_success(self, mock_get_service, mock_delete):
         """Test: Eliminar ejercicio de sesión exitosamente."""
         # Arrange
         session_exercise = SessionExercise.objects.create(
@@ -1596,9 +1564,7 @@ class SessionAPITestCase(TestCase):
         data = {"notes": "Updated notes"}
 
         # Act
-        response = self.client.put(
-            f"/api/sessions/{self.session.id}/", data, format="json"
-        )
+        response = self.client.put(f"/api/sessions/{self.session.id}/", data, format="json")
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1758,9 +1724,7 @@ class SessionWebViewTestCase(TestCase):
 
         # Assert
         self.assertEqual(response.status_code, 302)  # Redirect
-        self.assertTrue(
-            Session.objects.filter(user=self.user, notes="New session").exists()
-        )
+        self.assertTrue(Session.objects.filter(user=self.user, notes="New session").exists())
 
     def test_session_update_view_get_authenticated_owner(self):
         """Test: Vista de actualización GET como propietario."""

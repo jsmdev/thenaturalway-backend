@@ -187,14 +187,14 @@ Para cada endpoint, la IA verificará:
 
 **Endpoint**: POST /api/users/login/
 **Severity**: Critical
-**Browser Evidence**: 
+**Browser Evidence**:
 - Console error: "CORS policy: No 'Access-Control-Allow-Origin' header"
 - Network tab shows OPTIONS request with 403 status
 
-**Current Behavior**: 
+**Current Behavior**:
 Login request fails with CORS error
 
-**Expected Behavior**: 
+**Expected Behavior**:
 OPTIONS preflight should return 200 with appropriate CORS headers
 
 **Suggested Fix**:
@@ -231,6 +231,6 @@ CORS_ALLOW_ALL_ORIGINS = True  # Development only
 
 ---
 
-**Última actualización**: 30 Nov 2025  
-**Versión**: 1.0  
+**Última actualización**: 30 Nov 2025
+**Versión**: 1.0
 **Estado**: Documentado y listo para usar

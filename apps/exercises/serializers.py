@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from rest_framework import serializers
 
 from apps.exercises.models import Exercise
-
-if TYPE_CHECKING:
-    pass
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -244,4 +241,3 @@ class ExerciseUpdateSerializer(serializers.Serializer):
                     f"Cada elemento debe ser uno de: {', '.join(valid_groups)}"
                 )
         return value
-

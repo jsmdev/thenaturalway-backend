@@ -1,15 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.users.models import User
-from apps.users.repositories import get_user_by_username_repository, get_user_by_email_repository
-
-if TYPE_CHECKING:
-    pass
+from apps.users.repositories import get_user_by_email_repository, get_user_by_username_repository
 
 
 class UserRegisterForm(forms.Form):
@@ -24,19 +19,25 @@ class UserRegisterForm(forms.Form):
     email = forms.EmailField(
         required=True,
         label="Email",
-        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "correo@ejemplo.com"}),
+        widget=forms.EmailInput(
+            attrs={"class": "form-control", "placeholder": "correo@ejemplo.com"}
+        ),
     )
     password = forms.CharField(
         required=True,
         min_length=8,
         label="Contraseña",
-        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Mínimo 8 caracteres"}),
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "placeholder": "Mínimo 8 caracteres"}
+        ),
         help_text="La contraseña debe tener al menos 8 caracteres.",
     )
     password_confirm = forms.CharField(
         required=True,
         label="Confirmar contraseña",
-        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Repite la contraseña"}),
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "placeholder": "Repite la contraseña"}
+        ),
     )
     first_name = forms.CharField(
         max_length=150,
@@ -48,7 +49,9 @@ class UserRegisterForm(forms.Form):
         max_length=150,
         required=False,
         label="Apellidos",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Apellidos (opcional)"}),
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Apellidos (opcional)"}
+        ),
     )
     date_of_birth = forms.DateField(
         required=False,
@@ -66,14 +69,18 @@ class UserRegisterForm(forms.Form):
         decimal_places=2,
         required=False,
         label="Altura (cm)",
-        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Altura en centímetros (opcional)"}),
+        widget=forms.NumberInput(
+            attrs={"class": "form-control", "placeholder": "Altura en centímetros (opcional)"}
+        ),
     )
     weight = forms.DecimalField(
         max_digits=5,
         decimal_places=2,
         required=False,
         label="Peso (kg)",
-        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Peso en kilogramos (opcional)"}),
+        widget=forms.NumberInput(
+            attrs={"class": "form-control", "placeholder": "Peso en kilogramos (opcional)"}
+        ),
     )
 
     def clean_username(self) -> str:
@@ -164,6 +171,3 @@ class UserProfileUpdateForm(forms.Form):
         label="Peso (kg)",
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
-
-
-

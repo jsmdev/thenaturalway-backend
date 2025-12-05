@@ -2,21 +2,20 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.views import View
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.views import View
 
-from apps.users.forms import UserRegisterForm, UserLoginForm, UserProfileUpdateForm
+from apps.users.forms import UserLoginForm, UserProfileUpdateForm, UserRegisterForm
 from apps.users.services import (
-    register_user_service,
     authenticate_user_service,
     get_user_profile_service,
+    register_user_service,
     update_user_profile_service,
 )
-from apps.users.repositories import get_user_by_username_repository
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -55,17 +54,23 @@ class UserRegisterView(View):
                 if form.cleaned_data.get("date_of_birth")
                 else None,
                 gender=form.cleaned_data.get("gender") or None,
-                height=float(form.cleaned_data["height"]) if form.cleaned_data.get("height") else None,
-                weight=float(form.cleaned_data["weight"]) if form.cleaned_data.get("weight") else None,
+                height=float(form.cleaned_data["height"])
+                if form.cleaned_data.get("height")
+                else None,
+                weight=float(form.cleaned_data["weight"])
+                if form.cleaned_data.get("weight")
+                else None,
             )
 
             # Autenticar al usuario automáticamente
             login(request, user)
-            messages.success(request, f"¡Bienvenido, {user.username}! Tu cuenta ha sido creada exitosamente.")
+            messages.success(
+                request, f"¡Bienvenido, {user.username}! Tu cuenta ha sido creada exitosamente."
+            )
             return redirect("users:profile")
 
         except Exception as error:
-            messages.error(request, f"Error al registrar usuario: {str(error)}")
+            messages.error(request, f"Error al registrar usuario: {error!s}")
             return render(request, "users/register.html", {"form": form})
 
 
@@ -107,7 +112,7 @@ class UserLoginView(View):
             return redirect("users:profile")
 
         except Exception as error:
-            messages.error(request, f"Error al iniciar sesión: {str(error)}")
+            messages.error(request, f"Error al iniciar sesión: {error!s}")
             return render(request, "users/login.html", {"form": form})
 
 
@@ -173,17 +178,18 @@ class UserProfileView(View):
                 if form.cleaned_data.get("date_of_birth")
                 else None,
                 gender=form.cleaned_data.get("gender") or None,
-                height=float(form.cleaned_data["height"]) if form.cleaned_data.get("height") else None,
-                weight=float(form.cleaned_data["weight"]) if form.cleaned_data.get("weight") else None,
+                height=float(form.cleaned_data["height"])
+                if form.cleaned_data.get("height")
+                else None,
+                weight=float(form.cleaned_data["weight"])
+                if form.cleaned_data.get("weight")
+                else None,
             )
 
             messages.success(request, "Tu perfil ha sido actualizado correctamente.")
             return redirect("users:profile")
 
         except Exception as error:
-            messages.error(request, f"Error al actualizar perfil: {str(error)}")
+            messages.error(request, f"Error al actualizar perfil: {error!s}")
             profile_data = get_user_profile_service(user=request.user)
             return render(request, "users/profile.html", {"profile": profile_data, "form": form})
-
-
-

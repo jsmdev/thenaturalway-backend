@@ -69,7 +69,7 @@ frontend-test/
 </head>
 <body>
     <h1>The Natural Way - API Testing</h1>
-    
+
     <div class="token-display">
         <strong>Access Token:</strong> <span id="token-display">No token</span>
         <button onclick="clearToken()">Clear Token</button>
@@ -78,7 +78,7 @@ frontend-test/
     <!-- Authentication Section -->
     <section>
         <h2>Authentication</h2>
-        
+
         <div class="endpoint">
             <h3>POST /api/users/register/</h3>
             <input type="email" id="register-email" placeholder="email@example.com" value="test@example.com">
@@ -106,7 +106,7 @@ frontend-test/
     <!-- Protected Endpoints Section -->
     <section>
         <h2>Protected Endpoints</h2>
-        
+
         <div class="endpoint">
             <h3>GET /api/users/profile/</h3>
             <button onclick="testProfile()">Get Profile</button>
@@ -181,9 +181,9 @@ async function apiRequest(endpoint, options = {}) {
     try {
         const response = await fetch(url, config);
         const data = await response.json();
-        
+
         console.log('Response:', response.status, data);
-        
+
         return {
             status: response.status,
             data: data,
@@ -283,7 +283,7 @@ async function testProfile() {
 function displayResult(elementId, result) {
     const output = document.getElementById(elementId);
     const statusClass = result.ok ? 'success' : 'error';
-    
+
     output.innerHTML = `<span class="${statusClass}">Status: ${result.status}</span>\n${JSON.stringify(result.data, null, 2)}`;
 }
 ```

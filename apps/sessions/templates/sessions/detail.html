@@ -175,7 +175,7 @@
             <h2>Ejercicios Realizados</h2>
             <a href="{% url 'sessions:exercise-create' pk=session.id %}" class="btn btn-primary">Añadir Ejercicio</a>
         </div>
-        
+
         {% if session.sessionExercises %}
             <div class="exercises-list">
                 {% for exercise in session.sessionExercises %}
@@ -241,4 +241,3 @@
     </div>
 </div>
 {% endblock %}
-

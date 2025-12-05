@@ -142,7 +142,7 @@ El proyecto sigue una arquitectura en capas clara que separa responsabilidades:
 ### Flujo API REST
 
 ```
-Request (JSON) 
+Request (JSON)
   → API View (views.py)
     → Serializer (validación)
       → Service (lógica negocio)
@@ -154,7 +154,7 @@ Request (JSON)
 ### Flujo Web
 
 ```
-Request (HTML Form) 
+Request (HTML Form)
   → Web View (web_views.py)
     → Form (validación)
       → Service (lógica negocio)
@@ -592,7 +592,7 @@ Cada frontend puede estar en:
 
 **Escenario Real:**
 
-1. **Templates Django** (`/users/*`): 
+1. **Templates Django** (`/users/*`):
    - Usado por administradores internos
    - Autenticación por sesiones
    - Acceso: `admin.thenaturalway.com`
@@ -623,4 +623,3 @@ Cada frontend puede estar en:
 - [API Documentation](./api/README.md) - Documentación de APIs REST
 - [Reglas de Templates Django](../.cursor/rules/django-templates.mdc)
 - [Reglas de API Django](../.cursor/rules/api-structure-django.mdc)
-

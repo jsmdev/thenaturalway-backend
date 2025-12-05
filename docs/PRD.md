@@ -52,14 +52,14 @@ C4Context
     title Diagrama de Contexto - The Natural Way
 
     Person(user, "Usuario", "Persona que quiere llevar control de sus entrenamientos")
-    
+
     System(thenaturalway, "The Natural Way", "Aplicación web para gestión y seguimiento de entrenamientos")
-    
+
     System_Ext(email, "Servicio de Email", "Envío de notificaciones y recuperación de contraseña")
     System_Ext(cloud, "Almacenamiento en la Nube", "Almacenamiento de imágenes y archivos")
     System_Ext(applewatch, "Apple HealthKit", "Importación de datos de Apple Watch")
     System_Ext(garmin, "Garmin Connect API", "Importación de datos de dispositivos Garmin")
-    
+
     Rel(user, thenaturalway, "Crea rutinas, registra entrenamientos, consulta progreso")
     Rel(thenaturalway, email, "Envía emails")
     Rel(thenaturalway, cloud, "Almacena imágenes")

@@ -1,15 +1,15 @@
 from django.urls import path
 
 from apps.routines.web_views import (
-    RoutineListView,
-    RoutineDetailView,
-    RoutineCreateView,
-    RoutineUpdateView,
-    RoutineDeleteView,
-    WeekCreateView,
-    DayCreateView,
     BlockCreateView,
+    DayCreateView,
+    RoutineCreateView,
+    RoutineDeleteView,
+    RoutineDetailView,
     RoutineExerciseCreateView,
+    RoutineListView,
+    RoutineUpdateView,
+    WeekCreateView,
 )
 
 app_name = "routines"

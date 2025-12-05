@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.exercises.models import Exercise
-
-if TYPE_CHECKING:
-    pass
 
 
 class ExerciseForm(forms.Form):
@@ -18,12 +13,16 @@ class ExerciseForm(forms.Form):
         max_length=255,
         required=True,
         label="Nombre",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del ejercicio"}),
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Nombre del ejercicio"}
+        ),
     )
     description = forms.CharField(
         required=False,
         label="Descripción",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Descripción del ejercicio"}),
+        widget=forms.Textarea(
+            attrs={"class": "form-control", "rows": 4, "placeholder": "Descripción del ejercicio"}
+        ),
     )
     movement_type = forms.ChoiceField(
         choices=[("", "---------")] + Exercise.MOVEMENT_TYPE_CHOICES,
@@ -52,17 +51,23 @@ class ExerciseForm(forms.Form):
     instructions = forms.CharField(
         required=False,
         label="Instrucciones",
-        widget=forms.Textarea(attrs={"class": "form-control", "rows": 6, "placeholder": "Instrucciones de ejecución"}),
+        widget=forms.Textarea(
+            attrs={"class": "form-control", "rows": 6, "placeholder": "Instrucciones de ejecución"}
+        ),
     )
     image_url = forms.URLField(
         required=False,
         label="URL de imagen",
-        widget=forms.URLInput(attrs={"class": "form-control", "placeholder": "https://ejemplo.com/imagen.jpg"}),
+        widget=forms.URLInput(
+            attrs={"class": "form-control", "placeholder": "https://ejemplo.com/imagen.jpg"}
+        ),
     )
     video_url = forms.URLField(
         required=False,
         label="URL de video",
-        widget=forms.URLInput(attrs={"class": "form-control", "placeholder": "https://ejemplo.com/video.mp4"}),
+        widget=forms.URLInput(
+            attrs={"class": "form-control", "placeholder": "https://ejemplo.com/video.mp4"}
+        ),
     )
     is_active = forms.BooleanField(
         required=False,
@@ -120,6 +125,7 @@ class ExerciseUpdateForm(ExerciseForm):
         max_length=255,
         required=False,
         label="Nombre",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nombre del ejercicio"}),
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Nombre del ejercicio"}
+        ),
     )
-

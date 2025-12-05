@@ -1,11 +1,18 @@
 from django.contrib import admin
 
-from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
+from apps.routines.models import Block, Day, Routine, RoutineExercise, Week
 
 
 @admin.register(Routine)
 class RoutineAdmin(admin.ModelAdmin):
-    list_display = ["name", "created_by", "duration_weeks", "duration_months", "is_active", "created_at"]
+    list_display = [
+        "name",
+        "created_by",
+        "duration_weeks",
+        "duration_months",
+        "is_active",
+        "created_at",
+    ]
     list_filter = ["is_active", "created_at"]
     search_fields = ["name", "description"]
     readonly_fields = ["created_at", "updated_at"]

@@ -144,7 +144,7 @@
             <input type="text" name="search" class="form-control" placeholder="Buscar por nombre o descripción..." value="{{ search }}">
             <button type="submit" class="btn btn-primary">Buscar</button>
         </div>
-        
+
         <div class="filters-grid">
             <div class="filter-group">
                 <label for="primaryMuscleGroup">Grupo Muscular</label>
@@ -155,7 +155,7 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div class="filter-group">
                 <label for="equipment">Equipamiento</label>
                 <select name="equipment" id="equipment" class="form-control">
@@ -165,7 +165,7 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div class="filter-group">
                 <label for="difficulty">Dificultad</label>
                 <select name="difficulty" id="difficulty" class="form-control">
@@ -175,7 +175,7 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div class="filter-group">
                 <label for="isActive">Estado</label>
                 <select name="isActive" id="isActive" class="form-control">
@@ -185,7 +185,7 @@
                 </select>
             </div>
         </div>
-        
+
         <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
             <a href="{% url 'exercises:list' %}" class="btn btn-secondary">Limpiar</a>
@@ -231,4 +231,3 @@
     </div>
 {% endif %}
 {% endblock %}
-

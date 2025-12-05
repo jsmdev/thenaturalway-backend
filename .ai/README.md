@@ -180,4 +180,3 @@ Each step has quality gates that must be passed before proceeding.
 ---
 
 **Last Updated**: See git history for latest changes
-

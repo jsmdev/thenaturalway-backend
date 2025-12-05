@@ -123,25 +123,25 @@ google-chrome --remote-debugging-port=9222
 
 **Validar CORS**:
 ```
-Conecta a Chrome DevTools y abre frontend-test/index.html. 
+Conecta a Chrome DevTools y abre frontend-test/index.html.
 Inspecciona la petición POST /api/users/login/ y verifica que los headers CORS sean correctos.
 ```
 
 **Debugging de Autenticación**:
 ```
-Monitorea la consola mientras hago click en "Get Profile". 
+Monitorea la consola mientras hago click en "Get Profile".
 Reporta cualquier error 401 y verifica que el header Authorization esté presente.
 ```
 
 **Medición de Performance**:
 ```
-Mide el tiempo de respuesta de todos los endpoints de autenticación. 
+Mide el tiempo de respuesta de todos los endpoints de autenticación.
 Identifica cuáles tardan más de 200ms.
 ```
 
 **Inspección de Tokens**:
 ```
-Verifica que después del login, los tokens JWT se almacenen correctamente en localStorage 
+Verifica que después del login, los tokens JWT se almacenen correctamente en localStorage
 y tengan el formato adecuado (tres partes separadas por puntos).
 ```
 
@@ -189,7 +189,7 @@ CORS_ALLOW_ALL_ORIGINS = True  # Solo en desarrollo
 2. Token expirado (access token dura 60 min)
 3. Token inválido (formato incorrecto)
 
-**Solución**: 
+**Solución**:
 - Hacer login nuevamente
 - Usar "Refresh Token" si tienes refresh token válido
 - Verificar en DevTools > Application > Local Storage
@@ -234,7 +234,7 @@ CORS_ALLOW_ALL_ORIGINS = True  # Solo en desarrollo
 Esta test page se usa principalmente en la **fase Inspector** (opcional):
 
 ```
-Builder (implementación) 
+Builder (implementación)
    ↓
 Inspector (validación con browser) ← USO DE ESTA TEST PAGE
    ↓

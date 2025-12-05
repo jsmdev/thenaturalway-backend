@@ -127,13 +127,13 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div class="filter-group">
                 <label for="date">Fecha</label>
                 <input type="date" name="date" id="date" class="form-control" value="{{ date_filter }}">
             </div>
         </div>
-        
+
         <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
             <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
             <a href="{% url 'sessions:list' %}" class="btn btn-secondary">Limpiar</a>
@@ -192,4 +192,3 @@
     </div>
 {% endif %}
 {% endblock %}
-

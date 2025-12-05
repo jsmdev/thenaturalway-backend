@@ -955,15 +955,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.13'
-      
+
       - name: Install Ruff
         run: pip install ruff
-      
+
       - name: Run Ruff
         run: |
           ruff check .
@@ -1396,6 +1396,6 @@ git diff
 
 ---
 
-**Última actualización**: 2025-11-29  
-**Versión**: 1.0  
+**Última actualización**: 2025-11-29
+**Versión**: 1.0
 **Autor**: Equipo de The Natural Way

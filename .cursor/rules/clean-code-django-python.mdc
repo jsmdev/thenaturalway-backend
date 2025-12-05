@@ -98,13 +98,13 @@ def process_user(user):
 def process_user(user):
     if user is None:
         return None
-    
+
     if not user.is_active:
         return None
-    
+
     if not user.has_permission:
         return None
-    
+
     # lógica principal aquí
     return result
 ```
@@ -231,7 +231,7 @@ from django.core.exceptions import ValidationError
 class User(models.Model):
     email = models.EmailField()
     age = models.IntegerField()
-    
+
     def clean(self):
         if self.age < 18:
             raise ValidationError("El usuario debe ser mayor de edad")
@@ -249,10 +249,10 @@ class User(models.Model):
 class UserService:
     def create_user(self, user_data: UserData) -> User:
         pass
-    
+
     def update_user(self, user_id: int, user_data: UserData) -> User:
         pass
-    
+
     def delete_user(self, user_id: int) -> None:
         pass
 ```
@@ -272,7 +272,7 @@ class PaymentProcessor(Protocol):
 class OrderService:
     def __init__(self, payment_processor: PaymentProcessor):
         self.payment_processor = payment_processor
-    
+
     def complete_order(self, order: Order) -> bool:
         return self.payment_processor.process_payment(order.total)
 ```
@@ -283,7 +283,7 @@ class OrderService:
 class EmailService:
     def __init__(self, smtp_client):
         self.smtp_client = smtp_client
-    
+
     def send_email(self, to: str, subject: str, body: str) -> None:
         # Adapta la interfaz externa a nuestra interfaz interna
         self.smtp_client.send(
@@ -318,7 +318,7 @@ class UserRepository:
 class UserService:
     def __init__(self, repository: UserRepository):
         self.repository = repository
-    
+
     def get_user(self, user_id: int) -> User:
         return self.repository.get_by_id(user_id)
 
@@ -326,7 +326,7 @@ class UserService:
 class UserAPIView(APIView):
     def __init__(self, service: UserService):
         self.service = service
-    
+
     def get(self, request, user_id: int):
         user = self.service.get_user(user_id)
         return Response(UserSerializer(user).data)
@@ -374,7 +374,7 @@ def calculate_discount(user: User) -> float:
         'vip': 0.15,
         'standard': 0.0
     }
-    
+
     if user.is_premium:
         return DISCOUNT_RATES['premium']
     elif user.is_vip:
@@ -393,11 +393,11 @@ class User:
     def save(self):
         # guarda en BD
         pass
-    
+
     def send_email(self):
         # envía email
         pass
-    
+
     def generate_report(self):
         # genera reporte
         pass

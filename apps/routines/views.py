@@ -2,45 +2,37 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.routines.serializers import (
-    RoutineSerializer,
-    RoutineCreateSerializer,
-    RoutineUpdateSerializer,
-    RoutineFullSerializer,
-    WeekCreateSerializer,
-    WeekSerializer,
-    DayCreateSerializer,
-    DaySerializer,
     BlockCreateSerializer,
     BlockSerializer,
+    DayCreateSerializer,
+    DaySerializer,
+    RoutineCreateSerializer,
     RoutineExerciseCreateSerializer,
     RoutineExerciseSerializer,
+    RoutineFullSerializer,
+    RoutineSerializer,
+    RoutineUpdateSerializer,
+    WeekCreateSerializer,
+    WeekSerializer,
 )
 from apps.routines.services import (
-    list_routines_service,
-    get_routine_service,
-    create_routine_service,
-    update_routine_service,
-    delete_routine_service,
-    create_week_service,
-    update_week_service,
-    delete_week_service,
-    create_day_service,
-    update_day_service,
-    delete_day_service,
     create_block_service,
-    update_block_service,
-    delete_block_service,
+    create_day_service,
     create_routine_exercise_service,
-    update_routine_exercise_service,
-    delete_routine_exercise_service,
+    create_routine_service,
+    create_week_service,
+    delete_routine_service,
     get_routine_full_service,
+    get_routine_service,
+    list_routines_service,
+    update_routine_service,
 )
 
 if TYPE_CHECKING:
@@ -707,4 +699,3 @@ class RoutineExerciseCreateAPIView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-

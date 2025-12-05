@@ -234,7 +234,7 @@ ignore=migrations,tests.py
 [MESSAGES CONTROL]
 disable=C0111,  # missing-docstring
         R0903,  # too-few-public-methods
-        
+
 [FORMAT]
 max-line-length=100
 ```
@@ -392,5 +392,5 @@ Antes de cada release, verifica:
 
 ---
 
-**Última actualización**: 2025-11-29  
+**Última actualización**: 2025-11-29
 **Herramientas**: Ruff, Radon, Bandit, Pylint, Vulture

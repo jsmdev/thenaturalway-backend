@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Dict, Any, List
+from typing import TYPE_CHECKING, Any, Optional
 
-from django.db.models import QuerySet, Q
+from django.db.models import Q, QuerySet
 
 from apps.exercises.models import Exercise
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 def list_exercises_repository(
-    filters: Optional[Dict[str, Any]] = None,
+    filters: Optional[dict[str, Any]] = None,
     search: Optional[str] = None,
     ordering: Optional[str] = None,
 ) -> QuerySet[Exercise]:
@@ -43,9 +43,7 @@ def list_exercises_repository(
 
     # Aplicar búsqueda
     if search:
-        queryset = queryset.filter(
-            Q(name__icontains=search) | Q(description__icontains=search)
-        )
+        queryset = queryset.filter(Q(name__icontains=search) | Q(description__icontains=search))
 
     # Aplicar ordenamiento
     if ordering:
@@ -72,7 +70,9 @@ def get_exercise_by_id_repository(exercise_id: int) -> Optional[Exercise]:
         return None
 
 
-def create_exercise_repository(validated_data: Dict[str, Any], user: Optional[User] = None) -> Exercise:
+def create_exercise_repository(
+    validated_data: dict[str, Any], user: Optional[User] = None
+) -> Exercise:
     """
     Crea un nuevo ejercicio.
 
@@ -105,9 +105,7 @@ def create_exercise_repository(validated_data: Dict[str, Any], user: Optional[Us
     return Exercise.objects.create(**exercise_data)
 
 
-def update_exercise_repository(
-    exercise: Exercise, validated_data: Dict[str, Any]
-) -> Exercise:
+def update_exercise_repository(exercise: Exercise, validated_data: dict[str, Any]) -> Exercise:
     """
     Actualiza un ejercicio existente.
 
@@ -159,4 +157,3 @@ def delete_exercise_repository(exercise: Exercise) -> Exercise:
     exercise.is_active = False
     exercise.save()
     return exercise
-

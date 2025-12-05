@@ -483,7 +483,7 @@ response = self.client.get(reverse("routine-detail", kwargs={"pk": self.routine.
 #### Archivos a Modificar
 
 - `apps/routines/tests.py` - todos los tests de API views
-- `apps/exercises/tests.py` - todos los tests de API views  
+- `apps/exercises/tests.py` - todos los tests de API views
 - `apps/users/tests.py` - todos los tests de API views
 
 ---
@@ -506,7 +506,7 @@ Ampliar la cobertura de tests de repositorios para incluir casos de error y edge
            "name": "",  # Nombre vacío
            "durationWeeks": -1,  # Valor inválido
        }
-       
+
        # Act & Assert
        with self.assertRaises(ValidationError):
            create_routine_repository(validated_data=validated_data, user=self.user)
@@ -519,7 +519,7 @@ Ampliar la cobertura de tests de repositorios para incluir casos de error y edge
        # Arrange
        Week.objects.create(routine=self.routine, week_number=1)
        validated_data = {"weekNumber": 1}
-       
+
        # Act & Assert
        with self.assertRaises(ValidationError):
            create_week_repository(routine_id=self.routine.id, validated_data=validated_data)
@@ -536,10 +536,10 @@ Ampliar la cobertura de tests de repositorios para incluir casos de error y edge
            created_by=self.user
        )
        validated_data = {"name": "Updated"}  # Solo actualizar name
-       
+
        # Act
        updated = update_routine_repository(routine=routine, validated_data=validated_data)
-       
+
        # Assert
        self.assertEqual(updated.name, "Updated")
        self.assertEqual(updated.description, "Original description")  # No debe cambiar
@@ -564,17 +564,17 @@ Crear nueva clase al final de cada archivo `tests.py`:
 
 class RoutineE2ETestCase(TestCase):
     """Tests de integración end-to-end para rutinas."""
-    
+
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = UserFactory()
         self.client.force_authenticate(user=self.user)
-    
+
     def test_create_complete_routine_flow(self) -> None:
         """Test: Crear rutina completa con semanas, días, bloques y ejercicios."""
         # Arrange
         exercise = ExerciseFactory()
-        
+
         # Act - Crear rutina
         routine_data = {
             "name": "Full Routine",
@@ -587,7 +587,7 @@ class RoutineE2ETestCase(TestCase):
             format="json"
         )
         routine_id = routine_response.data["data"]["id"]
-        
+
         # Act - Crear semana
         week_data = {"weekNumber": 1, "notes": "Week 1"}
         week_response = self.client.post(
@@ -596,7 +596,7 @@ class RoutineE2ETestCase(TestCase):
             format="json"
         )
         week_id = week_response.data["data"]["id"]
-        
+
         # Act - Crear día
         day_data = {"dayNumber": 1, "name": "Day 1"}
         day_response = self.client.post(
@@ -605,7 +605,7 @@ class RoutineE2ETestCase(TestCase):
             format="json"
         )
         day_id = day_response.data["data"]["id"]
-        
+
         # Act - Crear bloque
         block_data = {"name": "Warm Up", "order": 1}
         block_response = self.client.post(
@@ -614,7 +614,7 @@ class RoutineE2ETestCase(TestCase):
             format="json"
         )
         block_id = block_response.data["data"]["id"]
-        
+
         # Act - Crear ejercicio en rutina
         exercise_data = {
             "exerciseId": exercise.id,
@@ -629,14 +629,14 @@ class RoutineE2ETestCase(TestCase):
             exercise_data,
             format="json"
         )
-        
+
         # Assert - Verificar toda la jerarquía
         self.assertEqual(routine_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(week_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(day_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(block_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(exercise_response.status_code, status.HTTP_201_CREATED)
-        
+
         # Assert - Verificar en BD
         routine = Routine.objects.get(id=routine_id)
         self.assertEqual(routine.weeks.count(), 1)
@@ -646,7 +646,7 @@ class RoutineE2ETestCase(TestCase):
             routine.weeks.first().days.first().blocks.first().routine_exercises.count(),
             1
         )
-    
+
     def test_soft_delete_routine_preserves_related_data(self) -> None:
         """Test: Soft delete de rutina no elimina datos relacionados."""
         # Arrange
@@ -656,17 +656,17 @@ class RoutineE2ETestCase(TestCase):
         block = BlockFactory(day=day)
         exercise = ExerciseFactory()
         routine_exercise = RoutineExerciseFactory(block=block, exercise=exercise)
-        
+
         # Act - Soft delete de rutina
         response = self.client.delete(
             reverse("routine-detail", kwargs={"pk": routine.id})
         )
-        
+
         # Assert
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         routine.refresh_from_db()
         self.assertFalse(routine.is_active)  # Marcada como inactiva
-        
+
         # Assert - Datos relacionados aún existen
         self.assertTrue(Week.objects.filter(id=week.id).exists())
         self.assertTrue(Day.objects.filter(id=day.id).exists())
@@ -692,15 +692,15 @@ def test_delete_week_cascades_to_days_blocks_exercises(self) -> None:
     block = BlockFactory(day=day)
     exercise = ExerciseFactory()
     routine_exercise = RoutineExerciseFactory(block=block, exercise=exercise)
-    
+
     week_id = week.id
     day_id = day.id
     block_id = block.id
     routine_exercise_id = routine_exercise.id
-    
+
     # Act
     delete_week_repository(week=week)
-    
+
     # Assert - Todos los objetos relacionados deben estar eliminados
     self.assertFalse(Week.objects.filter(id=week_id).exists())
     self.assertFalse(Day.objects.filter(id=day_id).exists())
@@ -728,7 +728,7 @@ Mejorar la claridad de los errores cuando fallan tests con múltiples aserciones
 def test_routine_serializer_success(self) -> None:
     serializer = RoutineSerializer(self.routine)
     data = serializer.data
-    
+
     self.assertEqual(data["id"], self.routine.id)
     self.assertEqual(data["name"], "Rutina Test")
     self.assertEqual(data["description"], "Descripción")
@@ -740,13 +740,13 @@ def test_routine_serializer_success(self) -> None:
 def test_routine_serializer_success(self) -> None:
     serializer = RoutineSerializer(self.routine)
     data = serializer.data
-    
+
     with self.subTest("Verificar id"):
         self.assertEqual(data["id"], self.routine.id)
-    
+
     with self.subTest("Verificar name"):
         self.assertEqual(data["name"], "Rutina Test")
-    
+
     with self.subTest("Verificar description"):
         self.assertEqual(data["description"], "Descripción")
 ```
@@ -778,16 +778,16 @@ def test_update_week_requires_ownership(self) -> None:
     routine = RoutineFactory(created_by=other_user)
     week = WeekFactory(routine=routine)
     self.client.force_authenticate(user=self.user)
-    
+
     data = {"weekNumber": 2}
-    
+
     # Act
     response = self.client.put(
         reverse("week-detail", kwargs={"routine_id": routine.id, "week_id": week.id}),
         data,
         format="json"
     )
-    
+
     # Assert
     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
     self.assertIn("error", response.data)

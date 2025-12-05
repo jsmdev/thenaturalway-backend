@@ -1,83 +1,82 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
-from django.test import TestCase
-from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.test import TestCase
 from django.urls import reverse
-from rest_framework.test import APIClient
 from rest_framework import status
-from unittest.mock import patch, MagicMock
+from rest_framework.test import APIClient
 
-from apps.routines.models import Routine, Week, Day, Block, RoutineExercise
 from apps.exercises.models import Exercise
-from apps.routines.services import (
-    list_routines_service,
-    get_routine_service,
-    create_routine_service,
-    update_routine_service,
-    delete_routine_service,
-    create_week_service,
-    update_week_service,
-    delete_week_service,
-    create_day_service,
-    update_day_service,
-    delete_day_service,
-    create_block_service,
-    update_block_service,
-    delete_block_service,
-    create_routine_exercise_service,
-    update_routine_exercise_service,
-    delete_routine_exercise_service,
-    get_routine_full_service,
-)
+from apps.routines.models import Block, Day, Routine, RoutineExercise, Week
 from apps.routines.repositories import (
-    list_routines_repository,
-    get_routine_by_id_repository,
-    create_routine_repository,
-    update_routine_repository,
-    delete_routine_repository,
-    list_weeks_by_routine_repository,
-    get_week_by_id_repository,
-    create_week_repository,
-    update_week_repository,
-    delete_week_repository,
-    list_days_by_week_repository,
-    get_day_by_id_repository,
-    create_day_repository,
-    update_day_repository,
-    delete_day_repository,
-    list_blocks_by_day_repository,
-    get_block_by_id_repository,
     create_block_repository,
-    update_block_repository,
-    delete_block_repository,
-    list_routine_exercises_by_block_repository,
-    get_routine_exercise_by_id_repository,
+    create_day_repository,
     create_routine_exercise_repository,
-    update_routine_exercise_repository,
-    delete_routine_exercise_repository,
+    create_routine_repository,
+    create_week_repository,
+    delete_block_repository,
+    delete_day_repository,
+    delete_routine_repository,
+    delete_week_repository,
+    get_block_by_id_repository,
+    get_day_by_id_repository,
+    get_routine_by_id_repository,
+    get_routine_exercise_by_id_repository,
     get_routine_full_repository,
+    get_week_by_id_repository,
+    list_blocks_by_day_repository,
+    list_days_by_week_repository,
+    list_routine_exercises_by_block_repository,
+    list_routines_repository,
+    list_weeks_by_routine_repository,
+    update_block_repository,
+    update_day_repository,
+    update_routine_exercise_repository,
+    update_routine_repository,
+    update_week_repository,
 )
 from apps.routines.serializers import (
-    RoutineSerializer,
-    RoutineCreateSerializer,
-    RoutineUpdateSerializer,
-    RoutineFullSerializer,
-    WeekSerializer,
-    WeekCreateSerializer,
-    DaySerializer,
-    DayCreateSerializer,
-    BlockSerializer,
     BlockCreateSerializer,
-    RoutineExerciseSerializer,
+    BlockSerializer,
+    DayCreateSerializer,
+    DaySerializer,
+    RoutineCreateSerializer,
     RoutineExerciseCreateSerializer,
+    RoutineExerciseSerializer,
+    RoutineFullSerializer,
+    RoutineSerializer,
+    RoutineUpdateSerializer,
+    WeekCreateSerializer,
+    WeekSerializer,
+)
+from apps.routines.services import (
+    create_block_service,
+    create_day_service,
+    create_routine_exercise_service,
+    create_routine_service,
+    create_week_service,
+    delete_block_service,
+    delete_day_service,
+    delete_routine_exercise_service,
+    delete_routine_service,
+    delete_week_service,
+    get_routine_full_service,
+    get_routine_service,
+    list_routines_service,
+    update_block_service,
+    update_day_service,
+    update_routine_exercise_service,
+    update_routine_service,
+    update_week_service,
 )
 
 if TYPE_CHECKING:
-    from apps.users.models import User
     from apps.exercises.models import Exercise
+    from apps.users.models import User
 
 User = get_user_model()
 
@@ -114,19 +113,19 @@ class RoutineModelTestCase(TestCase):
         # Assert
         with self.subTest("Verificar name"):
             self.assertEqual(routine.name, "Rutina de Fuerza")
-        
+
         with self.subTest("Verificar description"):
             self.assertEqual(routine.description, "Rutina para ganar fuerza")
-        
+
         with self.subTest("Verificar duration_weeks"):
             self.assertEqual(routine.duration_weeks, 12)
-        
+
         with self.subTest("Verificar is_active"):
             self.assertTrue(routine.is_active)
-        
+
         with self.subTest("Verificar created_by"):
             self.assertEqual(routine.created_by, self.user)
-        
+
         with self.subTest("Verificar timestamps"):
             self.assertIsNotNone(routine.created_at)
             self.assertIsNotNone(routine.updated_at)
@@ -134,9 +133,7 @@ class RoutineModelTestCase(TestCase):
     def test_routine_str_representation(self) -> None:
         """Test: Representación string de rutina."""
         # Arrange
-        routine = Routine.objects.create(
-            name="Rutina Test", created_by=self.user
-        )
+        routine = Routine.objects.create(name="Rutina Test", created_by=self.user)
 
         # Act
         str_repr = str(routine)
@@ -162,9 +159,7 @@ class WeekModelTestCase(TestCase):
         cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        cls.routine = Routine.objects.create(
-            name="Rutina Test", created_by=cls.user
-        )
+        cls.routine = Routine.objects.create(name="Rutina Test", created_by=cls.user)
 
     def test_week_creation_success(self) -> None:
         """Test: Crear semana exitosamente."""
@@ -181,13 +176,13 @@ class WeekModelTestCase(TestCase):
         # Assert
         with self.subTest("Verificar routine"):
             self.assertEqual(week.routine, self.routine)
-        
+
         with self.subTest("Verificar week_number"):
             self.assertEqual(week.week_number, 1)
-        
+
         with self.subTest("Verificar notes"):
             self.assertEqual(week.notes, "Primera semana")
-        
+
         with self.subTest("Verificar created_at"):
             self.assertIsNotNone(week.created_at)
 
@@ -241,10 +236,10 @@ class WeekModelTestCase(TestCase):
         # Assert
         with self.subTest("Primera semana debe ser week_number=1"):
             self.assertEqual(weeks[0].week_number, 1)
-        
+
         with self.subTest("Segunda semana debe ser week_number=2"):
             self.assertEqual(weeks[1].week_number, 2)
-        
+
         with self.subTest("Tercera semana debe ser week_number=3"):
             self.assertEqual(weeks[2].week_number, 3)
 
@@ -258,9 +253,7 @@ class DayModelTestCase(TestCase):
         cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        cls.routine = Routine.objects.create(
-            name="Rutina Test", created_by=cls.user
-        )
+        cls.routine = Routine.objects.create(name="Rutina Test", created_by=cls.user)
         cls.week = Week.objects.create(routine=cls.routine, week_number=1)
 
     def test_day_creation_success(self) -> None:
@@ -279,13 +272,13 @@ class DayModelTestCase(TestCase):
         # Assert
         with self.subTest("Verificar week"):
             self.assertEqual(day.week, self.week)
-        
+
         with self.subTest("Verificar day_number"):
             self.assertEqual(day.day_number, 1)
-        
+
         with self.subTest("Verificar name"):
             self.assertEqual(day.name, "Día 1")
-        
+
         with self.subTest("Verificar notes"):
             self.assertEqual(day.notes, "Día de pecho")
 
@@ -361,9 +354,7 @@ class BlockModelTestCase(TestCase):
         cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        cls.routine = Routine.objects.create(
-            name="Rutina Test", created_by=cls.user
-        )
+        cls.routine = Routine.objects.create(name="Rutina Test", created_by=cls.user)
         cls.week = Week.objects.create(routine=cls.routine, week_number=1)
         cls.day = Day.objects.create(week=cls.week, day_number=1)
 
@@ -443,9 +434,7 @@ class RoutineExerciseModelTestCase(TestCase):
         cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        cls.routine = Routine.objects.create(
-            name="Rutina Test", created_by=cls.user
-        )
+        cls.routine = Routine.objects.create(name="Rutina Test", created_by=cls.user)
         cls.week = Week.objects.create(routine=cls.routine, week_number=1)
         cls.day = Day.objects.create(week=cls.week, day_number=1)
         cls.block = Block.objects.create(day=cls.day, name="Bloque 1")
@@ -487,9 +476,7 @@ class RoutineExerciseModelTestCase(TestCase):
     def test_routine_exercise_str_representation(self) -> None:
         """Test: Representación string de ejercicio en rutina."""
         # Arrange
-        routine_exercise = RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise
-        )
+        routine_exercise = RoutineExercise.objects.create(block=self.block, exercise=self.exercise)
 
         # Act
         str_repr = str(routine_exercise)
@@ -500,9 +487,7 @@ class RoutineExerciseModelTestCase(TestCase):
     def test_routine_exercise_auto_assign_order_when_none(self) -> None:
         """Test: order se asigna automáticamente si no se proporciona."""
         # Arrange
-        RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise, order=1
-        )
+        RoutineExercise.objects.create(block=self.block, exercise=self.exercise, order=1)
 
         # Act
         routine_exercise = RoutineExercise(block=self.block, exercise=self.exercise)
@@ -523,15 +508,9 @@ class RoutineExerciseModelTestCase(TestCase):
     def test_routine_exercise_ordering(self) -> None:
         """Test: Ejercicios ordenados por order e id."""
         # Arrange
-        RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise, order=3
-        )
-        RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise, order=1
-        )
-        RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise, order=2
-        )
+        RoutineExercise.objects.create(block=self.block, exercise=self.exercise, order=3)
+        RoutineExercise.objects.create(block=self.block, exercise=self.exercise, order=1)
+        RoutineExercise.objects.create(block=self.block, exercise=self.exercise, order=2)
 
         # Act
         exercises = list(RoutineExercise.objects.filter(block=self.block))
@@ -592,12 +571,8 @@ class RoutineRepositoryTestCase(TestCase):
         Routine.objects.create(name="Rutina Inactiva", created_by=self.user, is_active=False)
 
         # Act
-        active_routines = list_routines_repository(
-            user=self.user, filters={"isActive": True}
-        )
-        inactive_routines = list_routines_repository(
-            user=self.user, filters={"isActive": False}
-        )
+        active_routines = list_routines_repository(user=self.user, filters={"isActive": True})
+        inactive_routines = list_routines_repository(user=self.user, filters={"isActive": False})
 
         # Assert
         self.assertEqual(active_routines.count(), 1)
@@ -659,9 +634,7 @@ class RoutineRepositoryTestCase(TestCase):
         }
 
         # Act
-        updated_routine = update_routine_repository(
-            routine=routine, validated_data=validated_data
-        )
+        updated_routine = update_routine_repository(routine=routine, validated_data=validated_data)
 
         # Assert
         self.assertEqual(updated_routine.name, "Rutina Actualizada")
@@ -688,7 +661,7 @@ class RoutineRepositoryTestCase(TestCase):
             name="Original",
             description="Original description",
             duration_weeks=12,
-            created_by=self.user
+            created_by=self.user,
         )
         validated_data = {"name": "Updated"}  # Solo actualizar name
 
@@ -937,7 +910,9 @@ class DayRepositoryTestCase(TestCase):
     def test_update_day_repository_partial_update(self) -> None:
         """Test: Actualización parcial de día no debe eliminar datos."""
         # Arrange
-        day = Day.objects.create(week=self.week, day_number=1, name="Original", notes="Original notes")
+        day = Day.objects.create(
+            week=self.week, day_number=1, name="Original", notes="Original notes"
+        )
         validated_data = {"dayNumber": 2}  # Solo actualizar day_number
 
         # Act
@@ -1091,14 +1066,10 @@ class RoutineExerciseRepositoryTestCase(TestCase):
     def test_get_routine_exercise_by_id_repository_success(self) -> None:
         """Test: Obtener ejercicio en rutina por ID exitosamente."""
         # Arrange
-        routine_exercise = RoutineExercise.objects.create(
-            block=self.block, exercise=self.exercise
-        )
+        routine_exercise = RoutineExercise.objects.create(block=self.block, exercise=self.exercise)
 
         # Act
-        result = get_routine_exercise_by_id_repository(
-            routine_exercise_id=routine_exercise.id
-        )
+        result = get_routine_exercise_by_id_repository(routine_exercise_id=routine_exercise.id)
 
         # Assert
         self.assertIsNotNone(result)
@@ -1173,14 +1144,13 @@ class RoutineExerciseRepositoryTestCase(TestCase):
             sets=3,
             repetitions="8-10",
             weight=80.0,
-            rest_seconds=90
+            rest_seconds=90,
         )
         validated_data = {"sets": 4}  # Solo actualizar sets
 
         # Act
         updated = update_routine_exercise_repository(
-            routine_exercise=routine_exercise,
-            validated_data=validated_data
+            routine_exercise=routine_exercise, validated_data=validated_data
         )
 
         # Assert
@@ -1357,9 +1327,7 @@ class RoutineServiceTestCase(TestCase):
 
         # Act & Assert
         with self.assertRaises(NotFound):
-            update_routine_service(
-                routine_id=999, validated_data={"name": "Test"}, user=self.user
-            )
+            update_routine_service(routine_id=999, validated_data={"name": "Test"}, user=self.user)
 
     @patch("apps.routines.services.get_routine_by_id_repository")
     def test_update_routine_service_permission_denied(self, mock_repo: MagicMock) -> None:
@@ -1432,7 +1400,10 @@ class WeekServiceTestCase(TestCase):
     @patch("apps.routines.services.create_week_repository")
     @patch("apps.routines.services.Week.objects.filter")
     def test_create_week_service_success(
-        self, mock_week_filter: MagicMock, mock_create_repo: MagicMock, mock_get_routine_repo: MagicMock
+        self,
+        mock_week_filter: MagicMock,
+        mock_create_repo: MagicMock,
+        mock_get_routine_repo: MagicMock,
     ) -> None:
         """Test: Crear semana exitosamente."""
         # Arrange
@@ -1464,9 +1435,7 @@ class WeekServiceTestCase(TestCase):
 
         # Act & Assert
         with self.assertRaises(NotFound):
-            create_week_service(
-                routine_id=999, validated_data={"weekNumber": 1}, user=self.user
-            )
+            create_week_service(routine_id=999, validated_data={"weekNumber": 1}, user=self.user)
 
     @patch("apps.routines.services.get_routine_by_id_repository")
     @patch("apps.routines.services.Week.objects.filter")
@@ -1524,9 +1493,7 @@ class WeekServiceTestCase(TestCase):
 
         # Act & Assert
         with self.assertRaises(NotFound):
-            update_week_service(
-                week_id=999, validated_data={"weekNumber": 2}, user=self.user
-            )
+            update_week_service(week_id=999, validated_data={"weekNumber": 2}, user=self.user)
 
     @patch("apps.routines.services.get_week_by_id_repository")
     def test_update_week_service_permission_denied(self, mock_repo: MagicMock) -> None:
@@ -1544,9 +1511,7 @@ class WeekServiceTestCase(TestCase):
 
         # Act & Assert
         with self.assertRaises(PermissionDenied):
-            update_week_service(
-                week_id=week.id, validated_data={"weekNumber": 2}, user=self.user
-            )
+            update_week_service(week_id=week.id, validated_data={"weekNumber": 2}, user=self.user)
 
     @patch("apps.routines.services.get_week_by_id_repository")
     @patch("apps.routines.services.delete_week_repository")
@@ -1827,7 +1792,9 @@ class BlockServiceTestCase(TestCase):
         validated_data = {"name": "Bloque Actualizado"}
 
         # Act
-        result = update_block_service(block_id=block.id, validated_data=validated_data, user=self.user)
+        result = update_block_service(
+            block_id=block.id, validated_data=validated_data, user=self.user
+        )
 
         # Assert
         self.assertEqual(result.name, "Bloque Actualizado")
@@ -2181,25 +2148,25 @@ class RoutineSerializerTestCase(TestCase):
         # Assert
         with self.subTest("Verificar id"):
             self.assertEqual(data["id"], self.routine.id)
-        
+
         with self.subTest("Verificar name"):
             self.assertEqual(data["name"], "Rutina Test")
-        
+
         with self.subTest("Verificar description"):
             self.assertEqual(data["description"], "Descripción")
-        
+
         with self.subTest("Verificar durationWeeks"):
             self.assertEqual(data["durationWeeks"], 12)
-        
+
         with self.subTest("Verificar durationMonths"):
             self.assertEqual(data["durationMonths"], 3)
-        
+
         with self.subTest("Verificar isActive"):
             self.assertTrue(data["isActive"])
-        
+
         with self.subTest("Verificar createdBy"):
             self.assertEqual(data["createdBy"], "testuser")
-        
+
         with self.subTest("Verificar timestamps"):
             self.assertIn("createdAt", data)
             self.assertIn("updatedAt", data)
@@ -2281,16 +2248,16 @@ class WeekSerializerTestCase(TestCase):
         # Assert
         with self.subTest("Verificar id"):
             self.assertEqual(data["id"], self.week.id)
-        
+
         with self.subTest("Verificar routineId"):
             self.assertEqual(data["routineId"], self.routine.id)
-        
+
         with self.subTest("Verificar weekNumber"):
             self.assertEqual(data["weekNumber"], 1)
-        
+
         with self.subTest("Verificar notes"):
             self.assertEqual(data["notes"], "Notas")
-        
+
         with self.subTest("Verificar timestamps"):
             self.assertIn("createdAt", data)
             self.assertIn("updatedAt", data)
@@ -2331,19 +2298,19 @@ class DaySerializerTestCase(TestCase):
         # Assert
         with self.subTest("Verificar id"):
             self.assertEqual(data["id"], self.day.id)
-        
+
         with self.subTest("Verificar weekId"):
             self.assertEqual(data["weekId"], self.week.id)
-        
+
         with self.subTest("Verificar dayNumber"):
             self.assertEqual(data["dayNumber"], 1)
-        
+
         with self.subTest("Verificar name"):
             self.assertEqual(data["name"], "Día 1")
-        
+
         with self.subTest("Verificar notes"):
             self.assertEqual(data["notes"], "Notas")
-        
+
         with self.subTest("Verificar timestamps"):
             self.assertIn("createdAt", data)
             self.assertIn("updatedAt", data)
@@ -2519,9 +2486,7 @@ class RoutineFullSerializerTestCase(TestCase):
         self.assertEqual(len(data["weeks"]), 1)
         self.assertEqual(len(data["weeks"][0]["days"]), 1)
         self.assertEqual(len(data["weeks"][0]["days"][0]["blocks"]), 1)
-        self.assertEqual(
-            len(data["weeks"][0]["days"][0]["blocks"][0]["exercises"]), 1
-        )
+        self.assertEqual(len(data["weeks"][0]["days"][0]["blocks"][0]["exercises"]), 1)
 
 
 # ============================================================================
@@ -2628,7 +2593,9 @@ class RoutineDetailAPIViewTestCase(TestCase):
     def test_get_routine_detail_success(self) -> None:
         """Test: GET detalle de rutina exitosamente."""
         # Act
-        response = self.client.get(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}))
+        response = self.client.get(
+            reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id})
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2654,7 +2621,9 @@ class RoutineDetailAPIViewTestCase(TestCase):
         Block.objects.create(day=day, name="Bloque 1")
 
         # Act
-        response = self.client.get(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}) + "?full=true")
+        response = self.client.get(
+            reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}) + "?full=true"
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2667,7 +2636,11 @@ class RoutineDetailAPIViewTestCase(TestCase):
         data = {"name": "Rutina Actualizada", "description": "Nueva descripción"}
 
         # Act
-        response = self.client.put(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}), data, format="json")
+        response = self.client.put(
+            reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}),
+            data,
+            format="json",
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -2682,7 +2655,11 @@ class RoutineDetailAPIViewTestCase(TestCase):
         data = {"name": "Rutina Actualizada"}
 
         # Act
-        response = self.client.put(reverse("routines_api:routine-detail", kwargs={"pk": other_routine.id}), data, format="json")
+        response = self.client.put(
+            reverse("routines_api:routine-detail", kwargs={"pk": other_routine.id}),
+            data,
+            format="json",
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -2691,7 +2668,9 @@ class RoutineDetailAPIViewTestCase(TestCase):
     def test_delete_routine_delete_success(self) -> None:
         """Test: DELETE eliminar rutina exitosamente."""
         # Act
-        response = self.client.delete(reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id}))
+        response = self.client.delete(
+            reverse("routines_api:routine-detail", kwargs={"pk": self.routine.id})
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -2705,7 +2684,9 @@ class RoutineDetailAPIViewTestCase(TestCase):
         other_routine = Routine.objects.create(name="Otra Rutina", created_by=self.other_user)
 
         # Act
-        response = self.client.delete(reverse("routines_api:routine-detail", kwargs={"pk": other_routine.id}))
+        response = self.client.delete(
+            reverse("routines_api:routine-detail", kwargs={"pk": other_routine.id})
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -2730,7 +2711,9 @@ class WeekCreateAPIViewTestCase(TestCase):
         data = {"weekNumber": 1, "notes": "Primera semana"}
 
         # Act
-        response = self.client.post(reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json")
+        response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json"
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -2745,7 +2728,9 @@ class WeekCreateAPIViewTestCase(TestCase):
         data = {"weekNumber": 1}
 
         # Act
-        response = self.client.post(reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json")
+        response = self.client.post(
+            reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json"
+        )
 
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -2764,7 +2749,7 @@ class WeekCreateAPIViewTestCase(TestCase):
         response = self.client.post(
             reverse("routines_api:week-create", kwargs={"pk": other_routine.id}),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2779,9 +2764,7 @@ class WeekCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:week-create", kwargs={"pk": self.routine.id}),
-            data,
-            format="json"
+            reverse("routines_api:week-create", kwargs={"pk": self.routine.id}), data, format="json"
         )
 
         # Assert
@@ -2808,9 +2791,11 @@ class DayCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:day-create", kwargs={"pk": self.routine.id, "weekId": self.week.id}),
+            reverse(
+                "routines_api:day-create", kwargs={"pk": self.routine.id, "weekId": self.week.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2831,9 +2816,11 @@ class DayCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:day-create", kwargs={"pk": other_routine.id, "weekId": other_week.id}),
+            reverse(
+                "routines_api:day-create", kwargs={"pk": other_routine.id, "weekId": other_week.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2848,9 +2835,11 @@ class DayCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:day-create", kwargs={"pk": self.routine.id, "weekId": self.week.id}),
+            reverse(
+                "routines_api:day-create", kwargs={"pk": self.routine.id, "weekId": self.week.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2878,9 +2867,11 @@ class BlockCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}),
+            reverse(
+                "routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2896,9 +2887,11 @@ class BlockCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}),
+            reverse(
+                "routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2918,9 +2911,11 @@ class BlockCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:block-create", kwargs={"pk": other_routine.id, "dayId": other_day.id}),
+            reverse(
+                "routines_api:block-create", kwargs={"pk": other_routine.id, "dayId": other_day.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2935,9 +2930,11 @@ class BlockCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}),
+            reverse(
+                "routines_api:block-create", kwargs={"pk": self.routine.id, "dayId": self.day.id}
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -2976,7 +2973,10 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:routine-exercise-create", kwargs={"pk": self.routine.id, "blockId": self.block.id}),
+            reverse(
+                "routines_api:routine-exercise-create",
+                kwargs={"pk": self.routine.id, "blockId": self.block.id},
+            ),
             data,
             format="json",
         )
@@ -2994,7 +2994,10 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:routine-exercise-create", kwargs={"pk": self.routine.id, "blockId": self.block.id}),
+            reverse(
+                "routines_api:routine-exercise-create",
+                kwargs={"pk": self.routine.id, "blockId": self.block.id},
+            ),
             data,
             format="json",
         )
@@ -3017,9 +3020,12 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:routine-exercise-create", kwargs={"pk": other_routine.id, "blockId": other_block.id}),
+            reverse(
+                "routines_api:routine-exercise-create",
+                kwargs={"pk": other_routine.id, "blockId": other_block.id},
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -3034,9 +3040,12 @@ class RoutineExerciseCreateAPIViewTestCase(TestCase):
 
         # Act
         response = self.client.post(
-            reverse("routines_api:routine-exercise-create", kwargs={"pk": self.routine.id, "blockId": self.block.id}),
+            reverse(
+                "routines_api:routine-exercise-create",
+                kwargs={"pk": self.routine.id, "blockId": self.block.id},
+            ),
             data,
-            format="json"
+            format="json",
         )
 
         # Assert
@@ -3085,16 +3094,16 @@ class CascadeDeleteTestCase(TestCase):
         # Assert: Todos los objetos relacionados deben estar eliminados
         with self.subTest("Rutina eliminada"):
             self.assertFalse(Routine.objects.filter(id=routine_id).exists())
-        
+
         with self.subTest("Week eliminada en cascada"):
             self.assertFalse(Week.objects.filter(id=week_id).exists())
-        
+
         with self.subTest("Day eliminado en cascada"):
             self.assertFalse(Day.objects.filter(id=day_id).exists())
-        
+
         with self.subTest("Block eliminado en cascada"):
             self.assertFalse(Block.objects.filter(id=block_id).exists())
-        
+
         with self.subTest("RoutineExercise eliminado en cascada"):
             self.assertFalse(RoutineExercise.objects.filter(id=routine_exercise_id).exists())
 
@@ -3240,13 +3249,13 @@ class CascadeDeleteTestCase(TestCase):
         # Assert: Todos los días, bloques y ejercicios deben estar eliminados
         with self.subTest("Week eliminada"):
             self.assertFalse(Week.objects.filter(id=week_id).exists())
-        
+
         with self.subTest("Todos los Days eliminados"):
             self.assertEqual(Day.objects.filter(week_id=week_id).count(), 0)
-        
+
         with self.subTest("Todos los Blocks eliminados"):
             self.assertEqual(Block.objects.filter(day__week_id=week_id).count(), 0)
-        
+
         with self.subTest("Todos los RoutineExercises eliminados"):
             self.assertEqual(RoutineExercise.objects.filter(block__day__week_id=week_id).count(), 0)
 
@@ -3321,7 +3330,10 @@ class RoutineIntegrationE2ETestCase(TestCase):
             "restSeconds": 90,
         }
         exercise1_response = self.client.post(
-            reverse("routines_api:routine-exercise-create", kwargs={"pk": routine_id, "blockId": block_id}),
+            reverse(
+                "routines_api:routine-exercise-create",
+                kwargs={"pk": routine_id, "blockId": block_id},
+            ),
             exercise1_data,
             format="json",
         )
@@ -3335,7 +3347,10 @@ class RoutineIntegrationE2ETestCase(TestCase):
             "restSeconds": 120,
         }
         exercise2_response = self.client.post(
-            reverse("routines_api:routine-exercise-create", kwargs={"pk": routine_id, "blockId": block_id}),
+            reverse(
+                "routines_api:routine-exercise-create",
+                kwargs={"pk": routine_id, "blockId": block_id},
+            ),
             exercise2_data,
             format="json",
         )

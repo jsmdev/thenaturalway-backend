@@ -4,32 +4,32 @@ from typing import TYPE_CHECKING
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.views import View
+from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.views import View
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 from apps.routines.forms import (
+    BlockForm,
+    DayForm,
     RoutineCreateForm,
+    RoutineExerciseForm,
     RoutineUpdateForm,
     WeekForm,
-    DayForm,
-    BlockForm,
-    RoutineExerciseForm,
 )
+from apps.routines.serializers import RoutineFullSerializer, RoutineSerializer
 from apps.routines.services import (
-    list_routines_service,
-    get_routine_service,
-    get_routine_full_service,
-    create_routine_service,
-    update_routine_service,
-    delete_routine_service,
-    create_week_service,
-    create_day_service,
     create_block_service,
+    create_day_service,
     create_routine_exercise_service,
+    create_routine_service,
+    create_week_service,
+    delete_routine_service,
+    get_routine_full_service,
+    get_routine_service,
+    list_routines_service,
+    update_routine_service,
 )
-from apps.routines.serializers import RoutineSerializer, RoutineFullSerializer
-from rest_framework.exceptions import NotFound, PermissionDenied
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -51,7 +51,7 @@ class RoutineListView(View):
             return render(request, "routines/list.html", context)
 
         except Exception as error:
-            messages.error(request, f"Error al cargar rutinas: {str(error)}")
+            messages.error(request, f"Error al cargar rutinas: {error!s}")
             return render(request, "routines/list.html", {"routines": []})
 
 
@@ -80,7 +80,7 @@ class RoutineDetailView(View):
             messages.error(request, "Rutina no encontrada.")
             return redirect("routines:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar rutina: {str(error)}")
+            messages.error(request, f"Error al cargar rutina: {error!s}")
             return redirect("routines:list")
 
 
@@ -116,7 +116,7 @@ class RoutineCreateView(View):
             return redirect("routines:detail", pk=routine.id)
 
         except Exception as error:
-            messages.error(request, f"Error al crear rutina: {str(error)}")
+            messages.error(request, f"Error al crear rutina: {error!s}")
             return render(request, "routines/form.html", {"form": form, "action": "create"})
 
 
@@ -153,7 +153,7 @@ class RoutineUpdateView(View):
             messages.error(request, "Rutina no encontrada.")
             return redirect("routines:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar rutina: {str(error)}")
+            messages.error(request, f"Error al cargar rutina: {error!s}")
             return redirect("routines:list")
 
     @method_decorator(login_required)
@@ -169,7 +169,9 @@ class RoutineUpdateView(View):
             except Exception:
                 routine_data = {}
             return render(
-                request, "routines/form.html", {"form": form, "routine": routine_data, "action": "update"}
+                request,
+                "routines/form.html",
+                {"form": form, "routine": routine_data, "action": "update"},
             )
 
         try:
@@ -199,7 +201,7 @@ class RoutineUpdateView(View):
             messages.error(request, "No tienes permisos para editar esta rutina.")
             return redirect("routines:list")
         except Exception as error:
-            messages.error(request, f"Error al actualizar rutina: {str(error)}")
+            messages.error(request, f"Error al actualizar rutina: {error!s}")
             return redirect("routines:detail", pk=pk)
 
 
@@ -223,7 +225,7 @@ class RoutineDeleteView(View):
             messages.error(request, "No tienes permisos para eliminar esta rutina.")
             return redirect("routines:list")
         except Exception as error:
-            messages.error(request, f"Error al eliminar rutina: {str(error)}")
+            messages.error(request, f"Error al eliminar rutina: {error!s}")
             return redirect("routines:detail", pk=pk)
 
 
@@ -243,7 +245,7 @@ class WeekCreateView(View):
             messages.error(request, "Rutina no encontrada.")
             return redirect("routines:list")
         except Exception as error:
-            messages.error(request, f"Error al cargar rutina: {str(error)}")
+            messages.error(request, f"Error al cargar rutina: {error!s}")
             return redirect("routines:list")
 
     @method_decorator(login_required)
@@ -271,7 +273,7 @@ class WeekCreateView(View):
             return redirect("routines:detail", pk=pk)
 
         except Exception as error:
-            messages.error(request, f"Error al crear semana: {str(error)}")
+            messages.error(request, f"Error al crear semana: {error!s}")
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 context = {"form": form, "routine_id": pk, "routine_name": routine.name}
@@ -289,6 +291,7 @@ class DayCreateView(View):
         try:
             routine = get_routine_service(routine_id=pk, user=request.user)
             from apps.routines.repositories import get_week_by_id_repository
+
             week = get_week_by_id_repository(week_id=weekId)
             if not week or week.routine.id != pk:
                 raise NotFound("Semana no encontrada")
@@ -305,7 +308,7 @@ class DayCreateView(View):
             messages.error(request, "Rutina o semana no encontrada.")
             return redirect("routines:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al cargar: {str(error)}")
+            messages.error(request, f"Error al cargar: {error!s}")
             return redirect("routines:detail", pk=pk)
 
     @method_decorator(login_required)
@@ -317,6 +320,7 @@ class DayCreateView(View):
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 from apps.routines.repositories import get_week_by_id_repository
+
                 week = get_week_by_id_repository(week_id=weekId)
                 context = {
                     "form": form,
@@ -342,10 +346,11 @@ class DayCreateView(View):
             return redirect("routines:detail", pk=pk)
 
         except Exception as error:
-            messages.error(request, f"Error al crear día: {str(error)}")
+            messages.error(request, f"Error al crear día: {error!s}")
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 from apps.routines.repositories import get_week_by_id_repository
+
                 week = get_week_by_id_repository(week_id=weekId)
                 context = {
                     "form": form,
@@ -368,6 +373,7 @@ class BlockCreateView(View):
         try:
             routine = get_routine_service(routine_id=pk, user=request.user)
             from apps.routines.repositories import get_day_by_id_repository
+
             day = get_day_by_id_repository(day_id=dayId)
             if not day or day.week.routine.id != pk:
                 raise NotFound("Día no encontrado")
@@ -384,7 +390,7 @@ class BlockCreateView(View):
             messages.error(request, "Rutina o día no encontrado.")
             return redirect("routines:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al cargar: {str(error)}")
+            messages.error(request, f"Error al cargar: {error!s}")
             return redirect("routines:detail", pk=pk)
 
     @method_decorator(login_required)
@@ -396,6 +402,7 @@ class BlockCreateView(View):
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 from apps.routines.repositories import get_day_by_id_repository
+
                 day = get_day_by_id_repository(day_id=dayId)
                 context = {
                     "form": form,
@@ -421,10 +428,11 @@ class BlockCreateView(View):
             return redirect("routines:detail", pk=pk)
 
         except Exception as error:
-            messages.error(request, f"Error al crear bloque: {str(error)}")
+            messages.error(request, f"Error al crear bloque: {error!s}")
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 from apps.routines.repositories import get_day_by_id_repository
+
                 day = get_day_by_id_repository(day_id=dayId)
                 context = {
                     "form": form,
@@ -447,6 +455,7 @@ class RoutineExerciseCreateView(View):
         try:
             routine = get_routine_service(routine_id=pk, user=request.user)
             from apps.routines.repositories import get_block_by_id_repository
+
             block = get_block_by_id_repository(block_id=blockId)
             if not block or block.day.week.routine.id != pk:
                 raise NotFound("Bloque no encontrado")
@@ -463,7 +472,7 @@ class RoutineExerciseCreateView(View):
             messages.error(request, "Rutina o bloque no encontrado.")
             return redirect("routines:detail", pk=pk)
         except Exception as error:
-            messages.error(request, f"Error al cargar: {str(error)}")
+            messages.error(request, f"Error al cargar: {error!s}")
             return redirect("routines:detail", pk=pk)
 
     @method_decorator(login_required)
@@ -475,6 +484,7 @@ class RoutineExerciseCreateView(View):
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 from apps.routines.repositories import get_block_by_id_repository
+
                 block = get_block_by_id_repository(block_id=blockId)
                 context = {
                     "form": form,
@@ -511,10 +521,11 @@ class RoutineExerciseCreateView(View):
             return redirect("routines:detail", pk=pk)
 
         except Exception as error:
-            messages.error(request, f"Error al añadir ejercicio: {str(error)}")
+            messages.error(request, f"Error al añadir ejercicio: {error!s}")
             try:
                 routine = get_routine_service(routine_id=pk, user=request.user)
                 from apps.routines.repositories import get_block_by_id_repository
+
                 block = get_block_by_id_repository(block_id=blockId)
                 context = {
                     "form": form,

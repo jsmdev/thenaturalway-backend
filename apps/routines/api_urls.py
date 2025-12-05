@@ -1,12 +1,12 @@
 from django.urls import path
 
 from apps.routines.views import (
-    RoutineListAPIView,
-    RoutineDetailAPIView,
-    WeekCreateAPIView,
-    DayCreateAPIView,
     BlockCreateAPIView,
+    DayCreateAPIView,
+    RoutineDetailAPIView,
     RoutineExerciseCreateAPIView,
+    RoutineListAPIView,
+    WeekCreateAPIView,
 )
 
 app_name = "routines_api"

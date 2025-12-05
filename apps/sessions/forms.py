@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from django import forms
 from django.core.exceptions import ValidationError
 
-from apps.sessions.models import Session, SessionExercise
-from apps.routines.models import Routine
 from apps.exercises.models import Exercise
-
-if TYPE_CHECKING:
-    pass
+from apps.routines.models import Routine
+from apps.sessions.models import Session
 
 
 class SessionCreateForm(forms.Form):
@@ -31,22 +26,22 @@ class SessionCreateForm(forms.Form):
     start_time = forms.DateTimeField(
         required=False,
         label="Hora de inicio",
-        widget=forms.DateTimeInput(
-            attrs={"class": "form-control", "type": "datetime-local"}
-        ),
+        widget=forms.DateTimeInput(attrs={"class": "form-control", "type": "datetime-local"}),
     )
     end_time = forms.DateTimeField(
         required=False,
         label="Hora de finalización",
-        widget=forms.DateTimeInput(
-            attrs={"class": "form-control", "type": "datetime-local"}
-        ),
+        widget=forms.DateTimeInput(attrs={"class": "form-control", "type": "datetime-local"}),
     )
     notes = forms.CharField(
         required=False,
         label="Notas",
         widget=forms.Textarea(
-            attrs={"class": "form-control", "rows": 4, "placeholder": "Notas generales de la sesión"}
+            attrs={
+                "class": "form-control",
+                "rows": 4,
+                "placeholder": "Notas generales de la sesión",
+            }
         ),
     )
     rpe = forms.IntegerField(
@@ -81,7 +76,9 @@ class SessionCreateForm(forms.Form):
         """Inicializa el formulario con el usuario para filtrar rutinas."""
         super().__init__(*args, **kwargs)
         if user:
-            self.fields["routine"].queryset = Routine.objects.filter(created_by=user, is_active=True)
+            self.fields["routine"].queryset = Routine.objects.filter(
+                created_by=user, is_active=True
+            )
 
     def clean_rpe(self) -> int | None:
         """Valida que RPE esté entre 1 y 10."""
@@ -136,7 +133,10 @@ class SessionExerciseForm(forms.Form):
         label="Orden",
         min_value=0,
         widget=forms.NumberInput(
-            attrs={"class": "form-control", "placeholder": "Se asignará automáticamente si se deja vacío"}
+            attrs={
+                "class": "form-control",
+                "placeholder": "Se asignará automáticamente si se deja vacío",
+            }
         ),
         help_text="Orden del ejercicio en la sesión",
     )
@@ -150,9 +150,7 @@ class SessionExerciseForm(forms.Form):
         required=False,
         label="Repeticiones",
         max_length=50,
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "Ej: 8-10, 10, 12"}
-        ),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ej: 8-10, 10, 12"}),
         help_text="Puede ser un rango (8-10) o valores específicos",
     )
     weight = forms.DecimalField(
@@ -185,7 +183,11 @@ class SessionExerciseForm(forms.Form):
         required=False,
         label="Notas",
         widget=forms.Textarea(
-            attrs={"class": "form-control", "rows": 3, "placeholder": "Notas específicas sobre este ejercicio"}
+            attrs={
+                "class": "form-control",
+                "rows": 3,
+                "placeholder": "Notas específicas sobre este ejercicio",
+            }
         ),
     )
 
@@ -195,4 +197,3 @@ class SessionExerciseForm(forms.Form):
         if rpe is not None and (rpe < 1 or rpe > 10):
             raise ValidationError("RPE debe estar entre 1 y 10")
         return rpe
-

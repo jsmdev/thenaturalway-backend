@@ -142,4 +142,3 @@ Para errores:
 - El código sigue las convenciones del proyecto (snake_case, PascalCase, etc.)
 - Los permisos están implementados usando clases de permisos de DRF con `get_permissions()`
 - La validación se realiza tanto en serializadores como en servicios
-

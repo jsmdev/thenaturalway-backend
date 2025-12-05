@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-
-if TYPE_CHECKING:
-    pass
+from django.db import models
 
 User = get_user_model()
 
@@ -85,9 +80,7 @@ class Week(models.Model):
 class Day(models.Model):
     """Modelo de día dentro de una semana."""
 
-    week = models.ForeignKey(
-        Week, on_delete=models.CASCADE, related_name="days", db_index=True
-    )
+    week = models.ForeignKey(Week, on_delete=models.CASCADE, related_name="days", db_index=True)
     day_number = models.IntegerField()
     name = models.CharField(max_length=255, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
@@ -112,9 +105,9 @@ class Day(models.Model):
     def clean(self) -> None:
         """Valida que day_number sea único por semana."""
         if self.week_id and self.day_number:
-            existing = Day.objects.filter(
-                week=self.week, day_number=self.day_number
-            ).exclude(pk=self.pk)
+            existing = Day.objects.filter(week=self.week, day_number=self.day_number).exclude(
+                pk=self.pk
+            )
             if existing.exists():
                 raise ValidationError(
                     {"day_number": "Ya existe un día con este número en esta semana"}
@@ -129,9 +122,7 @@ class Day(models.Model):
 class Block(models.Model):
     """Modelo de bloque dentro de un día."""
 
-    day = models.ForeignKey(
-        Day, on_delete=models.CASCADE, related_name="blocks", db_index=True
-    )
+    day = models.ForeignKey(Day, on_delete=models.CASCADE, related_name="blocks", db_index=True)
     name = models.CharField(max_length=255)
     order = models.IntegerField(default=0)
     notes = models.TextField(blank=True, null=True)
@@ -154,9 +145,9 @@ class Block(models.Model):
     def save(self, *args, **kwargs) -> None:
         """Asigna order automáticamente si no se proporciona."""
         if not self.order and self.day_id:
-            max_order = Block.objects.filter(day=self.day).aggregate(
-                max_order=models.Max("order")
-            )["max_order"]
+            max_order = Block.objects.filter(day=self.day).aggregate(max_order=models.Max("order"))[
+                "max_order"
+            ]
             self.order = (max_order or 0) + 1
         super().save(*args, **kwargs)
 
@@ -177,9 +168,7 @@ class RoutineExercise(models.Model):
     sets = models.IntegerField(blank=True, null=True)
     repetitions = models.CharField(max_length=50, blank=True, null=True)
     weight = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
-    weight_percentage = models.DecimalField(
-        max_digits=5, decimal_places=2, blank=True, null=True
-    )
+    weight_percentage = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     tempo = models.CharField(max_length=50, blank=True, null=True)
     rest_seconds = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
@@ -208,4 +197,3 @@ class RoutineExercise(models.Model):
             )["max_order"]
             self.order = (max_order or 0) + 1
         super().save(*args, **kwargs)
-

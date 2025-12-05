@@ -406,4 +406,3 @@ Implementar la funcionalidad completa para registrar y gestionar sesiones de ent
 - Enlace funcional que redirige a sessions/
 
 > Fin del Plan de Implementación para `4_registrar_sesiones_de_entrenamiento`
-

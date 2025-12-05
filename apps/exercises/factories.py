@@ -19,9 +19,7 @@ class ExerciseFactory(DjangoModelFactory):
     primary_muscle_group = factory.Iterator(
         ["chest", "back", "shoulders", "arms", "legs", "core", "full_body"]
     )
-    equipment = factory.Iterator(
-        ["barbell", "dumbbell", "bodyweight", "machine", "cable", "other"]
-    )
+    equipment = factory.Iterator(["barbell", "dumbbell", "bodyweight", "machine", "cable", "other"])
     difficulty = factory.Iterator(["beginner", "intermediate", "advanced"])
     is_active = True
     created_by = factory.SubFactory(UserFactory)
