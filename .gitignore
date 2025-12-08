@@ -105,3 +105,4 @@ ENV/
 
 # Quality reports
 docs/quality-reports/
+!docs/quality-reports/QUALITY_README.md

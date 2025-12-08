@@ -10,15 +10,19 @@ docs/quality-reports/
 ├── coverage/                    # Reportes de cobertura de tests
 │   ├── index.html              # 🌐 Dashboard principal de coverage
 │   └── ...                     # Archivos HTML detallados por módulo
-└── code-analysis/              # Análisis de calidad de código
-    ├── dashboard.html          # 🌐 Dashboard principal de calidad
-    ├── ruff.json               # Problemas de estilo y bugs
-    ├── complexity.json         # Complejidad ciclomática
-    ├── maintainability.json    # Índice de mantenibilidad
-    ├── security.json           # Vulnerabilidades de seguridad
-    ├── pylint.json             # Linting exhaustivo
-    └── dead-code.txt           # Código muerto/no usado
+├── code-analysis/              # Reportes JSON (fuente de datos)
+│   ├── ruff.json               # Problemas de estilo y bugs
+│   ├── complexity.json         # Complejidad ciclomática
+│   ├── maintainability.json    # Índice de mantenibilidad
+│   ├── security.json           # Vulnerabilidades de seguridad
+│   ├── pylint.json             # Linting exhaustivo
+│   └── dead-code.txt           # Código muerto/no usado
+└── YYYYMMDD-code-analysis/     # Dashboards HTML por fecha
+    └── dashboard.html          # 🌐 Dashboard de calidad (ej: 20251208-code-analysis/)
 ```
+
+**Nota**: Los dashboards HTML se guardan en carpetas con formato `YYYYMMDD-code-analysis`.
+Si generas el dashboard varias veces el mismo día, se reescribe en la misma carpeta.
 
 ## 🚀 Generar Reportes
 
@@ -60,8 +64,10 @@ make quality-html
 - **Actualizar**: `make coverage`
 
 ### Code Quality Dashboard
-- **URL**: `docs/quality-reports/code-analysis/dashboard.html`
+- **URL**: `docs/quality-reports/YYYYMMDD-code-analysis/dashboard.html` (donde YYYYMMDD es la fecha de hoy)
+- **Ejemplo**: `docs/quality-reports/20251208-code-analysis/dashboard.html`
 - **Actualizar**: `make quality-dashboard` (todo en uno) o `make quality-html` (solo dashboard)
+- **Nota**: Cada día se crea una nueva carpeta. Si regeneras el dashboard el mismo día, se reescribe.
 
 #### 🎨 Características del Dashboard
 
