@@ -1,0 +1,283 @@
+---
+globs: *.py
+alwaysApply: true
+---
+# Reglas de Ruff - Linting y Formateo
+
+## ⚠️ IMPORTANTE: Pre-commit Hook Activo
+Este proyecto usa pre-commit hooks que ejecutan Ruff automáticamente. **Si el código no pasa `make check`, el commit será bloqueado**.
+
+## 🎯 Configuración de Ruff
+- **Archivo de configuración**: `pyproject.toml`
+- **Longitud máxima de línea**: 100 caracteres
+- **Target Python**: 3.12+
+- **Formatter**: Ruff (reemplaza Black)
+- **Linter**: Ruff (reemplaza flake8, pylint, isort)
+
+## 📋 Reglas Críticas (SIEMPRE aplicar)
+
+### 1. ClassVar para Atributos de Clase Mutables (RUF012)
+**OBLIGATORIO**: Todos los atributos de clase mutables (listas, dicts) DEBEN usar `ClassVar`.
+
+```python
+from typing import ClassVar
+
+# ❌ INCORRECTO
+class MySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ["id", "name"]  # Error RUF012
+        read_only_fields = ["id"]  # Error RUF012
+
+# ✅ CORRECTO
+class MySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields: ClassVar[list[str]] = ["id", "name"]
+        read_only_fields: ClassVar[list[str]] = ["id"]
+```
+
+**Aplicar en**:
+- Django Admin: `list_display`, `list_filter`, `search_fields`, `readonly_fields`, `fieldsets`, `raw_id_fields`
+- Django Models: `CHOICES`, `Meta.indexes`, `Meta.ordering`, `unique_together`
+- DRF Serializers: `Meta.fields`, `Meta.read_only_fields`
+- APIViews: `permission_classes`
+
+### 2. Type Hints Obligatorios
+**SIEMPRE** incluir type hints en:
+- Parámetros de funciones
+- Valores de retorno
+- Atributos de clase que son mutables
+
+```python
+# ❌ INCORRECTO
+def get_user(user_id):
+    return User.objects.get(id=user_id)
+
+# ✅ CORRECTO
+def get_user(user_id: int) -> User:
+    return User.objects.get(id=user_id)
+```
+
+### 3. Orden Estricto de Imports (I)
+**Orden obligatorio**:
+1. `from __future__ import annotations` (SIEMPRE primero si se usa)
+2. Imports de `typing` (TYPE_CHECKING, ClassVar, etc.)
+3. Standard library
+4. Django/DRF
+5. Third-party libraries
+6. Local imports
+7. `if TYPE_CHECKING:` block al final
+
+```python
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
+
+# Standard library
+import os
+from datetime import datetime
+
+# Django/DRF
+from django.db import models
+from rest_framework import serializers
+
+# Third-party
+import requests
+
+# Local
+from apps.users.models import User
+
+if TYPE_CHECKING:
+    from rest_framework.request import Request
+```
+
+### 4. Orden de Métodos en Django Models (DJ012)
+**Orden obligatorio en modelos Django**:
+1. Campos del modelo
+2. `class Meta`
+3. `__str__()`
+4. `save()` (si existe)
+5. `clean()` (si existe)
+6. Otros métodos custom
+
+```python
+# ✅ CORRECTO
+class MyModel(models.Model):
+    # 1. Campos
+    name = models.CharField(max_length=255)
+
+    # 2. Meta
+    class Meta:
+        db_table = "my_models"
+        indexes: ClassVar[list] = [models.Index(fields=["name"])]
+        ordering: ClassVar[list[str]] = ["name"]
+
+    # 3. __str__
+    def __str__(self) -> str:
+        return self.name
+
+    # 4. save
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    # 5. clean
+    def clean(self) -> None:
+        # validaciones
+        pass
+
+    # 6. Otros métodos
+    def custom_method(self) -> str:
+        return f"Custom: {self.name}"
+```
+
+### 5. Manejo de Excepciones (B904)
+**SIEMPRE** usar `from` al re-lanzar excepciones:
+
+```python
+# ❌ INCORRECTO
+try:
+    value = int(data)
+except (ValueError, TypeError):
+    raise ValidationError("Must be integer")
+
+# ✅ CORRECTO
+try:
+    value = int(data)
+except (ValueError, TypeError) as e:
+    raise ValidationError("Must be integer") from e
+```
+
+### 6. Try-Except-Pass Prohibido (S110)
+**NUNCA** usar `except: pass` sin logging:
+
+```python
+# ❌ INCORRECTO
+try:
+    risky_operation()
+except Exception:
+    pass
+
+# ✅ CORRECTO
+import logging
+logger = logging.getLogger(__name__)
+
+try:
+    risky_operation()
+except Exception as e:
+    logger.debug(f"Operation failed: {e}")
+```
+
+## 🔤 Naming Conventions
+
+### Convención General (PEP 8)
+- **Funciones/métodos**: `snake_case` con verbo (`get_user`, `create_order`, `validate_data`)
+- **Clases**: `PascalCase` (`UserSerializer`, `OrderService`)
+- **Constantes**: `UPPER_SNAKE_CASE` (`MAX_RETRIES`, `DEFAULT_TIMEOUT`)
+- **Variables**: `snake_case` (`user_id`, `total_count`)
+- **Archivos**: `snake_case.py` (`user_service.py`, `order_repository.py`)
+
+### ⚠️ EXCEPCIÓN: API usa camelCase
+**Serializers de DRF usan camelCase** para compatibilidad con frontend JavaScript:
+
+```python
+class UserSerializer(serializers.ModelSerializer):
+    # ✅ camelCase permitido en serializers (reglas N815, N802, N803 ignoradas)
+    firstName = serializers.CharField(source="first_name")
+    lastName = serializers.CharField(source="last_name")
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+
+    def get_firstName(self, obj: User) -> str:  # camelCase OK en get_*
+        return obj.first_name
+
+    class Meta:
+        model = User
+        fields: ClassVar[list[str]] = ["id", "firstName", "lastName", "createdAt"]
+        read_only_fields: ClassVar[list[str]] = ["id", "createdAt"]
+```
+
+**Nota**: Usar `source` para mapear campos camelCase de API a snake_case del modelo.
+
+## 📐 Code Style
+
+### Formato
+- **Longitud de línea**: 100 caracteres máximo
+- **Indentación**: 4 espacios (nunca tabs)
+- **Quotes**: Dobles (`"`) siempre
+- **Line endings**: LF (Unix)
+
+### Django REST Framework
+```python
+# Estructura recomendada de un serializer
+class ExampleSerializer(serializers.ModelSerializer):
+    # Campos custom/calculados primero
+    customField = serializers.SerializerMethodField()
+    relatedData = serializers.CharField(source="related.data")
+
+    # Meta después de campos
+    class Meta:
+        model = ExampleModel
+        fields: ClassVar[list[str]] = ["id", "customField", "relatedData"]
+        read_only_fields: ClassVar[list[str]] = ["id"]
+
+    # Métodos get_* después de Meta
+    def get_customField(self, obj: ExampleModel) -> str:
+        return f"Custom: {obj.name}"
+```
+
+## 🚫 Reglas Ignoradas (Por Diseño)
+
+Las siguientes reglas están desactivadas **intencionalmente**:
+
+| Regla | Razón |
+|-------|-------|
+| N815, N802, N803 | API usa camelCase para compatibilidad con frontend |
+| E501 | Longitud de línea manejada por `line-length` |
+| S101 | Asserts permitidos en tests |
+| T201 | Print statements útiles para debugging |
+| DJ001 | Models sin `__str__` a veces intencional |
+| S104, S105 | Desarrollo local (secrets/bind all interfaces OK) |
+| E402 | Imports order en settings.py |
+
+## 🔧 Comandos
+
+```bash
+# Verificar código (lint + format check)
+make check
+
+# Formatear automáticamente
+make format
+
+# Solo linter
+make lint
+
+# Pre-commit manual
+make pre-commit
+```
+
+## ✅ Checklist Pre-Commit
+
+Antes de hacer commit, verifica:
+
+- [ ] Type hints en parámetros y retornos
+- [ ] `ClassVar` en atributos de clase mutables
+- [ ] Imports en orden correcto
+- [ ] Métodos de modelos Django en orden correcto
+- [ ] Excepciones con `from e`
+- [ ] No hay `except: pass` sin logging
+- [ ] `make check` pasa sin errores
+
+## 🎯 Prioridad de Reglas
+
+1. **Seguridad (S\*)**: Crítico - revisar siempre
+2. **Bugs potenciales (B\*, F\*)**: Muy importante - no ignorar
+3. **Django best practices (DJ\*)**: Importante - seguir guía Django
+4. **Style (E\*, W\*, I\*, N\*)**: Importante - consistencia de código
+5. **Simplificación (SIM\*)**: Recomendado - código más limpio
+
+## 📚 Referencias
+
+- Configuración completa: `pyproject.toml`
+- Documentación Ruff: https://docs.astral.sh/ruff/
+- Django Style Guide: https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/coding-style/
+- PEP 8: https://pep8.org/
+- PEP 484 (Type Hints): https://peps.python.org/pep-0484/
