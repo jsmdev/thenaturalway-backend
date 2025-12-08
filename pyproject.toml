@@ -103,3 +103,56 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
+
+[tool.mypy]
+# Configuración de Mypy - Type checker estático
+# https://mypy.readthedocs.io/en/stable/config_file.html
+
+# Python version
+python_version = "3.13"
+
+# Plugins necesarios para Django
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+
+# Nivel de estrictez (empezamos moderado, se puede aumentar gradualmente)
+warn_return_any = false  # Demasiado estricto para Django
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = false  # Puede generar muchos false positives
+warn_no_return = true
+warn_unreachable = false  # Django a veces genera código "inalcanzable" válido
+
+# Chequeos adicionales
+check_untyped_defs = false  # Muy estricto, activar gradualmente
+disallow_untyped_decorators = false  # Django usa muchos decorators sin tipos
+
+# No requerir tipos en todo (progresivo)
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+# Permitir some flexibility con Django
+allow_untyped_calls = true
+allow_untyped_defs = true
+
+# Configuración Django-específica
+strict_optional = true
+no_implicit_optional = true
+
+# Archivos a excluir
+exclude = [
+    "migrations/",
+    "venv/",
+    ".venv/",
+    "build/",
+    "dist/",
+]
+
+# Mostrar códigos de error
+show_error_codes = true
+show_column_numbers = true
+pretty = true
+
+[tool.django-stubs]
+# Configuración del plugin django-stubs
+django_settings_module = "config.settings"
+strict_settings = false  # No requerir tipos en settings.py

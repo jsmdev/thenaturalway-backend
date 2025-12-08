@@ -59,6 +59,10 @@ pre-commit-update: ## Actualizar pre-commit hooks
 	@echo "🔄 Actualizando pre-commit hooks..."
 	pre-commit autoupdate
 
+mypy: ## Ejecutar Mypy type checker
+	@echo "🔵 Ejecutando Mypy type checker..."
+	mypy apps/ --config-file=pyproject.toml
+
 secrets-scan: ## Escanear secretos en el código
 	@echo "🔐 Escaneando secretos..."
 	detect-secrets scan --baseline .secrets.baseline
@@ -134,8 +138,8 @@ quality: ## Análisis exhaustivo de calidad de código
 	@radon mi apps/ -j > docs/quality-reports/code-analysis/maintainability.json
 	@echo "🔒 Análisis de seguridad (Bandit)..."
 	@bandit -r apps/ -f json -o docs/quality-reports/code-analysis/security.json || true
-	@echo "🔍 Linting exhaustivo (Pylint)..."
-	@pylint apps/ --output-format=json > docs/quality-reports/code-analysis/pylint.json || true
+	@echo "🔵 Type checking (Mypy)..."
+	@mypy apps/ --config-file=pyproject.toml --no-error-summary --no-pretty > docs/quality-reports/code-analysis/mypy.txt 2>&1 || true
 	@echo "💀 Detectando código muerto (Vulture)..."
 	@vulture apps/ --min-confidence 80 > docs/quality-reports/code-analysis/dead-code.txt || true
 	@echo "✅ Análisis completo! Reportes en: docs/quality-reports/code-analysis/"
@@ -143,7 +147,7 @@ quality: ## Análisis exhaustivo de calidad de código
 	@echo "   - complexity.json: Complejidad ciclomática"
 	@echo "   - maintainability.json: Índice de mantenibilidad"
 	@echo "   - security.json: Vulnerabilidades de seguridad"
-	@echo "   - pylint.json: Linting exhaustivo"
+	@echo "   - mypy.txt: Type checking"
 	@echo "   - dead-code.txt: Código muerto/no usado"
 
 quality-summary: ## Resumen rápido de calidad
@@ -154,6 +158,8 @@ quality-summary: ## Resumen rápido de calidad
 	@radon mi apps/ -s
 	@echo "=== Seguridad (top 10) ==="
 	@bandit -r apps/ -ll | head -20 || true
+	@echo "=== Type checking (Mypy) ==="
+	@mypy apps/ --config-file=pyproject.toml 2>&1 | head -20 || true
 	@echo "=== Código muerto ==="
 	@vulture apps/ --min-confidence 90 | head -20 || true
 

@@ -46,13 +46,13 @@ METRIC_INFO = {
         "warning": "⚠️ 1-5 MEDIUM: Revisar y corregir",
         "critical": "❌ HIGH issues: Corregir inmediatamente",
     },
-    "pylint": {
-        "title": "Pylint Score",
-        "icon": "📝",
-        "description": "Análisis exhaustivo de estilo, errores y code smells. Penaliza cada problema encontrado.",
-        "optimal": "✅ 8-10: Excelente calidad de código",
-        "warning": "⚠️ 6-8: Buena calidad, algunas mejoras",
-        "critical": "❌ <6: Muchos problemas - revisar",
+    "mypy": {
+        "title": "Mypy Type Checker",
+        "icon": "🔵",
+        "description": "Verifica tipos estáticos en Python. Detecta errores de tipos, inconsistencias y problemas de type hints antes de ejecutar el código.",
+        "optimal": "✅ <50 errores: Buen uso de type hints",
+        "warning": "⚠️ 50-150 errores: Considerar agregar más type hints",
+        "critical": "❌ >150 errores: Revisar configuración de Mypy",
     },
     "ruff": {
         "title": "Ruff Linter",
@@ -192,47 +192,68 @@ def get_security_stats(data):
     return {"distribution": stats, "total_issues": len(issues), "issues": issues[:15]}
 
 
-def get_pylint_stats(data):
-    """Extrae estadísticas de Pylint."""
-    if not data:
-        return None
+def get_mypy_stats(filepath):
+    """Extrae estadísticas de Mypy."""
+    try:
+        with open(filepath) as f:
+            content = f.read()
+            lines = content.strip().split("\n")
 
-    # Pylint devuelve un array de issues
-    if isinstance(data, list):
-        stats = {"convention": 0, "warning": 0, "error": 0, "refactor": 0}
-        details = []
+            # Parsear errores de Mypy
+            # Formato: archivo.py:linea:columna: error: mensaje  [error-code]
+            errors = []
+            error_types = {}
 
-        for item in data:
-            if isinstance(item, dict):
-                issue_type = item.get("type", "convention")
-                stats[issue_type] = stats.get(issue_type, 0) + 1
+            for line in lines:
+                if ": error:" in line:
+                    try:
+                        # Extraer componentes
+                        parts = line.split(": error: ")
+                        if len(parts) == 2:
+                            location = parts[0]
+                            message_part = parts[1]
 
-                details.append(
-                    {
-                        "type": issue_type,
-                        "symbol": item.get("symbol", ""),
-                        "message": item.get("message", ""),
-                        "file": item.get("path", ""),
-                        "line": item.get("line", 0),
-                    }
-                )
+                            # Extraer archivo y línea
+                            loc_parts = location.split(":")
+                            file = loc_parts[0] if loc_parts else "unknown"
+                            line_num = int(loc_parts[1]) if len(loc_parts) > 1 else 0
 
-        # Calcular score simple: 10 - (total issues / 100)
-        total_issues = sum(stats.values())
-        score = max(0, 10 - (total_issues / 100))
+                            # Extraer código de error [error-code]
+                            error_code = "unknown"
+                            if "[" in message_part and "]" in message_part:
+                                error_code = message_part.split("[")[-1].split("]")[0]
+                                message = message_part.split("  [")[0].strip()
+                            else:
+                                message = message_part.strip()
 
+                            errors.append(
+                                {
+                                    "file": file,
+                                    "line": line_num,
+                                    "code": error_code,
+                                    "message": message,
+                                }
+                            )
+
+                            # Contar por tipo
+                            error_types[error_code] = error_types.get(error_code, 0) + 1
+                    except (ValueError, IndexError):
+                        continue
+
+            # Top 5 tipos de errores más comunes
+            top_errors = sorted(error_types.items(), key=lambda x: x[1], reverse=True)[:5]
+
+            return {
+                "total": len(errors),
+                "error_types": dict(top_errors),
+                "details": errors[:30],  # Top 30
+            }
+    except FileNotFoundError:
         return {
-            "score": round(score, 2),
-            "total_issues": total_issues,
-            "stats": stats,
-            "details": details[:30],  # Top 30
+            "total": 0,
+            "error_types": {},
+            "details": [],
         }
-
-    # Si viene un dict con score (formato antiguo)
-    if isinstance(data, dict):
-        return {"score": data.get("score", 0), "total_issues": 0, "stats": {}, "details": []}
-
-    return None
 
 
 def get_ruff_stats(data):
@@ -341,7 +362,7 @@ def generate_html(stats):
     complexity = stats.get("complexity")
     maintainability = stats.get("maintainability")
     security = stats.get("security")
-    pylint = stats.get("pylint")
+    mypy = stats.get("mypy")
     ruff = stats.get("ruff")
     dead_code = stats.get("dead_code")
 
@@ -735,7 +756,7 @@ def generate_html(stats):
             <li><a href="#overview" class="nav-link"><span class="icon">📄</span> Resumen</a></li>
             <li><a href="#complexity" class="nav-link"><span class="icon">🔄</span> Complejidad</a></li>
             <li><a href="#maintainability" class="nav-link"><span class="icon">🔧</span> Mantenibilidad</a></li>
-            <li><a href="#pylint" class="nav-link"><span class="icon">📝</span> Pylint</a></li>
+            <li><a href="#mypy" class="nav-link"><span class="icon">🔵</span> Mypy</a></li>
             <li><a href="#ruff" class="nav-link"><span class="icon">⚡</span> Ruff</a></li>
             <li><a href="#security" class="nav-link"><span class="icon">🔒</span> Seguridad</a></li>
             <li><a href="#dead-code" class="nav-link"><span class="icon">💀</span> Código Muerto</a></li>
@@ -908,45 +929,40 @@ def generate_html(stats):
 
         html += generate_metric_card("maintainability", info, stats_html, details_html)
 
-    # 3. Pylint
-    if pylint:
-        info = METRIC_INFO["pylint"]
-        score = pylint.get("score", 0)
-        score_color = COLORS["A"] if score >= 8 else (COLORS["C"] if score >= 6 else COLORS["E"])
+    # 3. Mypy Type Checker
+    if mypy is not None:
+        info = METRIC_INFO["mypy"]
+        total = mypy.get("total", 0)
         stats_html = f"""
-            <div class="score-circle" style="background: {score_color}">
-                {score:.1f}
-                <div class="score-label">/ 10</div>
-            </div>
             <div class="summary-stats">
                 <div class="summary-item">
-                    <strong>{pylint['total_issues']}</strong>
-                    <span>Total issues</span>
-                </div>
-                <div class="summary-item" style="background: #fef2f2;">
-                    <strong style="color: #dc2626;">{pylint['stats'].get('error', 0)}</strong>
-                    <span>Errores</span>
-                </div>
-                <div class="summary-item" style="background: #fff7ed;">
-                    <strong style="color: #f97316;">{pylint['stats'].get('warning', 0)}</strong>
-                    <span>Warnings</span>
-                </div>
-                <div class="summary-item" style="background: #fefce8;">
-                    <strong style="color: #eab308;">{pylint['stats'].get('convention', 0)}</strong>
-                    <span>Conventions</span>
+                    <strong>{total}</strong>
+                    <span>Total errores de tipos</span>
                 </div>
             </div>
         """
 
+        # Mostrar top 5 tipos de errores si hay
+        if mypy.get("error_types"):
+            stats_html += "<h3 style='margin-top: 20px; margin-bottom: 15px; font-size: 16px;'>Top 5 tipos de errores</h3>"
+            stats_html += "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px;'>"
+            for error_type, count in mypy["error_types"].items():
+                stats_html += f"""
+                <div style='background: #f9fafb; padding: 15px; border-radius: 6px; border-left: 4px solid #3b82f6;'>
+                    <div style='font-size: 24px; font-weight: bold; color: #3b82f6;'>{count}</div>
+                    <div style='font-size: 12px; color: #6b7280;'><code>{error_type}</code></div>
+                </div>
+                """
+            stats_html += "</div>"
+
         details_html = ""
-        if pylint["details"]:
+        if mypy.get("details"):
             details_html = """
-            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">📝 Issues detectados</h3>
+            <h3 style="margin-top: 25px; margin-bottom: 15px; font-size: 18px;">🔵 Errores de tipos detectados</h3>
             <table class="details-table">
                 <thead>
                     <tr>
-                        <th>Tipo</th>
-                        <th>Símbolo</th>
+                        <th>Código</th>
                         <th>Mensaje</th>
                         <th>Archivo</th>
                         <th>Línea</th>
@@ -954,17 +970,10 @@ def generate_html(stats):
                 </thead>
                 <tbody>
             """
-            for item in pylint["details"][:30]:
-                type_color = {
-                    "error": "#dc2626",
-                    "warning": "#f97316",
-                    "convention": "#eab308",
-                    "refactor": "#3b82f6",
-                }.get(item["type"], "#6b7280")
+            for item in mypy["details"][:30]:
                 details_html += f"""
                     <tr>
-                        <td><span style="color: {type_color}; font-weight: bold;">{item['type']}</span></td>
-                        <td><code>{item['symbol']}</code></td>
+                        <td><code style="color: #3b82f6;">{item['code']}</code></td>
                         <td>{item['message']}</td>
                         <td><code>{item['file']}</code></td>
                         <td>{item['line']}</td>
@@ -974,8 +983,16 @@ def generate_html(stats):
                 </tbody>
             </table>
             """
+        elif total == 0:
+            details_html = """
+            <div style="padding: 30px; text-align: center; background: #ecfdf5; border-radius: 8px; margin-top: 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                <h3 style="color: #047857; margin-bottom: 10px;">¡Types perfectos!</h3>
+                <p style="color: #065f46;">No se detectaron errores de tipos.</p>
+            </div>
+            """
 
-        html += generate_metric_card("pylint", info, stats_html, details_html)
+        html += generate_metric_card("mypy", info, stats_html, details_html)
 
     # 4. Ruff Linter
     if ruff is not None:
@@ -1138,7 +1155,7 @@ def main():
     complexity_data = load_json(source_dir / "complexity.json")
     maintainability_data = load_json(source_dir / "maintainability.json")
     security_data = load_json(source_dir / "security.json")
-    pylint_data = load_json(source_dir / "pylint.json")
+    mypy_data = get_mypy_stats(source_dir / "mypy.txt")
     ruff_data = load_json(source_dir / "ruff.json")
     dead_code_data = get_dead_code_stats(source_dir / "dead-code.txt")
 
@@ -1147,7 +1164,7 @@ def main():
         "complexity": get_complexity_stats(complexity_data),
         "maintainability": get_maintainability_stats(maintainability_data),
         "security": get_security_stats(security_data),
-        "pylint": get_pylint_stats(pylint_data),
+        "mypy": mypy_data,
         "ruff": get_ruff_stats(ruff_data),
         "dead_code": dead_code_data,
     }

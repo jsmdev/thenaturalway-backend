@@ -62,6 +62,20 @@ repos:
         name: Actualizar código Django
         args: [--target-version, "5.0"]
 
+  # Type checking con Mypy (opcional - puede ser lento)
+  # Descomenta para activar type checking en pre-commit
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.7.0
+  #   hooks:
+  #     - id: mypy
+  #       name: Mypy type checker
+  #       additional_dependencies:
+  #         - django-stubs
+  #         - djangorestframework-stubs
+  #         - types-requests
+  #       args: [--config-file=pyproject.toml]
+  #       files: ^apps/
+
 # Configuración global
 ci:
   autoupdate_schedule: weekly

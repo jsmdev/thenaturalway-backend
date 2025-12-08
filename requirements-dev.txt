@@ -28,5 +28,9 @@ django-upgrade>=1.16.0
 # Code quality analysis
 radon>=6.0.1         # Métricas de complejidad y mantenibilidad
 bandit>=1.7.5        # Análisis de seguridad detallado
-pylint>=3.0.3        # Linter exhaustivo
 vulture>=2.11        # Detecta código muerto
+
+# Type checking
+mypy>=1.7.0          # Type checker estático
+django-stubs>=4.2.7  # Type stubs para Django
+djangorestframework-stubs>=3.14.5  # Type stubs para DRF
