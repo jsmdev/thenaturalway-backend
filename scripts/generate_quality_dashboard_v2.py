@@ -237,7 +237,7 @@ def get_pylint_stats(data):
 
 def get_ruff_stats(data):
     """Extrae estadísticas de Ruff."""
-    if not data or not isinstance(data, list):
+    if data is None or not isinstance(data, list):
         return None
 
     stats = {"error": 0, "warning": 0}
@@ -265,6 +265,7 @@ def get_ruff_stats(data):
                 }
             )
 
+    # Siempre retornar stats, incluso si está vacío
     return {
         "total": len(data),
         "errors": stats["error"],
@@ -286,12 +287,17 @@ def get_dead_code_stats(filepath):
                 if line.strip() and not line.startswith(("#", "//")):
                     details.append(line.strip())
 
+            # Siempre retornar stats, incluso si está vacío
             return {
                 "total": len(details),
                 "details": details[:30],  # Top 30
             }
     except FileNotFoundError:
-        return None
+        # Retornar estructura vacía si el archivo no existe
+        return {
+            "total": 0,
+            "details": [],
+        }
 
 
 def generate_metric_card(section_id, info, stats, details_html="", collapsible=True):
@@ -972,7 +978,7 @@ def generate_html(stats):
         html += generate_metric_card("pylint", info, stats_html, details_html)
 
     # 4. Ruff Linter
-    if ruff:
+    if ruff is not None:
         info = METRIC_INFO["ruff"]
         stats_html = f"""
             <div class="summary-stats">
@@ -1018,6 +1024,14 @@ def generate_html(stats):
             details_html += """
                 </tbody>
             </table>
+            """
+        else:
+            details_html = """
+            <div style="padding: 30px; text-align: center; background: #ecfdf5; border-radius: 8px; margin-top: 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                <h3 style="color: #047857; margin-bottom: 10px;">¡Código limpio!</h3>
+                <p style="color: #065f46;">No se encontraron errores ni warnings de Ruff.</p>
+            </div>
             """
 
         html += generate_metric_card("ruff", info, stats_html, details_html)
@@ -1066,7 +1080,7 @@ def generate_html(stats):
         html += generate_metric_card("security", info, stats_html, details_html)
 
     # 6. Código Muerto
-    if dead_code and dead_code["total"] > 0:
+    if dead_code is not None:
         info = METRIC_INFO["dead_code"]
         stats_html = f"""
             <div class="summary-stats">
@@ -1086,6 +1100,14 @@ def generate_html(stats):
             for line in dead_code["details"][:30]:
                 details_html += f"<div style='padding: 5px; background: #f9fafb; margin-bottom: 3px; border-radius: 4px;'>{line}</div>"
             details_html += "</div>"
+        else:
+            details_html = """
+            <div style="padding: 30px; text-align: center; background: #ecfdf5; border-radius: 8px; margin-top: 20px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                <h3 style="color: #047857; margin-bottom: 10px;">¡Código limpio!</h3>
+                <p style="color: #065f46;">No se detectó código muerto o no usado.</p>
+            </div>
+            """
 
         html += generate_metric_card("dead-code", info, stats_html, details_html)
 
