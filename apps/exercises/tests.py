@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
@@ -9,8 +8,13 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.test import APIClient
 
+from apps.exercises.factories import (
+    EquipmentFactory,
+    MovementTypeFactory,
+    MuscleGroupFactory,
+)
 from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
-from apps.exercises.models import Exercise
+from apps.exercises.models import Exercise, MuscleGroup
 from apps.exercises.repositories import (
     create_exercise_repository,
     delete_exercise_repository,
@@ -31,9 +35,6 @@ from apps.exercises.services import (
     update_exercise_service,
 )
 
-if TYPE_CHECKING:
-    from apps.users.models import User
-
 User = get_user_model()
 
 
@@ -50,6 +51,9 @@ class ExerciseModelTestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
+        self.movement_type = MovementTypeFactory(name="push", display_name="Push")
+        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
 
     def test_exercise_creation_with_minimal_data(self):
         """Test: Crear ejercicio con datos mínimos."""
@@ -67,14 +71,16 @@ class ExerciseModelTestCase(TestCase):
 
     def test_exercise_creation_with_all_fields(self):
         """Test: Crear ejercicio con todos los campos."""
-        # Arrange
+        # Arrange - Crear grupos musculares secundarios para referencia
+        MuscleGroupFactory(name="shoulders", display_name="Shoulders")
+        MuscleGroupFactory(name="arms", display_name="Arms")
         exercise_data = {
             "name": "Bench Press",
             "description": "Classic chest exercise",
-            "movement_type": "push",
-            "primary_muscle_group": "chest",
+            "movement_type": self.movement_type,
+            "primary_muscle_group": self.muscle_group,
             "secondary_muscle_groups": ["shoulders", "arms"],
-            "equipment": "barbell",
+            "equipment": self.equipment,
             "difficulty": "intermediate",
             "instructions": "Lie on bench and press",
             "image_url": "https://example.com/image.jpg",
@@ -89,10 +95,10 @@ class ExerciseModelTestCase(TestCase):
         # Assert
         self.assertEqual(exercise.name, "Bench Press")
         self.assertEqual(exercise.description, "Classic chest exercise")
-        self.assertEqual(exercise.movement_type, "push")
-        self.assertEqual(exercise.primary_muscle_group, "chest")
+        self.assertEqual(exercise.movement_type, self.movement_type)
+        self.assertEqual(exercise.primary_muscle_group, self.muscle_group)
         self.assertEqual(exercise.secondary_muscle_groups, ["shoulders", "arms"])
-        self.assertEqual(exercise.equipment, "barbell")
+        self.assertEqual(exercise.equipment, self.equipment)
         self.assertEqual(exercise.difficulty, "intermediate")
         self.assertEqual(exercise.instructions, "Lie on bench and press")
         self.assertEqual(exercise.image_url, "https://example.com/image.jpg")
@@ -116,16 +122,16 @@ class ExerciseModelTestCase(TestCase):
         # Arrange & Act
         exercise = Exercise.objects.create(
             name="Test Exercise",
-            movement_type="push",
-            primary_muscle_group="chest",
-            equipment="barbell",
+            movement_type=self.movement_type,
+            primary_muscle_group=self.muscle_group,
+            equipment=self.equipment,
             difficulty="beginner",
         )
 
         # Assert
-        self.assertEqual(exercise.movement_type, "push")
-        self.assertEqual(exercise.primary_muscle_group, "chest")
-        self.assertEqual(exercise.equipment, "barbell")
+        self.assertEqual(exercise.movement_type, self.movement_type)
+        self.assertEqual(exercise.primary_muscle_group, self.muscle_group)
+        self.assertEqual(exercise.equipment, self.equipment)
         self.assertEqual(exercise.difficulty, "beginner")
 
     def test_exercise_default_is_active(self):
@@ -171,25 +177,31 @@ class ExerciseRepositoryTestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
+        # Crear opciones de configuración
+        self.chest = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.back = MuscleGroupFactory(name="back", display_name="Back")
+        self.bodyweight = EquipmentFactory(name="bodyweight", display_name="Bodyweight")
+        self.barbell = EquipmentFactory(name="barbell", display_name="Barbell")
+
         self.exercise1 = Exercise.objects.create(
             name="Push Up",
-            primary_muscle_group="chest",
-            equipment="bodyweight",
+            primary_muscle_group=self.chest,
+            equipment=self.bodyweight,
             difficulty="beginner",
             is_active=True,
             created_by=self.user,
         )
         self.exercise2 = Exercise.objects.create(
             name="Bench Press",
-            primary_muscle_group="chest",
-            equipment="barbell",
+            primary_muscle_group=self.chest,
+            equipment=self.barbell,
             difficulty="intermediate",
             is_active=True,
         )
         self.exercise3 = Exercise.objects.create(
             name="Deadlift",
-            primary_muscle_group="back",
-            equipment="barbell",
+            primary_muscle_group=self.back,
+            equipment=self.barbell,
             difficulty="advanced",
             is_active=False,
         )
@@ -329,11 +341,13 @@ class ExerciseRepositoryTestCase(TestCase):
     def test_create_exercise_repository(self):
         """Test: Crear ejercicio en repositorio."""
         # Arrange
+        legs = MuscleGroupFactory(name="legs", display_name="Legs")
+        barbell = EquipmentFactory(name="barbell", display_name="Barbell")
         validated_data = {
             "name": "Squat",
             "description": "Leg exercise",
-            "primaryMuscleGroup": "legs",
-            "equipment": "barbell",
+            "primaryMuscleGroup": legs,
+            "equipment": barbell,
             "difficulty": "intermediate",
         }
 
@@ -344,8 +358,8 @@ class ExerciseRepositoryTestCase(TestCase):
         self.assertIsNotNone(exercise.id)
         self.assertEqual(exercise.name, "Squat")
         self.assertEqual(exercise.description, "Leg exercise")
-        self.assertEqual(exercise.primary_muscle_group, "legs")
-        self.assertEqual(exercise.equipment, "barbell")
+        self.assertEqual(exercise.primary_muscle_group, legs)
+        self.assertEqual(exercise.equipment, barbell)
         self.assertEqual(exercise.difficulty, "intermediate")
         self.assertEqual(exercise.created_by, self.user)
 
@@ -393,7 +407,7 @@ class ExerciseRepositoryTestCase(TestCase):
 
         # Assert
         self.assertEqual(updated_exercise.name, "New Name")
-        self.assertEqual(updated_exercise.primary_muscle_group, "chest")  # No cambió
+        self.assertEqual(updated_exercise.primary_muscle_group, self.chest)  # No cambió
 
     def test_delete_exercise_repository_soft_delete(self):
         """Test: Soft delete de ejercicio."""
@@ -712,13 +726,19 @@ class ExerciseSerializerTestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
+        self.movement_type = MovementTypeFactory(name="push", display_name="Push")
+        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
+        self.shoulders = MuscleGroupFactory(name="shoulders", display_name="Shoulders")
+        self.arms = MuscleGroupFactory(name="arms", display_name="Arms")
+
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
             description="Test description",
-            movement_type="push",
-            primary_muscle_group="chest",
+            movement_type=self.movement_type,
+            primary_muscle_group=self.muscle_group,
             secondary_muscle_groups=["shoulders", "arms"],
-            equipment="barbell",
+            equipment=self.equipment,
             difficulty="intermediate",
             instructions="Test instructions",
             image_url="https://example.com/image.jpg",
@@ -963,10 +983,13 @@ class ExerciseAPITestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
+        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
+
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
-            primary_muscle_group="chest",
-            equipment="barbell",
+            primary_muscle_group=self.muscle_group,
+            equipment=self.equipment,
             difficulty="intermediate",
             created_by=self.user,
         )
@@ -985,10 +1008,12 @@ class ExerciseAPITestCase(TestCase):
     def test_exercise_list_api_get_with_filters(self):
         """Test: GET /api/exercises/ con filtros."""
         # Arrange
+        back = MuscleGroupFactory(name="back", display_name="Back")
+        dumbbell = EquipmentFactory(name="dumbbell", display_name="Dumbbell")
         Exercise.objects.create(
             name="Other Exercise",
-            primary_muscle_group="back",
-            equipment="dumbbell",
+            primary_muscle_group=back,
+            equipment=dumbbell,
         )
 
         # Act
@@ -1167,10 +1192,13 @@ class ExerciseWebViewTestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
+        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
+
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
-            primary_muscle_group="chest",
-            equipment="barbell",
+            primary_muscle_group=self.muscle_group,
+            equipment=self.equipment,
             difficulty="intermediate",
             created_by=self.user,
         )
@@ -1303,3 +1331,153 @@ class ExerciseWebViewTestCase(TestCase):
         self.assertEqual(response.status_code, 302)  # Redirect
         self.exercise.refresh_from_db()
         self.assertTrue(self.exercise.is_active)  # No se eliminó
+
+
+# ============================================================================
+# Tests Unitarios - MuscleGroup (Jerarquía)
+# ============================================================================
+
+
+class MuscleGroupHierarchyTestCase(TestCase):
+    """Tests unitarios para la funcionalidad jerárquica de MuscleGroup."""
+
+    def setUp(self):
+        """Arrange: Configura datos de prueba."""
+        # Crear grupos musculares principales
+        self.legs = MuscleGroupFactory(name="legs", display_name="Legs", parent=None)
+        self.arms = MuscleGroupFactory(name="arms", display_name="Arms", parent=None)
+        # Crear subgrupos
+        self.quadriceps = MuscleGroupFactory(
+            name="quadriceps", display_name="Quadriceps", parent=self.legs
+        )
+        self.hamstrings = MuscleGroupFactory(
+            name="hamstrings", display_name="Hamstrings", parent=self.legs
+        )
+        self.biceps = MuscleGroupFactory(name="biceps", display_name="Biceps", parent=self.arms)
+
+    def test_muscle_group_without_parent(self):
+        """Test: Grupo muscular sin padre muestra solo su nombre."""
+        # Act
+        str_repr = str(self.legs)
+
+        # Assert
+        self.assertEqual(str_repr, "Legs")
+        self.assertIsNone(self.legs.parent)
+
+    def test_muscle_group_with_parent(self):
+        """Test: Grupo muscular con padre muestra jerarchía."""
+        # Act
+        str_repr = str(self.quadriceps)
+
+        # Assert
+        self.assertEqual(str_repr, "Legs > Quadriceps")
+        self.assertEqual(self.quadriceps.parent, self.legs)
+
+    def test_muscle_group_subgroups_relationship(self):
+        """Test: Acceso a subgrupos desde el padre."""
+        # Act
+        subgroups = list(self.legs.subgroups.all())
+
+        # Assert
+        self.assertEqual(len(subgroups), 2)
+        self.assertIn(self.quadriceps, subgroups)
+        self.assertIn(self.hamstrings, subgroups)
+        self.assertNotIn(self.biceps, subgroups)
+
+    def test_muscle_group_cascade_delete(self):
+        """Test: Eliminar grupo padre elimina subgrupos (CASCADE)."""
+        # Arrange
+        quadriceps_id = self.quadriceps.id
+        hamstrings_id = self.hamstrings.id
+
+        # Act
+        self.legs.delete()
+
+        # Assert
+        self.assertFalse(MuscleGroup.objects.filter(id=quadriceps_id).exists())
+        self.assertFalse(MuscleGroup.objects.filter(id=hamstrings_id).exists())
+        # El grupo de brazos y bíceps deben seguir existiendo
+        self.assertTrue(MuscleGroup.objects.filter(id=self.arms.id).exists())
+        self.assertTrue(MuscleGroup.objects.filter(id=self.biceps.id).exists())
+
+    def test_muscle_group_self_reference_prevention(self):
+        """Test: Un grupo no puede ser su propio padre."""
+        # Arrange
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        muscle_group = MuscleGroupFactory(name="test", display_name="Test")
+
+        # Act & Assert
+        with self.assertRaises(DjangoValidationError):
+            muscle_group.parent = muscle_group
+            muscle_group.full_clean()
+
+    def test_muscle_group_circular_reference_prevention(self):
+        """Test: Prevenir referencias circulares (padre no puede ser hijo de su hijo)."""
+        # Arrange
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        parent = MuscleGroupFactory(name="parent", display_name="Parent")
+        child = MuscleGroupFactory(name="child", display_name="Child", parent=parent)
+
+        # Act & Assert
+        # Intentar hacer que el padre sea hijo del hijo debería fallar
+        with self.assertRaises(DjangoValidationError):
+            parent.parent = child
+            parent.full_clean()
+
+    def test_muscle_group_serializer_without_parent(self):
+        """Test: Serializador de grupo sin padre."""
+        # Arrange
+        from apps.exercises.serializers import MuscleGroupSerializer
+
+        serializer = MuscleGroupSerializer(self.legs)
+
+        # Act
+        data = serializer.data
+
+        # Assert
+        self.assertEqual(data["id"], self.legs.id)
+        self.assertEqual(data["name"], "legs")
+        self.assertEqual(data["displayName"], "Legs")
+        self.assertIsNone(data["parent"])
+        self.assertIsNone(data["parentId"])
+        self.assertIsInstance(data["subgroups"], list)
+        self.assertEqual(len(data["subgroups"]), 2)
+
+    def test_muscle_group_serializer_with_parent(self):
+        """Test: Serializador de grupo con padre."""
+        # Arrange
+        from apps.exercises.serializers import MuscleGroupSerializer
+
+        serializer = MuscleGroupSerializer(self.quadriceps)
+
+        # Act
+        data = serializer.data
+
+        # Assert
+        self.assertEqual(data["id"], self.quadriceps.id)
+        self.assertEqual(data["name"], "quadriceps")
+        self.assertEqual(data["displayName"], "Quadriceps")
+        self.assertIsNotNone(data["parent"])
+        self.assertEqual(data["parent"]["id"], self.legs.id)
+        self.assertEqual(data["parent"]["name"], "legs")
+        self.assertEqual(data["parent"]["displayName"], "Legs")
+        self.assertEqual(data["parentId"], self.legs.id)
+        self.assertIsInstance(data["subgroups"], list)
+
+    def test_muscle_group_serializer_subgroups(self):
+        """Test: Serializador incluye subgrupos."""
+        # Arrange
+        from apps.exercises.serializers import MuscleGroupSerializer
+
+        serializer = MuscleGroupSerializer(self.legs)
+
+        # Act
+        data = serializer.data
+
+        # Assert
+        self.assertEqual(len(data["subgroups"]), 2)
+        subgroup_names = [sg["name"] for sg in data["subgroups"]]
+        self.assertIn("quadriceps", subgroup_names)
+        self.assertIn("hamstrings", subgroup_names)
