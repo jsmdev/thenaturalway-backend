@@ -722,25 +722,60 @@ def generate_html(stats):
             const sections = document.querySelectorAll('.section');
             const navLinks = document.querySelectorAll('.nav-link');
 
-            // Resaltar sección activa en el menú
+            let currentActive = null;
+
+            function activateLink(id) {{
+                if (currentActive !== id) {{
+                    navLinks.forEach(link => {{
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === `#${{id}}`) {{
+                            link.classList.add('active');
+                        }}
+                    }});
+                    currentActive = id;
+                }}
+            }}
+
+            // Resaltar sección activa en el menú con IntersectionObserver
             const observer = new IntersectionObserver((entries) => {{
                 entries.forEach(entry => {{
                     if (entry.isIntersecting) {{
                         const id = entry.target.getAttribute('id');
-                        navLinks.forEach(link => {{
-                            link.classList.remove('active');
-                            if (link.getAttribute('href') === `#${{id}}`) {{
-                                link.classList.add('active');
-                            }}
-                        }});
+                        activateLink(id);
                     }}
                 }});
             }}, {{
-                threshold: 0.3,
-                rootMargin: '-100px 0px -50% 0px'
+                threshold: [0, 0.1, 0.2],
+                rootMargin: '-80px 0px -20% 0px'
             }});
 
             sections.forEach(section => observer.observe(section));
+
+            // Fallback: detectar cuál sección está visible al hacer scroll
+            // Útil para secciones al final del documento
+            let ticking = false;
+            function onScroll() {{
+                if (!ticking) {{
+                    window.requestAnimationFrame(() => {{
+                        const windowHeight = window.innerHeight;
+                        const documentHeight = document.documentElement.scrollHeight;
+                        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+                        // Si estamos cerca del final del documento (dentro de los últimos 100px)
+                        if (scrollTop + windowHeight >= documentHeight - 100) {{
+                            // Activar la última sección
+                            const lastSection = sections[sections.length - 1];
+                            if (lastSection) {{
+                                activateLink(lastSection.getAttribute('id'));
+                            }}
+                        }}
+                        ticking = false;
+                    }});
+                    ticking = true;
+                }}
+            }}
+
+            window.addEventListener('scroll', onScroll, {{ passive: true }});
         }});
     </script>
 </head>
