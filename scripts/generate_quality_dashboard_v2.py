@@ -1053,10 +1053,6 @@ def generate_html(stats):
 
         html += generate_metric_card("ruff", info, stats_html, details_html)
 
-    html += """
-        </div>
-    """
-
     # 5. Seguridad (full width)
     if security:
         info = METRIC_INFO["security"]
@@ -1129,6 +1125,7 @@ def generate_html(stats):
         html += generate_metric_card("dead-code", info, stats_html, details_html)
 
     html += """
+        </div>
             </div>
         </div>
     </div>
