@@ -160,8 +160,13 @@ quality-summary: ## Resumen rápido de calidad
 quality-html: ## Generar dashboard HTML visual
 	@echo "🌐 Generando dashboard HTML mejorado..."
 	@python3 scripts/generate_quality_dashboard_v2.py
-	@echo "✅ Dashboard listo en: docs/quality-reports/code-analysis/dashboard.html"
-	@open docs/quality-reports/code-analysis/dashboard.html || xdg-open docs/quality-reports/code-analysis/dashboard.html || true
+	@DASHBOARD_PATH=$$(ls -td docs/quality-reports/[0-9]*-code-analysis 2>/dev/null | head -1)/dashboard.html; \
+	if [ -f "$$DASHBOARD_PATH" ]; then \
+		echo "✅ Dashboard listo en: $$DASHBOARD_PATH"; \
+		open "$$DASHBOARD_PATH" || xdg-open "$$DASHBOARD_PATH" || true; \
+	else \
+		echo "❌ No se encontró el dashboard generado"; \
+	fi
 
 quality-dashboard: ## Análisis completo + dashboard HTML (quality + quality-html)
 	@echo "🚀 Ejecutando análisis completo y generando dashboard..."

@@ -1124,22 +1124,23 @@ def generate_html(stats):
 
 def main():
     """Función principal."""
-    reports_dir = Path("docs/quality-reports/code-analysis")
+    reports_base_dir = Path("docs/quality-reports")
+    source_dir = reports_base_dir / "code-analysis"
 
-    if not reports_dir.exists():
+    if not source_dir.exists():
         print("❌ No se encontró el directorio docs/quality-reports/code-analysis/")
         print("   Ejecuta primero: make quality")
         return
 
     print("📊 Generando dashboard HTML mejorado...")
 
-    # Cargar datos
-    complexity_data = load_json(reports_dir / "complexity.json")
-    maintainability_data = load_json(reports_dir / "maintainability.json")
-    security_data = load_json(reports_dir / "security.json")
-    pylint_data = load_json(reports_dir / "pylint.json")
-    ruff_data = load_json(reports_dir / "ruff.json")
-    dead_code_data = get_dead_code_stats(reports_dir / "dead-code.txt")
+    # Cargar datos desde code-analysis (donde se generan los reportes)
+    complexity_data = load_json(source_dir / "complexity.json")
+    maintainability_data = load_json(source_dir / "maintainability.json")
+    security_data = load_json(source_dir / "security.json")
+    pylint_data = load_json(source_dir / "pylint.json")
+    ruff_data = load_json(source_dir / "ruff.json")
+    dead_code_data = get_dead_code_stats(source_dir / "dead-code.txt")
 
     # Procesar estadísticas
     stats = {
@@ -1154,8 +1155,13 @@ def main():
     # Generar HTML
     html_content = generate_html(stats)
 
-    # Guardar archivo
-    output_file = reports_dir / "dashboard.html"
+    # Crear carpeta con formato YYYYMMDD-code-analysis
+    today = datetime.now().strftime("%Y%m%d")
+    output_dir = reports_base_dir / f"{today}-code-analysis"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Guardar dashboard
+    output_file = output_dir / "dashboard.html"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(html_content)
 
