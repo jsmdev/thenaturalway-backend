@@ -723,9 +723,12 @@ def generate_html(stats):
             const navLinks = document.querySelectorAll('.nav-link');
 
             let currentActive = null;
+            let isProgrammaticScroll = false;
+            let programmaticScrollTimeout = null;
+            const HEADER_OFFSET = 100; // Offset para compensar el header fijo
 
             function activateLink(id) {{
-                if (currentActive !== id) {{
+                if (currentActive !== id && id) {{
                     navLinks.forEach(link => {{
                         link.classList.remove('active');
                         if (link.getAttribute('href') === `#${{id}}`) {{
@@ -736,38 +739,146 @@ def generate_html(stats):
                 }}
             }}
 
-            // Resaltar sección activa en el menú con IntersectionObserver
-            const observer = new IntersectionObserver((entries) => {{
-                entries.forEach(entry => {{
-                    if (entry.isIntersecting) {{
-                        const id = entry.target.getAttribute('id');
-                        activateLink(id);
+            // Función principal para detectar qué sección debería estar activa
+            function detectActiveSection() {{
+                if (isProgrammaticScroll) {{
+                    return; // No cambiar durante scroll programático
+                }}
+
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                const viewportCenter = scrollTop + windowHeight / 2;
+
+                // Caso especial: si estamos muy cerca del final del documento
+                if (scrollTop + windowHeight >= documentHeight - 50) {{
+                    const lastSection = sections[sections.length - 1];
+                    if (lastSection) {{
+                        const lastRect = lastSection.getBoundingClientRect();
+                        if (lastRect.top < windowHeight && lastRect.bottom > 0) {{
+                            activateLink(lastSection.getAttribute('id'));
+                            return;
+                        }}
+                    }}
+                }}
+
+                // Encontrar la sección más activa basándose en múltiples criterios
+                let bestSection = null;
+                let bestScore = -Infinity;
+
+                sections.forEach(section => {{
+                    const rect = section.getBoundingClientRect();
+                    const sectionTop = rect.top + scrollTop;
+                    const sectionBottom = rect.bottom + scrollTop;
+                    const sectionHeight = rect.height;
+
+                    // Calcular qué porcentaje de la sección está visible
+                    const visibleTop = Math.max(rect.top, 0);
+                    const visibleBottom = Math.min(rect.bottom, windowHeight);
+                    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+                    const visibleRatio = sectionHeight > 0 ? visibleHeight / sectionHeight : 0;
+
+                    // Solo considerar secciones que están al menos parcialmente visibles
+                    if (rect.bottom <= 0 || rect.top >= windowHeight) {{
+                        return;
+                    }}
+
+                    // Calcular score basado en:
+                    // 1. Porcentaje visible (más importante)
+                    // 2. Proximidad al centro del viewport
+                    // 3. Si está en la parte superior del viewport (preferido)
+                    const sectionCenter = sectionTop + sectionHeight / 2;
+                    const distanceFromViewportCenter = Math.abs(sectionCenter - viewportCenter);
+                    const normalizedDistance = distanceFromViewportCenter / windowHeight;
+
+                    let score = visibleRatio * 2; // Peso alto para visibilidad
+
+                    // Bonus si la sección está en la parte superior del viewport
+                    if (rect.top >= HEADER_OFFSET && rect.top < HEADER_OFFSET + 200) {{
+                        score += 1.5;
+                    }}
+
+                    // Penalizar secciones muy lejos del centro
+                    score -= normalizedDistance * 0.5;
+
+                    // Bonus adicional si la sección está completamente visible
+                    if (visibleRatio >= 0.9) {{
+                        score += 0.5;
+                    }}
+
+                    if (score > bestScore) {{
+                        bestScore = score;
+                        bestSection = section;
                     }}
                 }});
+
+                if (bestSection) {{
+                    activateLink(bestSection.getAttribute('id'));
+                }}
+            }}
+
+            // Scroll suave al hacer click en los links del menú
+            navLinks.forEach(link => {{
+                link.addEventListener('click', function(e) {{
+                    e.preventDefault();
+                    const href = this.getAttribute('href');
+                    if (href && href.startsWith('#')) {{
+                        const targetId = href.substring(1);
+                        const targetSection = document.getElementById(targetId);
+                        if (targetSection) {{
+                            // Activar inmediatamente el link clickeado
+                            activateLink(targetId);
+
+                            // Marcar que estamos haciendo scroll programático
+                            isProgrammaticScroll = true;
+
+                            // Limpiar timeout anterior si existe
+                            if (programmaticScrollTimeout) {{
+                                clearTimeout(programmaticScrollTimeout);
+                            }}
+
+                            // Hacer scroll suave
+                            targetSection.scrollIntoView({{
+                                behavior: 'smooth',
+                                block: 'start'
+                            }});
+
+                            // Después del scroll, reactivar la detección automática
+                            // Usar un timeout más largo para asegurar que el scroll terminó
+                            programmaticScrollTimeout = setTimeout(() => {{
+                                isProgrammaticScroll = false;
+                                // Verificar nuevamente después de un pequeño delay
+                                setTimeout(detectActiveSection, 100);
+                            }}, 1000); // 1 segundo debería ser suficiente para scroll suave
+                        }}
+                    }}
+                }});
+            }});
+
+            // Usar IntersectionObserver como ayuda, pero la lógica principal está en detectActiveSection
+            const observer = new IntersectionObserver((entries) => {{
+                if (isProgrammaticScroll) {{
+                    return; // Ignorar durante scroll programático
+                }}
+                // Usar un pequeño delay para evitar actualizaciones muy frecuentes
+                if (programmaticScrollTimeout) {{
+                    clearTimeout(programmaticScrollTimeout);
+                }}
+                programmaticScrollTimeout = setTimeout(detectActiveSection, 50);
             }}, {{
-                threshold: [0, 0.1, 0.2],
-                rootMargin: '-80px 0px -20% 0px'
+                threshold: [0, 0.1, 0.25, 0.5, 0.75, 1.0],
+                rootMargin: `-${{HEADER_OFFSET}}px 0px -40% 0px`
             }});
 
             sections.forEach(section => observer.observe(section));
 
-            // Fallback: detectar cuál sección está visible al hacer scroll
-            // Útil para secciones al final del documento
+            // Throttled scroll handler
             let ticking = false;
             function onScroll() {{
                 if (!ticking) {{
                     window.requestAnimationFrame(() => {{
-                        const windowHeight = window.innerHeight;
-                        const documentHeight = document.documentElement.scrollHeight;
-                        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-
-                        // Si estamos cerca del final del documento (dentro de los últimos 100px)
-                        if (scrollTop + windowHeight >= documentHeight - 100) {{
-                            // Activar la última sección
-                            const lastSection = sections[sections.length - 1];
-                            if (lastSection) {{
-                                activateLink(lastSection.getAttribute('id'));
-                            }}
+                        if (!isProgrammaticScroll) {{
+                            detectActiveSection();
                         }}
                         ticking = false;
                     }});
@@ -776,6 +887,11 @@ def generate_html(stats):
             }}
 
             window.addEventListener('scroll', onScroll, {{ passive: true }});
+
+            // Activar primera sección al cargar la página
+            setTimeout(() => {{
+                detectActiveSection();
+            }}, 100);
         }});
     </script>
 </head>
