@@ -3,7 +3,7 @@ from __future__ import annotations
 from django import forms
 from django.core.exceptions import ValidationError
 
-from apps.exercises.models import Exercise
+from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
 
 
 class ExerciseForm(forms.Form):
@@ -24,23 +24,29 @@ class ExerciseForm(forms.Form):
             attrs={"class": "form-control", "rows": 4, "placeholder": "Descripción del ejercicio"}
         ),
     )
-    movement_type = forms.ChoiceField(
-        choices=[("", "---------"), *Exercise.MOVEMENT_TYPE_CHOICES],
+    movement_type = forms.ModelChoiceField(
+        queryset=MovementType.objects.filter(is_active=True).order_by("order", "name"),
         required=False,
+        empty_label="---------",
         label="Tipo de movimiento",
         widget=forms.Select(attrs={"class": "form-control"}),
+        to_field_name="name",
     )
-    primary_muscle_group = forms.ChoiceField(
-        choices=[("", "---------"), *Exercise.PRIMARY_MUSCLE_GROUP_CHOICES],
+    primary_muscle_group = forms.ModelChoiceField(
+        queryset=MuscleGroup.objects.filter(is_active=True).order_by("order", "name"),
         required=False,
+        empty_label="---------",
         label="Grupo muscular principal",
         widget=forms.Select(attrs={"class": "form-control"}),
+        to_field_name="name",
     )
-    equipment = forms.ChoiceField(
-        choices=[("", "---------"), *Exercise.EQUIPMENT_CHOICES],
+    equipment = forms.ModelChoiceField(
+        queryset=Equipment.objects.filter(is_active=True).order_by("order", "name"),
         required=False,
+        empty_label="---------",
         label="Equipamiento",
         widget=forms.Select(attrs={"class": "form-control"}),
+        to_field_name="name",
     )
     difficulty = forms.ChoiceField(
         choices=[("", "---------"), *Exercise.DIFFICULTY_CHOICES],
@@ -86,23 +92,23 @@ class ExerciseForm(forms.Form):
     def clean_movement_type(self) -> str | None:
         """Valida que el tipo de movimiento sea válido si se proporciona."""
         movement_type = self.cleaned_data.get("movement_type")
-        if movement_type == "":
-            return None
-        return movement_type
+        if movement_type:
+            return movement_type.name
+        return None
 
     def clean_primary_muscle_group(self) -> str | None:
         """Valida que el grupo muscular principal sea válido si se proporciona."""
         primary_muscle_group = self.cleaned_data.get("primary_muscle_group")
-        if primary_muscle_group == "":
-            return None
-        return primary_muscle_group
+        if primary_muscle_group:
+            return primary_muscle_group.name
+        return None
 
     def clean_equipment(self) -> str | None:
         """Valida que el equipamiento sea válido si se proporciona."""
         equipment = self.cleaned_data.get("equipment")
-        if equipment == "":
-            return None
-        return equipment
+        if equipment:
+            return equipment.name
+        return None
 
     def clean_difficulty(self) -> str | None:
         """Valida que la dificultad sea válida si se proporciona."""

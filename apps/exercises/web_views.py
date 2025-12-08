@@ -10,7 +10,7 @@ from django.views import View
 from rest_framework.exceptions import NotFound, PermissionDenied
 
 from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
-from apps.exercises.models import Exercise
+from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
 from apps.exercises.serializers import ExerciseSerializer
 from apps.exercises.services import (
     create_exercise_service,
@@ -72,14 +72,28 @@ class ExerciseListView(View):
                 "isActive": is_active_param if is_active_param else None,
             }
 
+            # Obtener opciones desde BD
+            movement_types = [("", "---------")] + [
+                (mt.name, mt.display_name)
+                for mt in MovementType.objects.filter(is_active=True).order_by("order", "name")
+            ]
+            muscle_groups = [
+                (mg.name, mg.display_name)
+                for mg in MuscleGroup.objects.filter(is_active=True).order_by("order", "name")
+            ]
+            equipment_choices = [
+                (eq.name, eq.display_name)
+                for eq in Equipment.objects.filter(is_active=True).order_by("order", "name")
+            ]
+
             context = {
                 "exercises": exercises_data,
                 "filters": context_filters,
                 "search": search,
                 "ordering": ordering,
-                "movement_types": [("", "---------"), *Exercise.MOVEMENT_TYPE_CHOICES],
-                "muscle_groups": Exercise.PRIMARY_MUSCLE_GROUP_CHOICES,
-                "equipment_choices": Exercise.EQUIPMENT_CHOICES,
+                "movement_types": movement_types,
+                "muscle_groups": muscle_groups,
+                "equipment_choices": equipment_choices,
                 "difficulty_choices": Exercise.DIFFICULTY_CHOICES,
             }
 
@@ -94,6 +108,20 @@ class ExerciseListView(View):
                 "difficulty": request.GET.get("difficulty", ""),
                 "isActive": None,
             }
+            # Obtener opciones desde BD
+            movement_types = [("", "---------")] + [
+                (mt.name, mt.display_name)
+                for mt in MovementType.objects.filter(is_active=True).order_by("order", "name")
+            ]
+            muscle_groups = [
+                (mg.name, mg.display_name)
+                for mg in MuscleGroup.objects.filter(is_active=True).order_by("order", "name")
+            ]
+            equipment_choices = [
+                (eq.name, eq.display_name)
+                for eq in Equipment.objects.filter(is_active=True).order_by("order", "name")
+            ]
+
             return render(
                 request,
                 "exercises/list.html",
@@ -101,9 +129,9 @@ class ExerciseListView(View):
                     "exercises": [],
                     "filters": context_filters,
                     "search": request.GET.get("search", ""),
-                    "movement_types": [("", "---------"), *Exercise.MOVEMENT_TYPE_CHOICES],
-                    "muscle_groups": Exercise.PRIMARY_MUSCLE_GROUP_CHOICES,
-                    "equipment_choices": Exercise.EQUIPMENT_CHOICES,
+                    "movement_types": movement_types,
+                    "muscle_groups": muscle_groups,
+                    "equipment_choices": equipment_choices,
                     "difficulty_choices": Exercise.DIFFICULTY_CHOICES,
                 },
             )

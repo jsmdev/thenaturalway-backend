@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
+from apps.exercises.models import Equipment, MovementType, MuscleGroup
 from apps.exercises.repositories import (
     create_exercise_repository,
     delete_exercise_repository,
@@ -39,39 +40,30 @@ def list_exercises_service(
     if filters:
         valid_filters = {}
         if "primaryMuscleGroup" in filters:
-            valid_primary_muscle_groups = [
-                "chest",
-                "back",
-                "shoulders",
-                "arms",
-                "legs",
-                "core",
-                "full_body",
-                "other",
-            ]
-            if filters["primaryMuscleGroup"] not in valid_primary_muscle_groups:
+            muscle_group_slug = filters["primaryMuscleGroup"]
+            if not MuscleGroup.objects.filter(name=muscle_group_slug, is_active=True).exists():
+                valid_groups = list(
+                    MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+                )
                 raise ValidationError(
                     {
-                        "primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"
+                        "primaryMuscleGroup": f"Debe ser uno de los grupos activos: {', '.join(valid_groups)}"
                     }
                 )
-            valid_filters["primaryMuscleGroup"] = filters["primaryMuscleGroup"]
+            valid_filters["primaryMuscleGroup"] = muscle_group_slug
 
         if "equipment" in filters:
-            valid_equipment = [
-                "barbell",
-                "dumbbell",
-                "cable",
-                "machine",
-                "bodyweight",
-                "kettlebell",
-                "other",
-            ]
-            if filters["equipment"] not in valid_equipment:
-                raise ValidationError(
-                    {"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"}
+            equipment_slug = filters["equipment"]
+            if not Equipment.objects.filter(name=equipment_slug, is_active=True).exists():
+                valid_equipment = list(
+                    Equipment.objects.filter(is_active=True).values_list("name", flat=True)
                 )
-            valid_filters["equipment"] = filters["equipment"]
+                raise ValidationError(
+                    {
+                        "equipment": f"Debe ser uno de los equipamientos activos: {', '.join(valid_equipment)}"
+                    }
+                )
+            valid_filters["equipment"] = equipment_slug
 
         if "difficulty" in filters:
             valid_difficulty = ["beginner", "intermediate", "advanced"]
@@ -147,42 +139,49 @@ def create_exercise_service(validated_data: dict[str, Any], user: User | None = 
     if not validated_data.get("name"):
         raise ValidationError({"name": "El nombre es requerido"})
 
-    # Validar enums si se proporcionan
-    if "movementType" in validated_data:
-        valid_movement_types = ["push", "pull", "squat", "hinge", "carry", "other"]
-        if validated_data["movementType"] not in valid_movement_types:
-            raise ValidationError(
-                {"movementType": f"Debe ser uno de: {', '.join(valid_movement_types)}"}
+    # Convertir slugs a objetos ForeignKey si se proporcionan
+    if "movementType" in validated_data and validated_data["movementType"]:
+        movement_type_slug = validated_data["movementType"]
+        try:
+            movement_type = MovementType.objects.get(name=movement_type_slug, is_active=True)
+            validated_data["movementType"] = movement_type
+        except MovementType.DoesNotExist as e:
+            valid_types = list(
+                MovementType.objects.filter(is_active=True).values_list("name", flat=True)
             )
-
-    if "primaryMuscleGroup" in validated_data:
-        valid_primary_muscle_groups = [
-            "chest",
-            "back",
-            "shoulders",
-            "arms",
-            "legs",
-            "core",
-            "full_body",
-            "other",
-        ]
-        if validated_data["primaryMuscleGroup"] not in valid_primary_muscle_groups:
             raise ValidationError(
-                {"primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"}
-            )
+                {"movementType": f"Debe ser uno de los tipos activos: {', '.join(valid_types)}"}
+            ) from e
 
-    if "equipment" in validated_data:
-        valid_equipment = [
-            "barbell",
-            "dumbbell",
-            "cable",
-            "machine",
-            "bodyweight",
-            "kettlebell",
-            "other",
-        ]
-        if validated_data["equipment"] not in valid_equipment:
-            raise ValidationError({"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"})
+    if "primaryMuscleGroup" in validated_data and validated_data["primaryMuscleGroup"]:
+        muscle_group_slug = validated_data["primaryMuscleGroup"]
+        try:
+            muscle_group = MuscleGroup.objects.get(name=muscle_group_slug, is_active=True)
+            validated_data["primaryMuscleGroup"] = muscle_group
+        except MuscleGroup.DoesNotExist as e:
+            valid_groups = list(
+                MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise ValidationError(
+                {
+                    "primaryMuscleGroup": f"Debe ser uno de los grupos activos: {', '.join(valid_groups)}"
+                }
+            ) from e
+
+    if "equipment" in validated_data and validated_data["equipment"]:
+        equipment_slug = validated_data["equipment"]
+        try:
+            equipment = Equipment.objects.get(name=equipment_slug, is_active=True)
+            validated_data["equipment"] = equipment
+        except Equipment.DoesNotExist as e:
+            valid_equipment = list(
+                Equipment.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise ValidationError(
+                {
+                    "equipment": f"Debe ser uno de los equipamientos activos: {', '.join(valid_equipment)}"
+                }
+            ) from e
 
     if "difficulty" in validated_data:
         valid_difficulty = ["beginner", "intermediate", "advanced"]
@@ -193,16 +192,9 @@ def create_exercise_service(validated_data: dict[str, Any], user: User | None = 
     if "secondaryMuscleGroups" in validated_data:
         if not isinstance(validated_data["secondaryMuscleGroups"], list):
             raise ValidationError({"secondaryMuscleGroups": "Debe ser un array de strings"})
-        valid_secondary_groups = [
-            "chest",
-            "back",
-            "shoulders",
-            "arms",
-            "legs",
-            "core",
-            "full_body",
-            "other",
-        ]
+        valid_secondary_groups = list(
+            MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+        )
         for group in validated_data["secondaryMuscleGroups"]:
             if not isinstance(group, str):
                 raise ValidationError(
@@ -250,42 +242,49 @@ def update_exercise_service(
     if user and exercise.created_by and exercise.created_by.id != user.id:
         raise PermissionDenied("Solo el creador puede actualizar este ejercicio")
 
-    # Validar enums si se proporcionan
-    if "movementType" in validated_data:
-        valid_movement_types = ["push", "pull", "squat", "hinge", "carry", "other"]
-        if validated_data["movementType"] not in valid_movement_types:
-            raise ValidationError(
-                {"movementType": f"Debe ser uno de: {', '.join(valid_movement_types)}"}
+    # Convertir slugs a objetos ForeignKey si se proporcionan
+    if "movementType" in validated_data and validated_data["movementType"]:
+        movement_type_slug = validated_data["movementType"]
+        try:
+            movement_type = MovementType.objects.get(name=movement_type_slug, is_active=True)
+            validated_data["movementType"] = movement_type
+        except MovementType.DoesNotExist as e:
+            valid_types = list(
+                MovementType.objects.filter(is_active=True).values_list("name", flat=True)
             )
-
-    if "primaryMuscleGroup" in validated_data:
-        valid_primary_muscle_groups = [
-            "chest",
-            "back",
-            "shoulders",
-            "arms",
-            "legs",
-            "core",
-            "full_body",
-            "other",
-        ]
-        if validated_data["primaryMuscleGroup"] not in valid_primary_muscle_groups:
             raise ValidationError(
-                {"primaryMuscleGroup": f"Debe ser uno de: {', '.join(valid_primary_muscle_groups)}"}
-            )
+                {"movementType": f"Debe ser uno de los tipos activos: {', '.join(valid_types)}"}
+            ) from e
 
-    if "equipment" in validated_data:
-        valid_equipment = [
-            "barbell",
-            "dumbbell",
-            "cable",
-            "machine",
-            "bodyweight",
-            "kettlebell",
-            "other",
-        ]
-        if validated_data["equipment"] not in valid_equipment:
-            raise ValidationError({"equipment": f"Debe ser uno de: {', '.join(valid_equipment)}"})
+    if "primaryMuscleGroup" in validated_data and validated_data["primaryMuscleGroup"]:
+        muscle_group_slug = validated_data["primaryMuscleGroup"]
+        try:
+            muscle_group = MuscleGroup.objects.get(name=muscle_group_slug, is_active=True)
+            validated_data["primaryMuscleGroup"] = muscle_group
+        except MuscleGroup.DoesNotExist as e:
+            valid_groups = list(
+                MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise ValidationError(
+                {
+                    "primaryMuscleGroup": f"Debe ser uno de los grupos activos: {', '.join(valid_groups)}"
+                }
+            ) from e
+
+    if "equipment" in validated_data and validated_data["equipment"]:
+        equipment_slug = validated_data["equipment"]
+        try:
+            equipment = Equipment.objects.get(name=equipment_slug, is_active=True)
+            validated_data["equipment"] = equipment
+        except Equipment.DoesNotExist as e:
+            valid_equipment = list(
+                Equipment.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise ValidationError(
+                {
+                    "equipment": f"Debe ser uno de los equipamientos activos: {', '.join(valid_equipment)}"
+                }
+            ) from e
 
     if "difficulty" in validated_data:
         valid_difficulty = ["beginner", "intermediate", "advanced"]
@@ -296,16 +295,9 @@ def update_exercise_service(
     if "secondaryMuscleGroups" in validated_data:
         if not isinstance(validated_data["secondaryMuscleGroups"], list):
             raise ValidationError({"secondaryMuscleGroups": "Debe ser un array de strings"})
-        valid_secondary_groups = [
-            "chest",
-            "back",
-            "shoulders",
-            "arms",
-            "legs",
-            "core",
-            "full_body",
-            "other",
-        ]
+        valid_secondary_groups = list(
+            MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+        )
         for group in validated_data["secondaryMuscleGroups"]:
             if not isinstance(group, str):
                 raise ValidationError(

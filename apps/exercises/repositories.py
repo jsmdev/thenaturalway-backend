@@ -26,14 +26,18 @@ def list_exercises_repository(
     Returns:
         QuerySet de ejercicios filtrados
     """
-    queryset = Exercise.objects.select_related("created_by").all()
+    queryset = Exercise.objects.select_related(
+        "created_by", "primary_muscle_group", "equipment", "movement_type"
+    ).all()
 
     # Aplicar filtros
     if filters:
         if filters.get("primaryMuscleGroup"):
-            queryset = queryset.filter(primary_muscle_group=filters["primaryMuscleGroup"])
+            # Filtrar por slug del grupo muscular
+            queryset = queryset.filter(primary_muscle_group__name=filters["primaryMuscleGroup"])
         if filters.get("equipment"):
-            queryset = queryset.filter(equipment=filters["equipment"])
+            # Filtrar por slug del equipamiento
+            queryset = queryset.filter(equipment__name=filters["equipment"])
         if filters.get("difficulty"):
             queryset = queryset.filter(difficulty=filters["difficulty"])
         if filters.get("isActive") is not None:
@@ -62,7 +66,9 @@ def get_exercise_by_id_repository(exercise_id: int) -> Exercise | None:
         Exercise o None si no existe
     """
     try:
-        return Exercise.objects.select_related("created_by").get(id=exercise_id)
+        return Exercise.objects.select_related(
+            "created_by", "primary_muscle_group", "equipment", "movement_type"
+        ).get(id=exercise_id)
     except Exercise.DoesNotExist:
         return None
 
@@ -81,13 +87,16 @@ def create_exercise_repository(
         Exercise creado
     """
     # Mapear nombres de dominio a nombres de modelo
+    # Los ForeignKey ya vienen como objetos desde el servicio
     exercise_data = {
         "name": validated_data.get("name"),
         "description": validated_data.get("description"),
-        "movement_type": validated_data.get("movementType"),
-        "primary_muscle_group": validated_data.get("primaryMuscleGroup"),
+        "movement_type": validated_data.get("movementType"),  # Ya es objeto MovementType
+        "primary_muscle_group": validated_data.get(
+            "primaryMuscleGroup"
+        ),  # Ya es objeto MuscleGroup
         "secondary_muscle_groups": validated_data.get("secondaryMuscleGroups", []),
-        "equipment": validated_data.get("equipment"),
+        "equipment": validated_data.get("equipment"),  # Ya es objeto Equipment
         "difficulty": validated_data.get("difficulty"),
         "instructions": validated_data.get("instructions"),
         "image_url": validated_data.get("imageUrl"),
@@ -114,18 +123,21 @@ def update_exercise_repository(exercise: Exercise, validated_data: dict[str, Any
         Exercise actualizado
     """
     # Mapear nombres de dominio a nombres de modelo
+    # Los ForeignKey ya vienen como objetos desde el servicio
     if "name" in validated_data:
         exercise.name = validated_data["name"]
     if "description" in validated_data:
         exercise.description = validated_data["description"]
     if "movementType" in validated_data:
-        exercise.movement_type = validated_data["movementType"]
+        exercise.movement_type = validated_data["movementType"]  # Ya es objeto MovementType
     if "primaryMuscleGroup" in validated_data:
-        exercise.primary_muscle_group = validated_data["primaryMuscleGroup"]
+        exercise.primary_muscle_group = validated_data[
+            "primaryMuscleGroup"
+        ]  # Ya es objeto MuscleGroup
     if "secondaryMuscleGroups" in validated_data:
         exercise.secondary_muscle_groups = validated_data["secondaryMuscleGroups"]
     if "equipment" in validated_data:
-        exercise.equipment = validated_data["equipment"]
+        exercise.equipment = validated_data["equipment"]  # Ya es objeto Equipment
     if "difficulty" in validated_data:
         exercise.difficulty = validated_data["difficulty"]
     if "instructions" in validated_data:

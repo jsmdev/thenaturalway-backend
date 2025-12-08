@@ -4,7 +4,62 @@ from typing import Any, ClassVar
 
 from rest_framework import serializers
 
-from apps.exercises.models import Exercise
+from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
+
+
+class MuscleGroupSerializer(serializers.ModelSerializer):
+    """
+    Serializador para representar grupos musculares con soporte jerárquico.
+
+    Este serializador incluye información sobre el grupo padre y los subgrupos.
+    """
+
+    displayName = serializers.CharField(source="display_name", read_only=True)
+    parent = serializers.SerializerMethodField()
+    parentId = serializers.IntegerField(source="parent.id", read_only=True, allow_null=True)
+    subgroups = serializers.SerializerMethodField()
+    isActive = serializers.BooleanField(source="is_active", read_only=True)
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
+
+    class Meta:
+        model = MuscleGroup
+        fields: ClassVar[list[str]] = [
+            "id",
+            "name",
+            "displayName",
+            "description",
+            "parent",
+            "parentId",
+            "subgroups",
+            "isActive",
+            "order",
+            "createdAt",
+            "updatedAt",
+        ]
+        read_only_fields: ClassVar[list[str]] = ["id", "createdAt", "updatedAt"]
+
+    def get_parent(self, obj: MuscleGroup) -> dict[str, Any] | None:
+        """Retorna información del grupo padre si existe."""
+        if obj.parent:
+            return {
+                "id": obj.parent.id,
+                "name": obj.parent.name,
+                "displayName": obj.parent.display_name,
+            }
+        return None
+
+    def get_subgroups(self, obj: MuscleGroup) -> list[dict[str, Any]]:
+        """Retorna lista de subgrupos."""
+        subgroups = obj.subgroups.filter(is_active=True).order_by("order", "name")
+        return [
+            {
+                "id": subgroup.id,
+                "name": subgroup.name,
+                "displayName": subgroup.display_name,
+            }
+            for subgroup in subgroups
+        ]
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -34,14 +89,12 @@ class ExerciseSerializer(serializers.ModelSerializer):
 
     # Campos calculados
     createdBy = serializers.SerializerMethodField()
-    movementType = serializers.CharField(source="movement_type", required=False, allow_null=True)
-    primaryMuscleGroup = serializers.CharField(
-        source="primary_muscle_group", required=False, allow_null=True
-    )
+    movementType = serializers.SerializerMethodField()
+    primaryMuscleGroup = serializers.SerializerMethodField()
     secondaryMuscleGroups = serializers.JSONField(
         source="secondary_muscle_groups", required=False, allow_null=True
     )
-    equipment = serializers.CharField(required=False, allow_null=True)
+    equipment = serializers.SerializerMethodField()
     difficulty = serializers.CharField(required=False, allow_null=True)
     instructions = serializers.CharField(required=False, allow_null=True)
     imageUrl = serializers.URLField(source="image_url", required=False, allow_null=True)
@@ -75,6 +128,24 @@ class ExerciseSerializer(serializers.ModelSerializer):
         """Retorna el username o id del creador."""
         if obj.created_by:
             return obj.created_by.username
+        return None
+
+    def get_movementType(self, obj: Exercise) -> str | None:
+        """Retorna el slug (name) del tipo de movimiento."""
+        if obj.movement_type:
+            return obj.movement_type.name
+        return None
+
+    def get_primaryMuscleGroup(self, obj: Exercise) -> str | None:
+        """Retorna el slug (name) del grupo muscular principal."""
+        if obj.primary_muscle_group:
+            return obj.primary_muscle_group.name
+        return None
+
+    def get_equipment(self, obj: Exercise) -> str | None:
+        """Retorna el slug (name) del equipamiento."""
+        if obj.equipment:
+            return obj.equipment.name
         return None
 
 
@@ -119,20 +190,12 @@ class ExerciseCreateSerializer(serializers.Serializer):
 
     name = serializers.CharField(required=True, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    movementType = serializers.ChoiceField(
-        choices=Exercise.MOVEMENT_TYPE_CHOICES, required=False, allow_null=True
-    )
-    primaryMuscleGroup = serializers.ChoiceField(
-        choices=Exercise.PRIMARY_MUSCLE_GROUP_CHOICES, required=False, allow_null=True
-    )
+    movementType = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    primaryMuscleGroup = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     secondaryMuscleGroups = serializers.ListField(
-        child=serializers.ChoiceField(choices=Exercise.PRIMARY_MUSCLE_GROUP_CHOICES),
-        required=False,
-        allow_empty=True,
+        child=serializers.CharField(), required=False, allow_empty=True
     )
-    equipment = serializers.ChoiceField(
-        choices=Exercise.EQUIPMENT_CHOICES, required=False, allow_null=True
-    )
+    equipment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     difficulty = serializers.ChoiceField(
         choices=Exercise.DIFFICULTY_CHOICES, required=False, allow_null=True
     )
@@ -151,7 +214,9 @@ class ExerciseCreateSerializer(serializers.Serializer):
         """Valida que secondaryMuscleGroups sea un array de strings válidos."""
         if not isinstance(value, list):
             raise serializers.ValidationError("Debe ser un array")
-        valid_groups = [choice[0] for choice in Exercise.PRIMARY_MUSCLE_GROUP_CHOICES]
+        valid_groups = list(
+            MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+        )
         for group in value:
             if not isinstance(group, str):
                 raise serializers.ValidationError("Todos los elementos deben ser strings")
@@ -200,20 +265,12 @@ class ExerciseUpdateSerializer(serializers.Serializer):
 
     name = serializers.CharField(required=False, max_length=255)
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    movementType = serializers.ChoiceField(
-        choices=Exercise.MOVEMENT_TYPE_CHOICES, required=False, allow_null=True
-    )
-    primaryMuscleGroup = serializers.ChoiceField(
-        choices=Exercise.PRIMARY_MUSCLE_GROUP_CHOICES, required=False, allow_null=True
-    )
+    movementType = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    primaryMuscleGroup = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     secondaryMuscleGroups = serializers.ListField(
-        child=serializers.ChoiceField(choices=Exercise.PRIMARY_MUSCLE_GROUP_CHOICES),
-        required=False,
-        allow_empty=True,
+        child=serializers.CharField(), required=False, allow_empty=True
     )
-    equipment = serializers.ChoiceField(
-        choices=Exercise.EQUIPMENT_CHOICES, required=False, allow_null=True
-    )
+    equipment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     difficulty = serializers.ChoiceField(
         choices=Exercise.DIFFICULTY_CHOICES, required=False, allow_null=True
     )
@@ -228,11 +285,55 @@ class ExerciseUpdateSerializer(serializers.Serializer):
             raise serializers.ValidationError("El nombre no puede estar vacío")
         return value.strip() if value else value
 
+    def validate_movementType(self, value: str) -> str:
+        """Valida que el tipo de movimiento exista y esté activo."""
+        if not value or value.strip() == "":
+            return None
+        value = value.strip()
+        if not MovementType.objects.filter(name=value, is_active=True).exists():
+            valid_types = list(
+                MovementType.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise serializers.ValidationError(
+                f"Debe ser uno de los tipos activos: {', '.join(valid_types)}"
+            )
+        return value
+
+    def validate_primaryMuscleGroup(self, value: str) -> str:
+        """Valida que el grupo muscular exista y esté activo."""
+        if not value or value.strip() == "":
+            return None
+        value = value.strip()
+        if not MuscleGroup.objects.filter(name=value, is_active=True).exists():
+            valid_groups = list(
+                MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise serializers.ValidationError(
+                f"Debe ser uno de los grupos activos: {', '.join(valid_groups)}"
+            )
+        return value
+
+    def validate_equipment(self, value: str) -> str:
+        """Valida que el equipamiento exista y esté activo."""
+        if not value or value.strip() == "":
+            return None
+        value = value.strip()
+        if not Equipment.objects.filter(name=value, is_active=True).exists():
+            valid_equipment = list(
+                Equipment.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise serializers.ValidationError(
+                f"Debe ser uno de los equipamientos activos: {', '.join(valid_equipment)}"
+            )
+        return value
+
     def validate_secondaryMuscleGroups(self, value: list) -> list:
         """Valida que secondaryMuscleGroups sea un array de strings válidos."""
         if not isinstance(value, list):
             raise serializers.ValidationError("Debe ser un array")
-        valid_groups = [choice[0] for choice in Exercise.PRIMARY_MUSCLE_GROUP_CHOICES]
+        valid_groups = list(
+            MuscleGroup.objects.filter(is_active=True).values_list("name", flat=True)
+        )
         for group in value:
             if not isinstance(group, str):
                 raise serializers.ValidationError("Todos los elementos deben ser strings")
