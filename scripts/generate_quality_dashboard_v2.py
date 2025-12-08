@@ -1289,6 +1289,8 @@ def generate_html(stats):
 
 def main():
     """Función principal."""
+    import shutil
+
     reports_base_dir = Path("docs/quality-reports")
     source_dir = reports_base_dir / "code-analysis"
 
@@ -1325,12 +1327,32 @@ def main():
     output_dir = reports_base_dir / f"{today}-code-analysis"
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Copiar todos los archivos de análisis a la carpeta datada
+    files_to_copy = [
+        "complexity.json",
+        "maintainability.json",
+        "security.json",
+        "mypy.txt",
+        "ruff.json",
+        "dead-code.txt",
+    ]
+
+    for filename in files_to_copy:
+        src_file = source_dir / filename
+        if src_file.exists():
+            dst_file = output_dir / filename
+            shutil.copy2(src_file, dst_file)
+
     # Guardar dashboard
     output_file = output_dir / "dashboard.html"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(f"✅ Dashboard generado: {output_file}")
+    print(f"✅ Dashboard y archivos de análisis copiados a: {output_dir}")
+    print("   - dashboard.html")
+    for filename in files_to_copy:
+        if (output_dir / filename).exists():
+            print(f"   - {filename}")
 
 
 if __name__ == "__main__":
