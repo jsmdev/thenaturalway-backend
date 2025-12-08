@@ -15,7 +15,7 @@ docs/quality-reports/
 │   ├── complexity.json         # Complejidad ciclomática
 │   ├── maintainability.json    # Índice de mantenibilidad
 │   ├── security.json           # Vulnerabilidades de seguridad
-│   ├── pylint.json             # Linting exhaustivo
+│   ├── mypy.txt                # Type checking estático
 │   └── dead-code.txt           # Código muerto/no usado
 └── YYYYMMDD-code-analysis/     # Dashboards HTML por fecha
     └── dashboard.html          # 🌐 Dashboard de calidad (ej: 20251208-code-analysis/)
@@ -81,7 +81,7 @@ make quality-html
 - 📄 **Overview del Proyecto**: Stack tecnológico, descripción, arquitectura
 - 🔄 **Complejidad Ciclomática**: Promedio + distribución A-F + top 30 funciones complejas
 - 🔧 **Índice de Mantenibilidad**: Score 0-100 + distribución A-C + archivos problemáticos
-- 📝 **Pylint**: Score /10 + desglose (errores, warnings, conventions) + top 30 issues
+- 🔵 **Mypy Type Checker**: Total errores de tipos + top 5 tipos de error + detalles
 - ⚡ **Ruff Linter**: Total problemas + errores vs warnings + tabla de detalles
 - 🔒 **Seguridad**: Distribución HIGH/MEDIUM/LOW + top 15 vulnerabilidades
 - 💀 **Código Muerto**: Total items + top 30 funciones/variables no usadas
@@ -97,11 +97,11 @@ make quality-html
 
 Los archivos JSON contienen datos detallados que puede ser procesados:
 
-- `ruff.json` - Lista de problemas detectados por Ruff
+- `ruff.json` - Lista de problemas detectados por Ruff (linting, estilo)
 - `complexity.json` - Complejidad de cada función
 - `maintainability.json` - Índice de mantenibilidad por archivo
 - `security.json` - Vulnerabilidades detectadas con detalles
-- `pylint.json` - Análisis exhaustivo de Pylint
+- `mypy.txt` - Errores de type checking (tipos estáticos)
 - `dead-code.txt` - Código no utilizado
 
 ## 🔄 Actualización
