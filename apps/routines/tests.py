@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
@@ -73,9 +72,6 @@ from apps.routines.services import (
     update_routine_service,
     update_week_service,
 )
-
-if TYPE_CHECKING:
-    from apps.users.models import User
 
 User = get_user_model()
 

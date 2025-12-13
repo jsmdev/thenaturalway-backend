@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
@@ -53,9 +52,6 @@ from apps.sessions.services import (
     update_session_service,
 )
 from apps.users.factories import UserFactory
-
-if TYPE_CHECKING:
-    from apps.users.models import User
 
 User = get_user_model()
 
