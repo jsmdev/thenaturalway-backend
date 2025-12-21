@@ -48,7 +48,10 @@
             </div>
 
             <div class="form-group">
-                <label for="{{ form.primary_muscle_group.id_for_label }}">{{ form.primary_muscle_group.label }}</label>
+                <label for="{{ form.primary_muscle_group.id_for_label }}">
+                    {{ form.primary_muscle_group.label }}
+                    <span class="required">*</span>
+                </label>
                 {{ form.primary_muscle_group }}
                 {% if form.primary_muscle_group.errors %}
                     <div class="field-errors">{{ form.primary_muscle_group.errors }}</div>
@@ -70,6 +73,18 @@
                     <div class="field-errors">{{ form.difficulty.errors }}</div>
                 {% endif %}
             </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.secondary_muscle_groups.id_for_label }}">{{ form.secondary_muscle_groups.label }}</label>
+            {{ form.secondary_muscle_groups }}
+            {% if form.secondary_muscle_groups.errors %}
+                <div class="field-errors">{{ form.secondary_muscle_groups.errors }}</div>
+            {% endif %}
+            {% if form.secondary_muscle_groups.help_text %}
+                <small class="help-text">{{ form.secondary_muscle_groups.help_text }}</small>
+            {% endif %}
+            <div id="secondary-groups-message" style="margin-top: 0.5rem; font-size: 0.875rem; color: #666; display: none;"></div>
         </div>
 
         <div class="form-group">
@@ -120,4 +135,186 @@
         </div>
     </form>
 </div>
+
+{% if muscle_groups_data %}
+    {{ muscle_groups_data|json_script:"muscle-groups-data" }}
+{% endif %}
+
+<script>
+(function() {
+    'use strict';
+
+    // Esperar a que el DOM esté completamente cargado
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    function init() {
+        // Obtener elementos del DOM
+        const primarySelect = document.getElementById('id_primary_muscle_group');
+        const secondarySelect = document.getElementById('id_secondary_muscle_groups');
+        const messageDiv = document.getElementById('secondary-groups-message');
+
+        if (!primarySelect || !secondarySelect) {
+            console.error('No se encontraron los campos de grupos musculares');
+            return;
+        }
+
+        // Cargar datos de grupos musculares
+        const muscleGroupsScript = document.getElementById('muscle-groups-data');
+        if (!muscleGroupsScript) {
+            console.error('No se encontró el script tag con los datos de grupos musculares');
+            return;
+        }
+
+        let muscleGroupsData = {};
+        try {
+            muscleGroupsData = JSON.parse(muscleGroupsScript.textContent);
+        } catch (e) {
+            console.error('Error al parsear los datos de grupos musculares:', e);
+            return;
+        }
+
+        // Construir mapeo desde las opciones del select al objeto del grupo
+        // Esto garantiza que usamos el valor exacto del select
+        const valueToGroupMap = {};
+        console.log('=== CONSTRUYENDO MAPEO ===');
+        console.log('Opciones del select:', primarySelect.options.length);
+        console.log('Claves en muscleGroupsData:', Object.keys(muscleGroupsData));
+
+        Array.from(primarySelect.options).forEach(function(option, index) {
+            if (option.value && option.value !== '') {
+                const groupName = option.value;
+                console.log('Opción', index + ':', {
+                    'valor': JSON.stringify(option.value),
+                    'texto': option.text,
+                    'existe en datos': groupName in muscleGroupsData,
+                    'valor en datos': muscleGroupsData[groupName] ? 'SÍ' : 'NO'
+                });
+
+                if (muscleGroupsData[groupName]) {
+                    valueToGroupMap[option.value] = muscleGroupsData[groupName];
+                    console.log('  ✓ Mapeo añadido:', option.value, '->', muscleGroupsData[groupName].display_name);
+                } else {
+                    console.warn('  ✗ No se encontró grupo para valor:', JSON.stringify(option.value));
+                    // Intentar buscar por todas las claves
+                    Object.keys(muscleGroupsData).forEach(function(key) {
+                        if (key === groupName) {
+                            console.log('    Pero la clave existe!', key);
+                        } else if (key.toLowerCase() === groupName.toLowerCase()) {
+                            console.log('    Coincidencia case-insensitive:', key);
+                        }
+                    });
+                }
+            }
+        });
+        console.log('Total de mapeos creados:', Object.keys(valueToGroupMap).length);
+        console.log('Mapeos:', Object.keys(valueToGroupMap));
+        console.log('=== FIN MAPEO ===');
+
+        // Función para actualizar grupos secundarios
+        function updateSecondaryGroups() {
+            const selectedValue = primarySelect.value;
+
+            console.log('=== updateSecondaryGroups ===');
+            console.log('Valor seleccionado:', JSON.stringify(selectedValue));
+            console.log('Tipo:', typeof selectedValue);
+
+            // Limpiar opciones anteriores
+            secondarySelect.innerHTML = '';
+
+            if (!selectedValue || selectedValue === '') {
+                console.log('No hay valor seleccionado');
+                if (messageDiv) {
+                    messageDiv.textContent = '';
+                    messageDiv.style.display = 'none';
+                }
+                return;
+            }
+
+            // Buscar el grupo usando el mapeo
+            console.log('Buscando en mapeo...');
+            console.log('Claves en mapeo:', Object.keys(valueToGroupMap));
+            console.log('¿Existe en mapeo?', selectedValue in valueToGroupMap);
+            const selectedGroup = valueToGroupMap[selectedValue];
+
+            if (!selectedGroup) {
+                console.error('ERROR: No se encontró grupo en el mapeo');
+                console.error('Valor del select:', JSON.stringify(selectedValue));
+                console.error('Longitud del valor:', selectedValue.length);
+                console.error('Mapeo disponible:', Object.keys(valueToGroupMap));
+                console.error('Comparación detallada:');
+                Object.keys(valueToGroupMap).forEach(function(key) {
+                    console.error('  - Clave en mapeo:', JSON.stringify(key), '¿Coincide?', key === selectedValue);
+                });
+                console.error('Datos disponibles:', Object.keys(muscleGroupsData));
+                console.error('¿Existe en datos directos?', selectedValue in muscleGroupsData);
+                if (muscleGroupsData[selectedValue]) {
+                    console.error('  Pero SÍ existe en datos directos!');
+                }
+                if (messageDiv) {
+                    messageDiv.textContent = 'Error: No se encontraron datos para este grupo.';
+                    messageDiv.style.display = 'block';
+                    messageDiv.style.color = '#dc3545';
+                }
+                return;
+            }
+
+            console.log('Grupo encontrado:', selectedGroup.display_name);
+
+            const subgroups = selectedGroup.subgroups || [];
+
+            if (subgroups.length === 0) {
+                if (messageDiv) {
+                    messageDiv.textContent = 'No hay subgrupos disponibles para este grupo principal.';
+                    messageDiv.style.display = 'block';
+                    messageDiv.style.color = '#666';
+                }
+            } else {
+                if (messageDiv) {
+                    messageDiv.style.display = 'none';
+                }
+
+                // Añadir opciones de subgrupos
+                subgroups.forEach(function(subgroup) {
+                    const option = document.createElement('option');
+                    option.value = subgroup.id;
+                    option.textContent = subgroup.display_name;
+                    secondarySelect.appendChild(option);
+                });
+            }
+        }
+
+        // Escuchar cambios en el grupo principal
+        primarySelect.addEventListener('change', updateSecondaryGroups);
+
+        // Actualizar al cargar la página si hay un valor inicial
+        if (primarySelect.value) {
+            updateSecondaryGroups();
+
+            // Si estamos en modo edición, restaurar selecciones previas
+            {% if action == 'update' and exercise %}
+            const previousSecondaryNames = {{ exercise.secondaryMuscleGroups|default:"[]"|safe }};
+            if (previousSecondaryNames && previousSecondaryNames.length > 0) {
+                setTimeout(function() {
+                    const selectedGroup = valueToGroupMap[primarySelect.value];
+                    if (selectedGroup && selectedGroup.subgroups) {
+                        selectedGroup.subgroups.forEach(function(subgroup) {
+                            if (previousSecondaryNames.includes(subgroup.name)) {
+                                const option = secondarySelect.querySelector('option[value="' + subgroup.id + '"]');
+                                if (option) {
+                                    option.selected = true;
+                                }
+                            }
+                        });
+                    }
+                }, 100);
+            }
+            {% endif %}
+        }
+    }
+})();
+</script>
 {% endblock %}
