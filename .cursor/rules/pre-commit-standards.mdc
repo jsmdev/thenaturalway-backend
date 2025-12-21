@@ -1,0 +1,337 @@
+---
+globs: *.py
+alwaysApply: true
+---
+
+# Estándares de Pre-Commit Hooks
+
+Este documento define las reglas que se aplican automáticamente a través de los pre-commit hooks del proyecto. Todo código generado debe cumplir estas reglas desde el principio para evitar fallos en los commits.
+
+## 1. Formato de Archivos
+
+### Espacios en Blanco
+- **NO dejar espacios en blanco al final de las líneas** (trailing whitespace)
+- Cada archivo debe terminar con **una línea en blanco** al final
+- Usar **LF (Unix)** como final de línea, nunca CRLF (Windows)
+
+```python
+# ❌ Malo - espacios al final de línea
+def my_function():
+    return True
+
+# ✅ Bueno - sin espacios al final
+def my_function():
+    return True
+
+```
+
+### Final de Archivo
+- **Siempre** incluir una línea en blanco al final del archivo
+- El último carácter del archivo debe ser `\n`
+
+## 2. Ruff - Linter y Formatter
+
+### Configuración Activa
+El proyecto usa **Ruff** para linting y formatting (reemplaza Black, isort, flake8, pylint).
+
+### Reglas Principales de Ruff
+
+#### Imports
+- **Orden de imports** (automático con Ruff):
+  1. `from __future__ import annotations` (siempre primero)
+  2. `from typing import TYPE_CHECKING`
+  3. Standard library
+  4. Django
+  5. Django REST Framework
+  6. Third-party
+  7. Local imports
+  8. `if TYPE_CHECKING:` block al final
+
+- **No imports sin usar** (F401)
+- **No variables sin usar** (F841)
+
+```python
+# ✅ Bueno - orden correcto de imports
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from django.db import models
+from django.utils import timezone
+
+from rest_framework import serializers
+
+from apps.users.models import User
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+```
+
+#### Django-Specific (DJ)
+- **DJ007**: No usar `__all__` en `ModelForm.Meta`, usar `fields` explícitos
+- **DJ008**: No usar `exclude` en `ModelForm.Meta`, usar `fields`
+
+```python
+# ❌ Malo
+class MyForm(forms.ModelForm):
+    class Meta:
+        model = MyModel
+        fields = "__all__"
+
+# ✅ Bueno
+class MyForm(forms.ModelForm):
+    class Meta:
+        model = MyModel
+        fields: ClassVar[list[str]] = ["field1", "field2", "field3"]
+```
+
+#### Type Hints (RUF)
+- **RUF012**: Atributos de clase mutables deben usar `typing.ClassVar`
+
+```python
+# ❌ Malo
+class MyAdmin(admin.ModelAdmin):
+    list_display = ["id", "name"]  # Mutable sin ClassVar
+
+# ✅ Bueno
+from typing import ClassVar
+
+class MyAdmin(admin.ModelAdmin):
+    list_display: ClassVar[list[str]] = ["id", "name"]
+```
+
+#### Otros
+- **E501**: Línea máxima de 100 caracteres (configurado en pyproject.toml)
+- **F841**: No variables locales sin usar
+- **F401**: No imports sin usar
+
+### Line Length
+- **Máximo 100 caracteres por línea**
+- Ruff formatea automáticamente para cumplir este límite
+- Usar continuación de línea cuando sea necesario
+
+```python
+# ❌ Malo - línea muy larga
+def my_function_with_very_long_name(parameter1, parameter2, parameter3, parameter4, parameter5, parameter6):
+    pass
+
+# ✅ Bueno - línea dividida
+def my_function_with_very_long_name(
+    parameter1,
+    parameter2,
+    parameter3,
+    parameter4,
+    parameter5,
+    parameter6,
+):
+    pass
+```
+
+## 3. Django Upgrade
+
+### Target Version: Django 5.0
+El hook `django-upgrade` actualiza código automáticamente para Django 5.0+.
+
+### Cambios Comunes
+- Usar `QuerySet` type hints modernos
+- Actualizar patrones deprecados
+- Usar nuevas APIs de Django 5.0
+
+## 4. Validaciones de Archivos
+
+### JSON
+- Todos los archivos `.json` deben tener sintaxis válida
+- Excepción: `.vscode/` (configuración de IDE)
+
+### YAML
+- Todos los archivos `.yaml` y `.yml` deben tener sintaxis válida
+- Excepción: `docs/api/*-openapi.yaml` (pueden tener templates)
+
+### TOML
+- Todos los archivos `.toml` deben tener sintaxis válida
+- Especialmente `pyproject.toml`
+
+### Tamaño de Archivos
+- **Máximo 500KB por archivo**
+- Archivos más grandes deben ser revisados manualmente
+
+## 5. Control de Versiones
+
+### Conflictos de Merge
+- No dejar marcadores de conflicto (`<<<<<<<`, `=======`, `>>>>>>>`)
+- Resolver conflictos antes de commit
+
+### Conflictos de Nombres
+- No crear archivos con nombres que solo difieren en mayúsculas/minúsculas
+- Ejemplo: evitar `myfile.py` y `MyFile.py` en el mismo directorio
+
+### Debug Statements
+- **NO dejar** statements de debug en el código:
+  - `import pdb`
+  - `import ipdb`
+  - `pdb.set_trace()`
+  - `breakpoint()`
+
+```python
+# ❌ Malo - debug statement
+def my_function():
+    import pdb; pdb.set_trace()
+    return True
+
+# ✅ Bueno - sin debug
+def my_function():
+    return True
+```
+
+## 6. Checklist de Pre-Commit
+
+Antes de hacer commit, asegúrate de que tu código cumple:
+
+1. ✅ Sin espacios en blanco al final de líneas
+2. ✅ Línea en blanco al final de cada archivo
+3. ✅ Imports ordenados correctamente
+4. ✅ Sin imports sin usar
+5. ✅ Sin variables sin usar
+6. ✅ Máximo 100 caracteres por línea
+7. ✅ `ClassVar` en atributos mutables de clase
+8. ✅ `fields` explícitos en ModelForm.Meta (no `__all__`)
+9. ✅ Sin debug statements
+10. ✅ Finales de línea LF (Unix)
+11. ✅ Sintaxis válida en JSON/YAML/TOML
+12. ✅ Archivos menores a 500KB
+
+## 7. Comandos Útiles
+
+### Ejecutar Pre-Commit Manualmente
+```bash
+# Ejecutar en todos los archivos
+pre-commit run --all-files
+
+# Ejecutar en archivos staged
+pre-commit run
+
+# Ejecutar un hook específico
+pre-commit run ruff --all-files
+pre-commit run ruff-format --all-files
+```
+
+### Formatear Código Antes de Commit
+```bash
+# Formatear con Ruff
+ruff format .
+
+# Linter con auto-fix
+ruff check --fix .
+
+# Verificar sin modificar
+ruff check .
+```
+
+### Actualizar Pre-Commit Hooks
+```bash
+# Actualizar a las últimas versiones
+pre-commit autoupdate
+```
+
+## 8. Integración con Editor
+
+### VS Code
+Configuración recomendada en `.vscode/settings.json`:
+
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.rulers": [100],
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.eol": "\n",
+  "python.linting.enabled": true,
+  "python.formatting.provider": "none",
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true
+    }
+  }
+}
+```
+
+### Cursor / Similar IDEs
+- Configurar Ruff como formatter por defecto
+- Habilitar format-on-save
+- Configurar rulers a 100 caracteres
+- Habilitar trim trailing whitespace
+
+## 9. Resumen de Errores Comunes
+
+### Error: trailing-whitespace
+**Problema**: Espacios al final de línea
+**Solución**: Configurar editor para eliminarlos automáticamente
+
+### Error: end-of-file-fixer
+**Problema**: Falta línea en blanco al final del archivo
+**Solución**: Configurar editor para añadirla automáticamente
+
+### Error: ruff F401
+**Problema**: Import sin usar
+**Solución**: Eliminar el import o usarlo
+
+### Error: ruff F841
+**Problema**: Variable asignada pero no usada
+**Solución**: Usar la variable o eliminar la asignación
+
+### Error: ruff RUF012
+**Problema**: Atributo mutable de clase sin `ClassVar`
+**Solución**: Añadir type hint con `ClassVar[list[str]]`
+
+### Error: ruff DJ007
+**Problema**: Usar `fields = "__all__"` en ModelForm
+**Solución**: Especificar campos explícitamente
+
+## 10. Notas Importantes
+
+### Auto-Fix
+La mayoría de hooks tienen **auto-fix** habilitado:
+- `ruff --fix`: Corrige automáticamente muchos errores
+- `trailing-whitespace`: Elimina espacios automáticamente
+- `end-of-file-fixer`: Añade línea final automáticamente
+- `mixed-line-ending`: Normaliza a LF automáticamente
+
+### Cuando Falla un Commit
+Si un commit falla por pre-commit hooks:
+
+1. **No te preocupes** - los hooks ya corrigieron muchos problemas
+2. **Revisa los cambios** que hicieron los hooks
+3. **Añade los archivos corregidos**: `git add .`
+4. **Intenta commit nuevamente**: `git commit -m "..."`
+
+### Bypass (NO recomendado)
+En casos **muy excepcionales**, puedes saltar los hooks:
+```bash
+git commit --no-verify -m "mensaje"
+```
+**⚠️ IMPORTANTE**: Solo usar en emergencias. Los hooks existen por una razón.
+
+---
+
+## Referencia Rápida
+
+**Siempre que generes código**:
+1. Imports ordenados con `from __future__ import annotations` primero
+2. `ClassVar` para atributos de clase mutables
+3. `fields` explícitos en ModelForm
+4. Sin espacios al final de líneas
+5. Línea en blanco al final del archivo
+6. Máximo 100 caracteres por línea
+7. Sin imports ni variables sin usar
+8. Sin debug statements
+
+**Antes de commit**:
+```bash
+ruff format .
+ruff check --fix .
+git add .
+git commit -m "mensaje"
+```
