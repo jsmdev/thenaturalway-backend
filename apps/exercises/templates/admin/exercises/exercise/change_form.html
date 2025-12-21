@@ -1,0 +1,125 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% if muscle_groups_data %}
+        {{ muscle_groups_data|json_script:"muscle-groups-data" }}
+    {% endif %}
+    <script>
+    (function() {
+        'use strict';
+
+        // Esperar a que el DOM esté completamente cargado
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        function init() {
+            // Obtener elementos del DOM
+            const primarySelect = document.getElementById('id_primary_muscle_group');
+            const secondarySelect = document.getElementById('id_secondary_muscle_groups');
+
+            if (!primarySelect || !secondarySelect) {
+                console.error('No se encontraron los campos de grupos musculares en el admin');
+                return;
+            }
+
+            // Cargar datos de grupos musculares
+            const muscleGroupsScript = document.getElementById('muscle-groups-data');
+            if (!muscleGroupsScript) {
+                console.error('No se encontró el script tag con los datos de grupos musculares');
+                return;
+            }
+
+            let muscleGroupsData = {};
+            try {
+                muscleGroupsData = JSON.parse(muscleGroupsScript.textContent);
+            } catch (e) {
+                console.error('Error al parsear los datos de grupos musculares:', e);
+                return;
+            }
+
+            // Construir mapeo desde las opciones del select al objeto del grupo
+            // En el admin, el valor del select es el ID (número)
+            const valueToGroupMap = {};
+            Array.from(primarySelect.options).forEach(function(option) {
+                if (option.value && option.value !== '') {
+                    const groupId = parseInt(option.value);
+                    if (!isNaN(groupId) && muscleGroupsData[groupId]) {
+                        valueToGroupMap[option.value] = muscleGroupsData[groupId];
+                    }
+                }
+            });
+
+            // Función para actualizar grupos secundarios
+            function updateSecondaryOptions() {
+                const selectedValue = primarySelect.value;
+
+                // Limpiar opciones anteriores
+                secondarySelect.innerHTML = '';
+
+                if (!selectedValue || selectedValue === '') {
+                    return;
+                }
+
+                // Convertir a número porque el admin usa IDs
+                const selectedId = parseInt(selectedValue);
+                if (isNaN(selectedId)) {
+                    console.error('Valor del select no es un número:', selectedValue);
+                    return;
+                }
+
+                // Buscar el grupo usando el mapeo o directamente por ID
+                const selectedGroup = valueToGroupMap[selectedValue] || muscleGroupsData[selectedId];
+
+                if (!selectedGroup) {
+                    console.error('No se encontró grupo para ID:', selectedId);
+                    return;
+                }
+
+                const subgroups = selectedGroup.subgroups || [];
+
+                // Guardar selecciones actuales antes de limpiar
+                const currentSelectedIds = [];
+                Array.from(secondarySelect.options).forEach(function(option) {
+                    if (option.selected) {
+                        currentSelectedIds.push(parseInt(option.value));
+                    }
+                });
+
+                // Limpiar opciones
+                secondarySelect.innerHTML = '';
+
+                if (subgroups.length === 0) {
+                    const option = document.createElement('option');
+                    option.textContent = 'No hay subgrupos disponibles';
+                    option.disabled = true;
+                    secondarySelect.appendChild(option);
+                } else {
+                    // Añadir opciones de subgrupos
+                    subgroups.forEach(function(subgroup) {
+                        const option = document.createElement('option');
+                        option.value = subgroup.id;
+                        option.textContent = subgroup.display_name;
+                        // Preservar selección si estaba seleccionado
+                        if (currentSelectedIds.includes(subgroup.id)) {
+                            option.selected = true;
+                        }
+                        secondarySelect.appendChild(option);
+                    });
+                }
+            }
+
+            // Escuchar cambios en el grupo principal
+            primarySelect.addEventListener('change', updateSecondaryOptions);
+
+            // Actualizar al cargar la página si hay un valor inicial
+            if (primarySelect.value) {
+                updateSecondaryOptions();
+            }
+        }
+    })();
+    </script>
+{% endblock %}
