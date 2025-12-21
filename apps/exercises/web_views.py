@@ -179,7 +179,43 @@ class ExerciseCreateView(View):
     def get(self, request: HttpRequest) -> HttpResponse:
         """Muestra el formulario de creación."""
         form = ExerciseCreateForm()
-        return render(request, "exercises/form.html", {"form": form, "action": "create"})
+
+        # Cargar grupos principales con sus subgrupos
+        main_groups = (
+            MuscleGroup.objects.filter(is_active=True, parent=None)
+            .prefetch_related("subgroups")
+            .order_by("order", "name")
+        )
+
+        # Estructurar datos para JavaScript
+        # IMPORTANTE: Indexar por name Y por id para mayor robustez
+        muscle_groups_data: dict[str, dict] = {}
+        muscle_groups_by_id: dict[int, dict] = {}
+        for main_group in main_groups:
+            group_data = {
+                "id": main_group.id,
+                "name": main_group.name,
+                "display_name": main_group.display_name,
+                "subgroups": [
+                    {
+                        "id": sg.id,
+                        "name": sg.name,
+                        "display_name": sg.display_name,
+                    }
+                    for sg in main_group.subgroups.filter(is_active=True).order_by("order", "name")
+                ],
+            }
+            # Indexar por name (valor del select cuando to_field_name="name")
+            muscle_groups_data[main_group.name] = group_data
+            # También indexar por id como fallback
+            muscle_groups_by_id[main_group.id] = group_data
+
+        context = {
+            "form": form,
+            "action": "create",
+            "muscle_groups_data": muscle_groups_data,  # json_script hace el json.dumps automáticamente
+        }
+        return render(request, "exercises/form.html", context)
 
     @method_decorator(login_required)
     def post(self, request: HttpRequest) -> HttpResponse:
@@ -187,7 +223,38 @@ class ExerciseCreateView(View):
         form = ExerciseCreateForm(request.POST)
 
         if not form.is_valid():
-            return render(request, "exercises/form.html", {"form": form, "action": "create"})
+            # Recargar datos de grupos musculares para el template
+            main_groups = (
+                MuscleGroup.objects.filter(is_active=True, parent=None)
+                .prefetch_related("subgroups")
+                .order_by("order", "name")
+            )
+
+            # Estructurar datos para JavaScript (indexado por name porque el form usa to_field_name="name")
+            muscle_groups_data: dict[str, dict] = {}
+            for main_group in main_groups:
+                muscle_groups_data[main_group.name] = {
+                    "id": main_group.id,
+                    "name": main_group.name,
+                    "display_name": main_group.display_name,
+                    "subgroups": [
+                        {
+                            "id": sg.id,
+                            "name": sg.name,
+                            "display_name": sg.display_name,
+                        }
+                        for sg in main_group.subgroups.filter(is_active=True).order_by(
+                            "order", "name"
+                        )
+                    ],
+                }
+
+            context = {
+                "form": form,
+                "action": "create",
+                "muscle_groups_data": muscle_groups_data,  # json_script hace el json.dumps automáticamente
+            }
+            return render(request, "exercises/form.html", context)
 
         try:
             # Preparar datos para el servicio (solo incluir campos con valores)
@@ -196,11 +263,17 @@ class ExerciseCreateView(View):
             if form.cleaned_data.get("description"):
                 validated_data["description"] = form.cleaned_data["description"]
             if form.cleaned_data.get("movement_type"):
-                validated_data["movementType"] = form.cleaned_data["movement_type"]
+                validated_data["movementType"] = form.cleaned_data["movement_type"].name
             if form.cleaned_data.get("primary_muscle_group"):
-                validated_data["primaryMuscleGroup"] = form.cleaned_data["primary_muscle_group"]
+                validated_data["primaryMuscleGroup"] = form.cleaned_data[
+                    "primary_muscle_group"
+                ].name
+            if form.cleaned_data.get("secondary_muscle_groups"):
+                validated_data["secondaryMuscleGroups"] = [
+                    sg.name for sg in form.cleaned_data["secondary_muscle_groups"]
+                ]
             if form.cleaned_data.get("equipment"):
-                validated_data["equipment"] = form.cleaned_data["equipment"]
+                validated_data["equipment"] = form.cleaned_data["equipment"].name
             if form.cleaned_data.get("difficulty"):
                 validated_data["difficulty"] = form.cleaned_data["difficulty"]
             if form.cleaned_data.get("instructions"):
@@ -242,6 +315,41 @@ class ExerciseUpdateView(View):
             serializer = ExerciseSerializer(exercise)
             exercise_data = serializer.data
 
+            # Cargar grupos principales con sus subgrupos
+            main_groups = (
+                MuscleGroup.objects.filter(is_active=True, parent=None)
+                .prefetch_related("subgroups")
+                .order_by("order", "name")
+            )
+
+            # Estructurar datos para JavaScript (indexado por name porque el form usa to_field_name="name")
+            muscle_groups_data: dict[str, dict] = {}
+            for main_group in main_groups:
+                muscle_groups_data[main_group.name] = {
+                    "id": main_group.id,
+                    "name": main_group.name,
+                    "display_name": main_group.display_name,
+                    "subgroups": [
+                        {
+                            "id": sg.id,
+                            "name": sg.name,
+                            "display_name": sg.display_name,
+                        }
+                        for sg in main_group.subgroups.filter(is_active=True).order_by(
+                            "order", "name"
+                        )
+                    ],
+                }
+
+            # Obtener IDs de grupos secundarios seleccionados (si existen)
+            secondary_group_names = exercise_data.get("secondaryMuscleGroups", [])
+            secondary_group_ids: list[int] = []
+            if secondary_group_names:
+                secondary_groups = MuscleGroup.objects.filter(
+                    name__in=secondary_group_names, is_active=True
+                )
+                secondary_group_ids = [sg.id for sg in secondary_groups]
+
             # Preparar datos iniciales para el formulario
             form = ExerciseUpdateForm(
                 initial={
@@ -249,6 +357,7 @@ class ExerciseUpdateView(View):
                     "description": exercise_data.get("description"),
                     "movement_type": exercise_data.get("movementType"),
                     "primary_muscle_group": exercise_data.get("primaryMuscleGroup"),
+                    "secondary_muscle_groups": secondary_group_ids,
                     "equipment": exercise_data.get("equipment"),
                     "difficulty": exercise_data.get("difficulty"),
                     "instructions": exercise_data.get("instructions"),
@@ -262,6 +371,7 @@ class ExerciseUpdateView(View):
                 "form": form,
                 "exercise": exercise_data,
                 "action": "update",
+                "muscle_groups_data": muscle_groups_data,  # json_script hace el json.dumps automáticamente
             }
 
             return render(request, "exercises/form.html", context)
@@ -279,17 +389,46 @@ class ExerciseUpdateView(View):
         form = ExerciseUpdateForm(request.POST)
 
         if not form.is_valid():
+            # Recargar datos de grupos musculares para el template
+            main_groups = (
+                MuscleGroup.objects.filter(is_active=True, parent=None)
+                .prefetch_related("subgroups")
+                .order_by("order", "name")
+            )
+
+            # Estructurar datos para JavaScript (indexado por name porque el form usa to_field_name="name")
+            muscle_groups_data: dict[str, dict] = {}
+            for main_group in main_groups:
+                muscle_groups_data[main_group.name] = {
+                    "id": main_group.id,
+                    "name": main_group.name,
+                    "display_name": main_group.display_name,
+                    "subgroups": [
+                        {
+                            "id": sg.id,
+                            "name": sg.name,
+                            "display_name": sg.display_name,
+                        }
+                        for sg in main_group.subgroups.filter(is_active=True).order_by(
+                            "order", "name"
+                        )
+                    ],
+                }
+
             try:
                 exercise = get_exercise_service(exercise_id=pk)
                 serializer = ExerciseSerializer(exercise)
                 exercise_data = serializer.data
             except Exception:
                 exercise_data = {}
-            return render(
-                request,
-                "exercises/form.html",
-                {"form": form, "exercise": exercise_data, "action": "update"},
-            )
+
+            context = {
+                "form": form,
+                "exercise": exercise_data,
+                "action": "update",
+                "muscle_groups_data": muscle_groups_data,  # json_script hace el json.dumps automáticamente
+            }
+            return render(request, "exercises/form.html", context)
 
         try:
             # Obtener ejercicio usando el servicio
@@ -307,13 +446,27 @@ class ExerciseUpdateView(View):
             if form.cleaned_data.get("description") is not None:
                 validated_data["description"] = form.cleaned_data["description"] or None
             if form.cleaned_data.get("movement_type"):
-                validated_data["movementType"] = form.cleaned_data["movement_type"] or None
+                validated_data["movementType"] = (
+                    form.cleaned_data["movement_type"].name
+                    if form.cleaned_data["movement_type"]
+                    else None
+                )
             if form.cleaned_data.get("primary_muscle_group"):
                 validated_data["primaryMuscleGroup"] = (
-                    form.cleaned_data["primary_muscle_group"] or None
+                    form.cleaned_data["primary_muscle_group"].name
+                    if form.cleaned_data["primary_muscle_group"]
+                    else None
+                )
+            if form.cleaned_data.get("secondary_muscle_groups") is not None:
+                validated_data["secondaryMuscleGroups"] = (
+                    [sg.name for sg in form.cleaned_data["secondary_muscle_groups"]]
+                    if form.cleaned_data["secondary_muscle_groups"]
+                    else []
                 )
             if form.cleaned_data.get("equipment"):
-                validated_data["equipment"] = form.cleaned_data["equipment"] or None
+                validated_data["equipment"] = (
+                    form.cleaned_data["equipment"].name if form.cleaned_data["equipment"] else None
+                )
             if form.cleaned_data.get("difficulty"):
                 validated_data["difficulty"] = form.cleaned_data["difficulty"] or None
             if form.cleaned_data.get("instructions") is not None:

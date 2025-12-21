@@ -727,10 +727,16 @@ class ExerciseSerializerTestCase(TestCase):
             username="testuser", email="test@example.com", password="testpass123"
         )
         self.movement_type = MovementTypeFactory(name="push", display_name="Push")
-        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.muscle_group = MuscleGroupFactory(
+            name="chest", display_name="Chest", parent=None
+        )  # Grupo principal
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
-        self.shoulders = MuscleGroupFactory(name="shoulders", display_name="Shoulders")
-        self.arms = MuscleGroupFactory(name="arms", display_name="Arms")
+        self.shoulders = MuscleGroupFactory(
+            name="shoulders", display_name="Shoulders", parent=None
+        )  # Grupo principal
+        self.arms = MuscleGroupFactory(
+            name="arms", display_name="Arms", parent=None
+        )  # Grupo principal
 
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
@@ -890,14 +896,29 @@ class ExerciseSerializerTestCase(TestCase):
 class ExerciseFormTestCase(TestCase):
     """Tests unitarios para los formularios de Exercise."""
 
-    def test_exercise_create_form_valid_data(self):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        """Configura datos de prueba que no cambian."""
+        cls.main_muscle_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
+        cls.sub_muscle_group1 = MuscleGroupFactory(
+            name="upper_chest", display_name="Upper Chest", parent=cls.main_muscle_group
+        )
+        cls.sub_muscle_group2 = MuscleGroupFactory(
+            name="lower_chest", display_name="Lower Chest", parent=cls.main_muscle_group
+        )
+        cls.other_main_group = MuscleGroupFactory(name="back", display_name="Back", parent=None)
+        cls.other_sub_group = MuscleGroupFactory(
+            name="lats", display_name="Lats", parent=cls.other_main_group
+        )
+
+    def test_exercise_create_form_valid_data(self) -> None:
         """Test: Formulario de creación con datos válidos."""
         # Arrange
         form_data = {
             "name": "Test Exercise",
             "description": "Test description",
             "movement_type": "push",
-            "primary_muscle_group": "chest",
+            "primary_muscle_group": "chest",  # Obligatorio ahora
             "equipment": "barbell",
             "difficulty": "intermediate",
         }
@@ -908,6 +929,107 @@ class ExerciseFormTestCase(TestCase):
         # Assert
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data["name"], "Test Exercise")
+        self.assertEqual(form.cleaned_data["primary_muscle_group"].name, "chest")
+
+    def test_exercise_create_form_primary_muscle_group_required(self) -> None:
+        """Test: Formulario de creación requiere grupo muscular principal."""
+        # Arrange
+        form_data = {"name": "Test Exercise"}  # Sin primary_muscle_group
+
+        # Act
+        form = ExerciseCreateForm(data=form_data)
+
+        # Assert
+        self.assertFalse(form.is_valid())
+        self.assertIn("primary_muscle_group", form.errors)
+
+    def test_exercise_create_form_primary_muscle_group_only_main_groups(self) -> None:
+        """Test: Formulario solo muestra grupos principales en primary_muscle_group."""
+        # Arrange
+        form = ExerciseCreateForm()
+
+        # Act
+        queryset = form.fields["primary_muscle_group"].queryset
+
+        # Assert
+        # Solo debe incluir grupos principales (sin parent)
+        for group in queryset:
+            self.assertIsNone(group.parent, f"{group.name} no debería tener parent")
+
+    def test_exercise_create_form_secondary_muscle_groups_optional(self) -> None:
+        """Test: Formulario permite crear ejercicio sin grupos secundarios."""
+        # Arrange
+        form_data = {
+            "name": "Test Exercise",
+            "primary_muscle_group": "chest",
+        }
+
+        # Act
+        form = ExerciseCreateForm(data=form_data)
+
+        # Assert
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data.get("secondary_muscle_groups"), [])
+
+    def test_exercise_create_form_secondary_muscle_groups_multiple(self) -> None:
+        """Test: Formulario permite seleccionar múltiples grupos secundarios."""
+        # Arrange
+        form_data = {
+            "name": "Test Exercise",
+            "primary_muscle_group": "chest",
+            "secondary_muscle_groups": [self.sub_muscle_group1.id, self.sub_muscle_group2.id],
+        }
+
+        # Act
+        form = ExerciseCreateForm(data=form_data)
+
+        # Assert
+        self.assertTrue(form.is_valid())
+        secondary_groups = form.cleaned_data.get("secondary_muscle_groups")
+        self.assertIsNotNone(secondary_groups)
+        self.assertEqual(len(secondary_groups), 2)
+        # Ahora devuelve objetos MuscleGroup
+        secondary_names = [sg.name for sg in secondary_groups]
+        self.assertIn("upper_chest", secondary_names)
+        self.assertIn("lower_chest", secondary_names)
+
+    def test_exercise_create_form_secondary_muscle_groups_validation(self) -> None:
+        """Test: Formulario valida que grupos secundarios sean hijos del principal."""
+        # Arrange
+        form_data = {
+            "name": "Test Exercise",
+            "primary_muscle_group": "chest",
+            "secondary_muscle_groups": [
+                self.other_sub_group.id
+            ],  # Grupo secundario de otro grupo principal
+        }
+
+        # Act
+        form = ExerciseCreateForm(data=form_data)
+
+        # Assert
+        self.assertFalse(form.is_valid())
+        self.assertIn("secondary_muscle_groups", form.errors)
+
+    def test_exercise_create_form_secondary_without_primary(self) -> None:
+        """Test: Formulario no permite grupos secundarios sin grupo principal."""
+        # Arrange
+        form_data = {
+            "name": "Test Exercise",
+            "secondary_muscle_groups": [self.sub_muscle_group1.id],
+        }
+
+        # Act
+        form = ExerciseCreateForm(data=form_data)
+
+        # Assert
+        self.assertFalse(form.is_valid())
+        # Debe tener error en clean() (non_field_errors) o en secondary_muscle_groups
+        self.assertTrue(
+            "secondary_muscle_groups" in form.errors
+            or "__all__" in form.errors
+            or "primary_muscle_group" in form.errors
+        )
 
     def test_exercise_create_form_name_required(self):
         """Test: Formulario de creación requiere nombre."""
@@ -959,7 +1081,7 @@ class ExerciseFormTestCase(TestCase):
     def test_exercise_form_clean_movement_type_empty_string(self):
         """Test: Formulario limpia movement_type vacío."""
         # Arrange
-        form_data = {"name": "Test", "movement_type": ""}
+        form_data = {"name": "Test", "movement_type": "", "primary_muscle_group": "chest"}
 
         # Act
         form = ExerciseCreateForm(data=form_data)
@@ -983,7 +1105,9 @@ class ExerciseAPITestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
+        self.muscle_group = MuscleGroupFactory(
+            name="chest", display_name="Chest", parent=None
+        )  # Grupo principal
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
 
         self.exercise = Exercise.objects.create(
@@ -1259,10 +1383,14 @@ class ExerciseWebViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 302)  # Redirect to login
 
-    def test_exercise_create_view_post_success(self):
+    def test_exercise_create_view_post_success(self) -> None:
         """Test: Vista de creación POST exitoso."""
         # Arrange
         self.client.force_login(self.user)
+        # Asegurar que chest es un grupo principal
+        main_group = MuscleGroup.objects.filter(name="chest", parent=None).first()
+        if not main_group:
+            main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
         data = {
             "name": "New Exercise",
             "primary_muscle_group": "chest",
@@ -1276,6 +1404,79 @@ class ExerciseWebViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 302)  # Redirect
         self.assertTrue(Exercise.objects.filter(name="New Exercise").exists())
+
+    def test_exercise_create_view_get_with_muscle_groups_data(self) -> None:
+        """Test: Vista de creación GET incluye datos de grupos musculares en contexto."""
+        # Arrange
+        self.client.force_login(self.user)
+        main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
+        MuscleGroupFactory(name="upper_chest", display_name="Upper Chest", parent=main_group)
+
+        # Act
+        response = self.client.get("/exercises/create/")
+
+        # Assert
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("muscle_groups_data", response.context)
+        muscle_groups_data = response.context["muscle_groups_data"]
+        # Ahora es un diccionario indexado por name
+        self.assertIsInstance(muscle_groups_data, dict)
+        self.assertIn(main_group.name, muscle_groups_data)
+        self.assertEqual(len(muscle_groups_data[main_group.name]["subgroups"]), 1)
+        self.assertEqual(muscle_groups_data[main_group.name]["subgroups"][0]["name"], "upper_chest")
+
+    def test_exercise_create_view_post_with_secondary_groups(self) -> None:
+        """Test: Vista de creación POST con grupos secundarios."""
+        # Arrange
+        self.client.force_login(self.user)
+        main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
+        sub_group1 = MuscleGroupFactory(
+            name="upper_chest", display_name="Upper Chest", parent=main_group
+        )
+        sub_group2 = MuscleGroupFactory(
+            name="lower_chest", display_name="Lower Chest", parent=main_group
+        )
+        data = {
+            "name": "New Exercise",
+            "primary_muscle_group": "chest",
+            "secondary_muscle_groups": [sub_group1.id, sub_group2.id],
+            "equipment": "barbell",
+            "difficulty": "beginner",
+        }
+
+        # Act
+        response = self.client.post("/exercises/create/", data)
+
+        # Assert
+        self.assertEqual(response.status_code, 302)  # Redirect
+        exercise = Exercise.objects.get(name="New Exercise")
+        self.assertEqual(exercise.primary_muscle_group.name, "chest")
+        self.assertIn("upper_chest", exercise.secondary_muscle_groups)
+        self.assertIn("lower_chest", exercise.secondary_muscle_groups)
+
+    def test_exercise_update_view_post_with_secondary_groups(self) -> None:
+        """Test: Vista de actualización POST con grupos secundarios."""
+        # Arrange
+        self.client.force_login(self.user)
+        main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
+        sub_group = MuscleGroupFactory(
+            name="upper_chest", display_name="Upper Chest", parent=main_group
+        )
+        self.exercise.primary_muscle_group = main_group
+        self.exercise.save()
+        data = {
+            "name": "Updated Exercise",
+            "primary_muscle_group": "chest",
+            "secondary_muscle_groups": [sub_group.id],
+        }
+
+        # Act
+        response = self.client.post(f"/exercises/{self.exercise.id}/update/", data)
+
+        # Assert
+        self.assertEqual(response.status_code, 302)  # Redirect
+        self.exercise.refresh_from_db()
+        self.assertIn("upper_chest", self.exercise.secondary_muscle_groups)
 
     def test_exercise_update_view_get_authenticated_owner(self):
         """Test: Vista de actualización GET como propietario."""
