@@ -1,0 +1,23 @@
+{
+  "recommendations": [
+    // Python y formateo
+    "charliermarsh.ruff",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+
+    // Django
+    "batisteo.vscode-django",
+
+    // Git
+    "eamodio.gitlens",
+
+    // YAML/JSON/TOML
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+
+    // Utilidades
+    "editorconfig.editorconfig",
+    "usernamehw.errorlens",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}
