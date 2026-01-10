@@ -4,7 +4,7 @@ from typing import Any, ClassVar
 
 from rest_framework import serializers
 
-from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
+from apps.exercises.models import Difficulty, Equipment, Exercise, MovementType, MuscleGroup
 
 
 class MuscleGroupSerializer(serializers.ModelSerializer):
@@ -62,6 +62,31 @@ class MuscleGroupSerializer(serializers.ModelSerializer):
         ]
 
 
+class DifficultySerializer(serializers.ModelSerializer):
+    """
+    Serializador para representar niveles de dificultad.
+    """
+
+    displayName = serializers.CharField(source="display_name", read_only=True)
+    isActive = serializers.BooleanField(source="is_active", read_only=True)
+    createdAt = serializers.DateTimeField(source="created_at", read_only=True)
+    updatedAt = serializers.DateTimeField(source="updated_at", read_only=True)
+
+    class Meta:
+        model = Difficulty
+        fields: ClassVar[list[str]] = [
+            "id",
+            "name",
+            "displayName",
+            "description",
+            "isActive",
+            "order",
+            "createdAt",
+            "updatedAt",
+        ]
+        read_only_fields: ClassVar[list[str]] = ["id", "createdAt", "updatedAt"]
+
+
 class ExerciseSerializer(serializers.ModelSerializer):
     """
     Serializador para representar un ejercicio completo.
@@ -77,7 +102,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
     - `primaryMuscleGroup` (str, opcional): Grupo muscular principal
     - `secondaryMuscleGroups` (array[str], opcional): Grupos musculares secundarios
     - `equipment` (str, opcional): Equipamiento necesario
-    - `difficulty` (str, opcional): Nivel de dificultad (beginner, intermediate, advanced)
+    - `difficulty` (dict, opcional): Nivel de dificultad con name y displayName
     - `instructions` (str, opcional): Instrucciones de ejecución
     - `imageUrl` (str, opcional): URL de imagen del ejercicio
     - `videoUrl` (str, opcional): URL de video del ejercicio
@@ -95,7 +120,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
         source="secondary_muscle_groups", required=False, allow_null=True
     )
     equipment = serializers.SerializerMethodField()
-    difficulty = serializers.CharField(required=False, allow_null=True)
+    difficulty = serializers.SerializerMethodField()
     instructions = serializers.CharField(required=False, allow_null=True)
     imageUrl = serializers.URLField(source="image_url", required=False, allow_null=True)
     videoUrl = serializers.URLField(source="video_url", required=False, allow_null=True)
@@ -157,6 +182,15 @@ class ExerciseSerializer(serializers.ModelSerializer):
             }
         return None
 
+    def get_difficulty(self, obj: Exercise) -> dict[str, Any] | None:
+        """Retorna la dificultad con name y displayName."""
+        if obj.difficulty:
+            return {
+                "name": obj.difficulty.name,
+                "displayName": obj.difficulty.display_name,
+            }
+        return None
+
 
 class ExerciseCreateSerializer(serializers.Serializer):
     """
@@ -205,9 +239,7 @@ class ExerciseCreateSerializer(serializers.Serializer):
         child=serializers.CharField(), required=False, allow_empty=True
     )
     equipment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    difficulty = serializers.ChoiceField(
-        choices=Exercise.DIFFICULTY_CHOICES, required=False, allow_null=True
-    )
+    difficulty = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     instructions = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     imageUrl = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     videoUrl = serializers.URLField(required=False, allow_blank=True, allow_null=True)
@@ -218,6 +250,18 @@ class ExerciseCreateSerializer(serializers.Serializer):
         if not value or not value.strip():
             raise serializers.ValidationError("El nombre no puede estar vacío")
         return value.strip()
+
+    def validate_difficulty(self, value: str) -> str:
+        """Valida que la dificultad exista y esté activa."""
+        if not value or value.strip() == "":
+            return None
+        value = value.strip()
+        if not Difficulty.objects.filter(name=value, is_active=True).exists():
+            valid_difficulties = list(
+                Difficulty.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise serializers.ValidationError(f"Debe ser uno de: {', '.join(valid_difficulties)}")
+        return value
 
     def validate_secondaryMuscleGroups(self, value: list) -> list:
         """Valida que secondaryMuscleGroups sea un array de strings válidos."""
@@ -280,9 +324,7 @@ class ExerciseUpdateSerializer(serializers.Serializer):
         child=serializers.CharField(), required=False, allow_empty=True
     )
     equipment = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    difficulty = serializers.ChoiceField(
-        choices=Exercise.DIFFICULTY_CHOICES, required=False, allow_null=True
-    )
+    difficulty = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     instructions = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     imageUrl = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     videoUrl = serializers.URLField(required=False, allow_blank=True, allow_null=True)
@@ -334,6 +376,18 @@ class ExerciseUpdateSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 f"Debe ser uno de los equipamientos activos: {', '.join(valid_equipment)}"
             )
+        return value
+
+    def validate_difficulty(self, value: str) -> str:
+        """Valida que la dificultad exista y esté activa."""
+        if not value or value.strip() == "":
+            return None
+        value = value.strip()
+        if not Difficulty.objects.filter(name=value, is_active=True).exists():
+            valid_difficulties = list(
+                Difficulty.objects.filter(is_active=True).values_list("name", flat=True)
+            )
+            raise serializers.ValidationError(f"Debe ser uno de: {', '.join(valid_difficulties)}")
         return value
 
     def validate_secondaryMuscleGroups(self, value: list) -> list:

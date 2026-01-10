@@ -136,7 +136,7 @@
             {% if exercise.difficulty %}
                 <div class="meta-item">
                     <strong>Dificultad:</strong>
-                    <span class="badge badge-{{ exercise.difficulty }}">{{ exercise.difficulty|title }}</span>
+                    <span class="badge badge-{{ exercise.difficulty.name }}">{{ exercise.difficulty.displayName }}</span>
                 </div>
             {% endif %}
             <div class="meta-item">

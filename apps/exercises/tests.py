@@ -9,6 +9,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ValidationErro
 from rest_framework.test import APIClient
 
 from apps.exercises.factories import (
+    DifficultyFactory,
     EquipmentFactory,
     MovementTypeFactory,
     MuscleGroupFactory,
@@ -54,6 +55,10 @@ class ExerciseModelTestCase(TestCase):
         self.movement_type = MovementTypeFactory(name="push", display_name="Push")
         self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
+        self.difficulty_beginner = DifficultyFactory(name="beginner", display_name="Principiante")
+        self.difficulty_intermediate = DifficultyFactory(
+            name="intermediate", display_name="Intermedio"
+        )
 
     def test_exercise_creation_with_minimal_data(self):
         """Test: Crear ejercicio con datos mínimos."""
@@ -81,7 +86,7 @@ class ExerciseModelTestCase(TestCase):
             "primary_muscle_group": self.muscle_group,
             "secondary_muscle_groups": ["shoulders", "arms"],
             "equipment": self.equipment,
-            "difficulty": "intermediate",
+            "difficulty": self.difficulty_intermediate,
             "instructions": "Lie on bench and press",
             "image_url": "https://example.com/image.jpg",
             "video_url": "https://example.com/video.mp4",
@@ -99,7 +104,7 @@ class ExerciseModelTestCase(TestCase):
         self.assertEqual(exercise.primary_muscle_group, self.muscle_group)
         self.assertEqual(exercise.secondary_muscle_groups, ["shoulders", "arms"])
         self.assertEqual(exercise.equipment, self.equipment)
-        self.assertEqual(exercise.difficulty, "intermediate")
+        self.assertEqual(exercise.difficulty, self.difficulty_intermediate)
         self.assertEqual(exercise.instructions, "Lie on bench and press")
         self.assertEqual(exercise.image_url, "https://example.com/image.jpg")
         self.assertEqual(exercise.video_url, "https://example.com/video.mp4")
@@ -125,14 +130,14 @@ class ExerciseModelTestCase(TestCase):
             movement_type=self.movement_type,
             primary_muscle_group=self.muscle_group,
             equipment=self.equipment,
-            difficulty="beginner",
+            difficulty=self.difficulty_beginner,
         )
 
         # Assert
         self.assertEqual(exercise.movement_type, self.movement_type)
         self.assertEqual(exercise.primary_muscle_group, self.muscle_group)
         self.assertEqual(exercise.equipment, self.equipment)
-        self.assertEqual(exercise.difficulty, "beginner")
+        self.assertEqual(exercise.difficulty, self.difficulty_beginner)
 
     def test_exercise_default_is_active(self):
         """Test: Valor por defecto de is_active."""
@@ -182,12 +187,17 @@ class ExerciseRepositoryTestCase(TestCase):
         self.back = MuscleGroupFactory(name="back", display_name="Back")
         self.bodyweight = EquipmentFactory(name="bodyweight", display_name="Bodyweight")
         self.barbell = EquipmentFactory(name="barbell", display_name="Barbell")
+        self.difficulty_beginner = DifficultyFactory(name="beginner", display_name="Principiante")
+        self.difficulty_intermediate = DifficultyFactory(
+            name="intermediate", display_name="Intermedio"
+        )
+        self.difficulty_advanced = DifficultyFactory(name="advanced", display_name="Avanzado")
 
         self.exercise1 = Exercise.objects.create(
             name="Push Up",
             primary_muscle_group=self.chest,
             equipment=self.bodyweight,
-            difficulty="beginner",
+            difficulty=self.difficulty_beginner,
             is_active=True,
             created_by=self.user,
         )
@@ -195,14 +205,14 @@ class ExerciseRepositoryTestCase(TestCase):
             name="Bench Press",
             primary_muscle_group=self.chest,
             equipment=self.barbell,
-            difficulty="intermediate",
+            difficulty=self.difficulty_intermediate,
             is_active=True,
         )
         self.exercise3 = Exercise.objects.create(
             name="Deadlift",
             primary_muscle_group=self.back,
             equipment=self.barbell,
-            difficulty="advanced",
+            difficulty=self.difficulty_advanced,
             is_active=False,
         )
 
@@ -248,7 +258,7 @@ class ExerciseRepositoryTestCase(TestCase):
     def test_list_exercises_repository_with_difficulty_filter(self):
         """Test: Listar ejercicios filtrados por dificultad."""
         # Arrange
-        filters = {"difficulty": "beginner"}
+        filters = {"difficulty": self.difficulty_beginner.name}
 
         # Act
         queryset = list_exercises_repository(filters=filters)
@@ -348,7 +358,7 @@ class ExerciseRepositoryTestCase(TestCase):
             "description": "Leg exercise",
             "primaryMuscleGroup": legs,
             "equipment": barbell,
-            "difficulty": "intermediate",
+            "difficulty": self.difficulty_intermediate,
         }
 
         # Act
@@ -360,7 +370,7 @@ class ExerciseRepositoryTestCase(TestCase):
         self.assertEqual(exercise.description, "Leg exercise")
         self.assertEqual(exercise.primary_muscle_group, legs)
         self.assertEqual(exercise.equipment, barbell)
-        self.assertEqual(exercise.difficulty, "intermediate")
+        self.assertEqual(exercise.difficulty, self.difficulty_intermediate)
         self.assertEqual(exercise.created_by, self.user)
 
     def test_create_exercise_repository_without_user(self):
@@ -382,7 +392,7 @@ class ExerciseRepositoryTestCase(TestCase):
         validated_data = {
             "name": "Updated Push Up",
             "description": "Updated description",
-            "difficulty": "advanced",
+            "difficulty": self.difficulty_advanced,
         }
 
         # Act
@@ -393,7 +403,7 @@ class ExerciseRepositoryTestCase(TestCase):
         # Assert
         self.assertEqual(updated_exercise.name, "Updated Push Up")
         self.assertEqual(updated_exercise.description, "Updated description")
-        self.assertEqual(updated_exercise.difficulty, "advanced")
+        self.assertEqual(updated_exercise.difficulty, self.difficulty_advanced)
 
     def test_update_exercise_repository_partial(self):
         """Test: Actualizar ejercicio parcialmente."""
@@ -750,6 +760,9 @@ class ExerciseSerializerTestCase(TestCase):
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
         self.shoulders = MuscleGroupFactory(name="shoulders", display_name="Shoulders")
         self.arms = MuscleGroupFactory(name="arms", display_name="Arms")
+        self.difficulty_intermediate = DifficultyFactory(
+            name="intermediate", display_name="Intermedio"
+        )
 
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
@@ -758,7 +771,7 @@ class ExerciseSerializerTestCase(TestCase):
             primary_muscle_group=self.muscle_group,
             secondary_muscle_groups=["shoulders", "arms"],
             equipment=self.equipment,
-            difficulty="intermediate",
+            difficulty=self.difficulty_intermediate,
             instructions="Test instructions",
             image_url="https://example.com/image.jpg",
             video_url="https://example.com/video.mp4",
@@ -778,11 +791,19 @@ class ExerciseSerializerTestCase(TestCase):
         self.assertEqual(data["id"], self.exercise.id)
         self.assertEqual(data["name"], "Test Exercise")
         self.assertEqual(data["description"], "Test description")
-        self.assertEqual(data["movementType"], "push")
-        self.assertEqual(data["primaryMuscleGroup"], "chest")
+        self.assertIsNotNone(data["movementType"])
+        self.assertEqual(data["movementType"]["name"], "push")
+        self.assertEqual(data["movementType"]["displayName"], "Push")
+        self.assertIsNotNone(data["primaryMuscleGroup"])
+        self.assertEqual(data["primaryMuscleGroup"]["name"], "chest")
+        self.assertEqual(data["primaryMuscleGroup"]["displayName"], "Chest")
         self.assertEqual(data["secondaryMuscleGroups"], ["shoulders", "arms"])
-        self.assertEqual(data["equipment"], "barbell")
-        self.assertEqual(data["difficulty"], "intermediate")
+        self.assertIsNotNone(data["equipment"])
+        self.assertEqual(data["equipment"]["name"], "barbell")
+        self.assertEqual(data["equipment"]["displayName"], "Barbell")
+        self.assertIsNotNone(data["difficulty"])
+        self.assertEqual(data["difficulty"]["name"], "intermediate")
+        self.assertEqual(data["difficulty"]["displayName"], "Intermedio")
         self.assertEqual(data["instructions"], "Test instructions")
         self.assertEqual(data["imageUrl"], "https://example.com/image.jpg")
         self.assertEqual(data["videoUrl"], "https://example.com/video.mp4")
@@ -1004,12 +1025,15 @@ class ExerciseAPITestCase(TestCase):
         )
         self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
+        self.difficulty_intermediate = DifficultyFactory(
+            name="intermediate", display_name="Intermedio"
+        )
 
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
             primary_muscle_group=self.muscle_group,
             equipment=self.equipment,
-            difficulty="intermediate",
+            difficulty=self.difficulty_intermediate,
             created_by=self.user,
         )
 
@@ -1041,7 +1065,9 @@ class ExerciseAPITestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["data"]), 1)
-        self.assertEqual(response.data["data"][0]["primaryMuscleGroup"], "chest")
+        self.assertIsNotNone(response.data["data"][0]["primaryMuscleGroup"])
+        self.assertEqual(response.data["data"][0]["primaryMuscleGroup"]["name"], "chest")
+        self.assertEqual(response.data["data"][0]["primaryMuscleGroup"]["displayName"], "Chest")
 
     def test_exercise_list_api_get_with_search(self):
         """Test: GET /api/exercises/ con búsqueda."""
@@ -1213,12 +1239,15 @@ class ExerciseWebViewTestCase(TestCase):
         )
         self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
+        self.difficulty_intermediate = DifficultyFactory(
+            name="intermediate", display_name="Intermedio"
+        )
 
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
             primary_muscle_group=self.muscle_group,
             equipment=self.equipment,
-            difficulty="intermediate",
+            difficulty=self.difficulty_intermediate,
             created_by=self.user,
         )
 

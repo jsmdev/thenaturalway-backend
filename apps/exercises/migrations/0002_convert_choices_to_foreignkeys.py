@@ -68,7 +68,9 @@ def reverse_populate_initial_options(apps, schema_editor):
     ).delete()
 
     # Eliminar MovementTypes
-    MovementType.objects.filter(name__in=["push", "pull", "squat", "hinge", "carry", "other"]).delete()
+    MovementType.objects.filter(
+        name__in=["push", "pull", "squat", "hinge", "carry", "other"]
+    ).delete()
 
     # Eliminar Equipment
     Equipment.objects.filter(
@@ -77,7 +79,6 @@ def reverse_populate_initial_options(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("exercises", "0001_initial"),
     ]

@@ -27,7 +27,7 @@ def list_exercises_repository(
         QuerySet de ejercicios filtrados
     """
     queryset = Exercise.objects.select_related(
-        "created_by", "primary_muscle_group", "equipment", "movement_type"
+        "created_by", "primary_muscle_group", "equipment", "movement_type", "difficulty"
     ).all()
 
     # Aplicar filtros
@@ -39,7 +39,17 @@ def list_exercises_repository(
             # Filtrar por slug del equipamiento
             queryset = queryset.filter(equipment__name=filters["equipment"])
         if filters.get("difficulty"):
-            queryset = queryset.filter(difficulty=filters["difficulty"])
+            # Filtro por difficulty: puede ser ID (int) o name (str)
+            difficulty_filter = filters["difficulty"]
+            if isinstance(difficulty_filter, int):
+                # Es un ID
+                queryset = queryset.filter(difficulty_id=difficulty_filter)
+            elif isinstance(difficulty_filter, str):
+                # Es un name (slug)
+                queryset = queryset.filter(difficulty__name=difficulty_filter)
+            else:
+                # Intentar como ID
+                queryset = queryset.filter(difficulty_id=difficulty_filter)
         if filters.get("isActive") is not None:
             queryset = queryset.filter(is_active=filters["isActive"])
         if filters.get("createdBy"):
@@ -67,7 +77,7 @@ def get_exercise_by_id_repository(exercise_id: int) -> Exercise | None:
     """
     try:
         return Exercise.objects.select_related(
-            "created_by", "primary_muscle_group", "equipment", "movement_type"
+            "created_by", "primary_muscle_group", "equipment", "movement_type", "difficulty"
         ).get(id=exercise_id)
     except Exercise.DoesNotExist:
         return None

@@ -10,7 +10,7 @@ from django.views import View
 from rest_framework.exceptions import NotFound, PermissionDenied
 
 from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
-from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
+from apps.exercises.models import Difficulty, Equipment, MovementType, MuscleGroup
 from apps.exercises.serializers import ExerciseSerializer
 from apps.exercises.services import (
     create_exercise_service,
@@ -85,6 +85,10 @@ class ExerciseListView(View):
                 (eq.name, eq.display_name)
                 for eq in Equipment.objects.filter(is_active=True).order_by("order", "name")
             ]
+            difficulty_choices = [
+                (d.name, d.display_name)
+                for d in Difficulty.objects.filter(is_active=True).order_by("order", "name")
+            ]
 
             context = {
                 "exercises": exercises_data,
@@ -94,7 +98,7 @@ class ExerciseListView(View):
                 "movement_types": movement_types,
                 "muscle_groups": muscle_groups,
                 "equipment_choices": equipment_choices,
-                "difficulty_choices": Exercise.DIFFICULTY_CHOICES,
+                "difficulty_choices": difficulty_choices,
             }
 
             return render(request, "exercises/list.html", context)
@@ -121,6 +125,10 @@ class ExerciseListView(View):
                 (eq.name, eq.display_name)
                 for eq in Equipment.objects.filter(is_active=True).order_by("order", "name")
             ]
+            difficulty_choices = [
+                (d.name, d.display_name)
+                for d in Difficulty.objects.filter(is_active=True).order_by("order", "name")
+            ]
 
             return render(
                 request,
@@ -132,7 +140,7 @@ class ExerciseListView(View):
                     "movement_types": movement_types,
                     "muscle_groups": muscle_groups,
                     "equipment_choices": equipment_choices,
-                    "difficulty_choices": Exercise.DIFFICULTY_CHOICES,
+                    "difficulty_choices": difficulty_choices,
                 },
             )
 

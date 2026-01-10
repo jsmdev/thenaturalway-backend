@@ -206,7 +206,7 @@
                     <span><strong>Equipo:</strong> {{ exercise.equipment.displayName }}</span>
                 {% endif %}
                 {% if exercise.difficulty %}
-                    <span class="badge badge-{{ exercise.difficulty }}">{{ exercise.difficulty|title }}</span>
+                    <span class="badge badge-{{ exercise.difficulty.name }}">{{ exercise.difficulty.displayName }}</span>
                 {% endif %}
                 <span class="badge {% if exercise.isActive %}badge-active{% else %}badge-inactive{% endif %}">
                     {% if exercise.isActive %}Activo{% else %}Inactivo{% endif %}

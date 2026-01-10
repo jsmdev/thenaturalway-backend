@@ -35,7 +35,7 @@ Su objetivo es establecer un entendimiento común (lenguaje ubicuo) para la lóg
 - **primaryMuscleGroup**: enum(chest, back, shoulders, arms, legs, core, full_body, other) (optional) - Grupo muscular principal
 - **secondaryMuscleGroups**: array (optional) - Grupos musculares secundarios
 - **equipment**: enum(barbell, dumbbell, cable, machine, bodyweight, kettlebell, other) (optional) - Equipamiento necesario
-- **difficulty**: enum(beginner, intermediate, advanced) (optional) - Nivel de dificultad
+- **difficulty**: enum(beginner, intermediate, advanced) (optional) - Nivel de dificultad configurable (Principiante, Intermedio, Avanzado)
 - **instructions**: text (optional) - Instrucciones de ejecución
 - **imageUrl**: string (optional) - URL de imagen del ejercicio
 - **videoUrl**: string (optional) - URL de video demostrativo

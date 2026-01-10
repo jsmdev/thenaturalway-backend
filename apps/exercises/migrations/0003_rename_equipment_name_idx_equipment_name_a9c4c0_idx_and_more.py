@@ -4,65 +4,64 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('exercises', '0002_convert_choices_to_foreignkeys'),
+        ("exercises", "0002_convert_choices_to_foreignkeys"),
     ]
 
     operations = [
         migrations.RenameIndex(
-            model_name='equipment',
-            new_name='equipment_name_a9c4c0_idx',
-            old_name='equipment_name_idx',
+            model_name="equipment",
+            new_name="equipment_name_a9c4c0_idx",
+            old_name="equipment_name_idx",
         ),
         migrations.RenameIndex(
-            model_name='equipment',
-            new_name='equipment_is_acti_cafb62_idx',
-            old_name='equipment_is_active_idx',
+            model_name="equipment",
+            new_name="equipment_is_acti_cafb62_idx",
+            old_name="equipment_is_active_idx",
         ),
         migrations.RenameIndex(
-            model_name='equipment',
-            new_name='equipment_order_f7f9f2_idx',
-            old_name='equipment_order_idx',
+            model_name="equipment",
+            new_name="equipment_order_f7f9f2_idx",
+            old_name="equipment_order_idx",
         ),
         migrations.RenameIndex(
-            model_name='exercise',
-            new_name='exercises_primary_f00782_idx',
-            old_name='exercises_primary_c74680_idx',
+            model_name="exercise",
+            new_name="exercises_primary_f00782_idx",
+            old_name="exercises_primary_c74680_idx",
         ),
         migrations.RenameIndex(
-            model_name='exercise',
-            new_name='exercises_equipme_0357ca_idx',
-            old_name='exercises_equipme_0bc618_idx',
+            model_name="exercise",
+            new_name="exercises_equipme_0357ca_idx",
+            old_name="exercises_equipme_0bc618_idx",
         ),
         migrations.RenameIndex(
-            model_name='movementtype',
-            new_name='movement_ty_name_ec9c66_idx',
-            old_name='movement_types_name_idx',
+            model_name="movementtype",
+            new_name="movement_ty_name_ec9c66_idx",
+            old_name="movement_types_name_idx",
         ),
         migrations.RenameIndex(
-            model_name='movementtype',
-            new_name='movement_ty_is_acti_6c0eee_idx',
-            old_name='movement_types_is_active_idx',
+            model_name="movementtype",
+            new_name="movement_ty_is_acti_6c0eee_idx",
+            old_name="movement_types_is_active_idx",
         ),
         migrations.RenameIndex(
-            model_name='movementtype',
-            new_name='movement_ty_order_2d188f_idx',
-            old_name='movement_types_order_idx',
+            model_name="movementtype",
+            new_name="movement_ty_order_2d188f_idx",
+            old_name="movement_types_order_idx",
         ),
         migrations.RenameIndex(
-            model_name='musclegroup',
-            new_name='muscle_grou_name_e8b814_idx',
-            old_name='muscle_groups_name_idx',
+            model_name="musclegroup",
+            new_name="muscle_grou_name_e8b814_idx",
+            old_name="muscle_groups_name_idx",
         ),
         migrations.RenameIndex(
-            model_name='musclegroup',
-            new_name='muscle_grou_is_acti_0db161_idx',
-            old_name='muscle_groups_is_active_idx',
+            model_name="musclegroup",
+            new_name="muscle_grou_is_acti_0db161_idx",
+            old_name="muscle_groups_is_active_idx",
         ),
         migrations.RenameIndex(
-            model_name='musclegroup',
-            new_name='muscle_grou_order_7f5459_idx',
-            old_name='muscle_groups_order_idx',
+            model_name="musclegroup",
+            new_name="muscle_grou_order_7f5459_idx",
+            old_name="muscle_groups_order_idx",
         ),
     ]

@@ -6,7 +6,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
+from apps.exercises.models import Difficulty, Equipment, Exercise, MovementType, MuscleGroup
 
 
 class Command(BaseCommand):
@@ -193,12 +193,19 @@ class Command(BaseCommand):
                 ) from e
 
         # Validar dificultad
-        difficulty = exercise_data.get("difficulty")
-        if difficulty and difficulty not in ["beginner", "intermediate", "advanced"]:
-            raise ValueError(
-                f"Dificultad inválida: '{difficulty}'. "
-                f"Valores válidos: beginner, intermediate, advanced"
-            )
+        difficulty_name = exercise_data.get("difficulty")
+        difficulty = None
+        if difficulty_name:
+            try:
+                difficulty = Difficulty.objects.get(name=difficulty_name, is_active=True)
+            except Difficulty.DoesNotExist:
+                valid_difficulties = list(
+                    Difficulty.objects.filter(is_active=True).values_list("name", flat=True)
+                )
+                raise ValueError(
+                    f"Dificultad inválida: '{difficulty_name}'. "
+                    f"Valores válidos: {', '.join(valid_difficulties)}"
+                ) from None
 
         # Verificar si ya existe
         existing_exercise = Exercise.objects.filter(name=name).first()

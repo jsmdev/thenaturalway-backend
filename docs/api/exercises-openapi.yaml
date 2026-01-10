@@ -55,7 +55,7 @@ paths:
           example: barbell
         - name: difficulty
           in: query
-          description: Filtra por nivel de dificultad
+          description: Filtra por nivel de dificultad (slug). Valores: beginner (Principiante), intermediate (Intermedio), advanced (Avanzado)
           required: false
           schema:
             type: string
@@ -110,7 +110,9 @@ paths:
                     description: "Press de banca con barra"
                     primaryMuscleGroup: "chest"
                     equipment: "barbell"
-                    difficulty: "intermediate"
+                    difficulty:
+                      name: "intermediate"
+                      displayName: "Intermedio"
                     isActive: true
                     createdAt: "2024-01-15T10:30:00Z"
                 request:
@@ -346,17 +348,40 @@ components:
           description: Grupos musculares secundarios
           example: [shoulders, triceps]
         equipment:
-          type: string
+          type: object
           nullable: true
-          enum: [barbell, dumbbell, cable, machine, bodyweight, kettlebell, other]
-          description: Equipamiento necesario
-          example: barbell
+          description: Equipamiento necesario con name (slug) y displayName
+          properties:
+            name:
+              type: string
+              enum: [barbell, dumbbell, cable, machine, bodyweight, kettlebell, other]
+              description: Slug del equipamiento
+              example: barbell
+            displayName:
+              type: string
+              description: Nombre del equipamiento
+              example: Barbell
+          example:
+            name: barbell
+            displayName: Barbell
         difficulty:
-          type: string
+          type: object
           nullable: true
-          enum: [beginner, intermediate, advanced]
-          description: Nivel de dificultad
-          example: intermediate
+          description: Nivel de dificultad configurable con name (slug) y displayName (castellano)
+          properties:
+            name:
+              type: string
+              enum: [beginner, intermediate, advanced]
+              description: Slug del nivel de dificultad
+              example: intermediate
+            displayName:
+              type: string
+              enum: [Principiante, Intermedio, Avanzado]
+              description: Nombre en castellano del nivel de dificultad
+              example: Intermedio
+          example:
+            name: intermediate
+            displayName: Intermedio
         instructions:
           type: string
           nullable: true
@@ -439,7 +464,7 @@ components:
           type: string
           nullable: true
           enum: [beginner, intermediate, advanced]
-          description: Nivel de dificultad
+          description: Nivel de dificultad (slug). Valores: beginner (Principiante), intermediate (Intermedio), advanced (Avanzado)
           example: intermediate
         instructions:
           type: string
@@ -502,7 +527,7 @@ components:
           type: string
           nullable: true
           enum: [beginner, intermediate, advanced]
-          description: Nivel de dificultad
+          description: Nivel de dificultad (slug). Valores: beginner (Principiante), intermediate (Intermedio), advanced (Avanzado)
         instructions:
           type: string
           nullable: true

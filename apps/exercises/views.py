@@ -64,8 +64,8 @@ class ExerciseListAPIView(APIView):
           - Valores válidos: chest, back, shoulders, arms, legs, core, full_body, other
         - `equipment` (str, opcional): Filtra por equipamiento
           - Valores válidos: barbell, dumbbell, cable, machine, bodyweight, kettlebell, other
-        - `difficulty` (str, opcional): Filtra por dificultad
-          - Valores válidos: beginner, intermediate, advanced
+        - `difficulty` (str, opcional): Filtra por dificultad (slug del modelo Difficulty)
+          - Valores válidos: beginner (Principiante), intermediate (Intermedio), advanced (Avanzado)
         - `isActive` (bool, opcional): Filtra por estado activo/inactivo
           - Valores: true, false, 1, 0, yes, no
         - `createdBy` (int, opcional): Filtra por ID de usuario creador
@@ -189,8 +189,8 @@ class ExerciseListAPIView(APIView):
           - Cada elemento debe ser uno de los valores válidos de primaryMuscleGroup
         - `equipment` (str, opcional): Equipamiento necesario
           - Valores válidos: barbell, dumbbell, cable, machine, bodyweight, kettlebell, other
-        - `difficulty` (str, opcional): Nivel de dificultad
-          - Valores válidos: beginner, intermediate, advanced
+        - `difficulty` (str, opcional): Nivel de dificultad (slug del modelo Difficulty)
+          - Valores válidos: beginner (Principiante), intermediate (Intermedio), advanced (Avanzado)
         - `instructions` (str, opcional): Instrucciones de ejecución
         - `imageUrl` (str, opcional): URL de imagen del ejercicio
         - `videoUrl` (str, opcional): URL de video del ejercicio
@@ -420,7 +420,7 @@ class ExerciseDetailAPIView(APIView):
         - `primaryMuscleGroup` (str, opcional): Grupo muscular principal
         - `secondaryMuscleGroups` (array[str], opcional): Grupos musculares secundarios
         - `equipment` (str, opcional): Equipamiento
-        - `difficulty` (str, opcional): Dificultad
+        - `difficulty` (str, opcional): Dificultad (slug del modelo Difficulty: beginner, intermediate, advanced)
         - `instructions` (str, opcional): Instrucciones
         - `imageUrl` (str, opcional): URL de imagen
         - `videoUrl` (str, opcional): URL de video

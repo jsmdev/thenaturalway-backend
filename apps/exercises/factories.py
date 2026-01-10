@@ -3,7 +3,7 @@ from __future__ import annotations
 import factory
 from factory.django import DjangoModelFactory
 
-from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
+from apps.exercises.models import Difficulty, Equipment, Exercise, MovementType, MuscleGroup
 from apps.users.factories import UserFactory
 
 
@@ -51,6 +51,25 @@ class EquipmentFactory(DjangoModelFactory):
     order = factory.Sequence(lambda n: n)
 
 
+class DifficultyFactory(DjangoModelFactory):
+    """Factory para crear niveles de dificultad de prueba."""
+
+    class Meta:
+        model = Difficulty
+        django_get_or_create = ("name",)
+
+    name = factory.Iterator(["beginner", "intermediate", "advanced"])
+    display_name = factory.LazyAttribute(
+        lambda obj: {
+            "beginner": "Principiante",
+            "intermediate": "Intermedio",
+            "advanced": "Avanzado",
+        }.get(obj.name, "Principiante")
+    )
+    is_active = True
+    order = factory.Sequence(lambda n: n)
+
+
 class ExerciseFactory(DjangoModelFactory):
     """Factory para crear ejercicios de prueba."""
 
@@ -62,6 +81,6 @@ class ExerciseFactory(DjangoModelFactory):
     movement_type = factory.SubFactory(MovementTypeFactory)
     primary_muscle_group = factory.SubFactory(MuscleGroupFactory)
     equipment = factory.SubFactory(EquipmentFactory)
-    difficulty = factory.Iterator(["beginner", "intermediate", "advanced"])
+    difficulty = factory.SubFactory(DifficultyFactory)
     is_active = True
     created_by = factory.SubFactory(UserFactory)

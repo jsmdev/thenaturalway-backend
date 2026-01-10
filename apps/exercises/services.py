@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from apps.exercises.models import Equipment, MovementType, MuscleGroup
+from apps.exercises.models import Difficulty, Equipment, MovementType, MuscleGroup
 from apps.exercises.repositories import (
     create_exercise_repository,
     delete_exercise_repository,
@@ -66,12 +66,25 @@ def list_exercises_service(
             valid_filters["equipment"] = equipment_slug
 
         if "difficulty" in filters:
-            valid_difficulty = ["beginner", "intermediate", "advanced"]
-            if filters["difficulty"] not in valid_difficulty:
-                raise ValidationError(
-                    {"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"}
-                )
-            valid_filters["difficulty"] = filters["difficulty"]
+            difficulty_value = filters["difficulty"]
+            # Puede ser ID (int) o name (str)
+            if isinstance(difficulty_value, int):
+                # Es un ID
+                if not Difficulty.objects.filter(id=difficulty_value, is_active=True).exists():
+                    raise ValidationError({"difficulty": "Dificultad no encontrada o inactiva"})
+                valid_filters["difficulty"] = difficulty_value
+            elif isinstance(difficulty_value, str):
+                # Es un name (slug)
+                if not Difficulty.objects.filter(name=difficulty_value, is_active=True).exists():
+                    valid_difficulties = list(
+                        Difficulty.objects.filter(is_active=True).values_list("name", flat=True)
+                    )
+                    raise ValidationError(
+                        {"difficulty": f"Debe ser uno de: {', '.join(valid_difficulties)}"}
+                    )
+                valid_filters["difficulty"] = difficulty_value
+            else:
+                raise ValidationError({"difficulty": "Debe ser un ID (int) o name (str)"})
 
         if "isActive" in filters:
             if not isinstance(filters["isActive"], bool):
@@ -183,10 +196,23 @@ def create_exercise_service(validated_data: dict[str, Any], user: User | None = 
                 }
             ) from e
 
-    if "difficulty" in validated_data:
-        valid_difficulty = ["beginner", "intermediate", "advanced"]
-        if validated_data["difficulty"] not in valid_difficulty:
-            raise ValidationError({"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"})
+    if validated_data.get("difficulty"):
+        difficulty_value = validated_data["difficulty"]
+        # Puede venir como slug (str) o como objeto Difficulty
+        if isinstance(difficulty_value, str):
+            try:
+                difficulty = Difficulty.objects.get(name=difficulty_value, is_active=True)
+                validated_data["difficulty"] = difficulty
+            except Difficulty.DoesNotExist as e:
+                valid_difficulties = list(
+                    Difficulty.objects.filter(is_active=True).values_list("name", flat=True)
+                )
+                raise ValidationError(
+                    {"difficulty": f"Debe ser uno de: {', '.join(valid_difficulties)}"}
+                ) from e
+        # Si ya es un objeto Difficulty, no hacer nada
+        elif not isinstance(difficulty_value, Difficulty):
+            raise ValidationError({"difficulty": "Debe ser un slug (str) o un objeto Difficulty"})
 
     # Validar secondaryMuscleGroups si se proporciona
     if "secondaryMuscleGroups" in validated_data:
@@ -286,10 +312,23 @@ def update_exercise_service(
                 }
             ) from e
 
-    if "difficulty" in validated_data:
-        valid_difficulty = ["beginner", "intermediate", "advanced"]
-        if validated_data["difficulty"] not in valid_difficulty:
-            raise ValidationError({"difficulty": f"Debe ser uno de: {', '.join(valid_difficulty)}"})
+    if validated_data.get("difficulty"):
+        difficulty_value = validated_data["difficulty"]
+        # Puede venir como slug (str) o como objeto Difficulty
+        if isinstance(difficulty_value, str):
+            try:
+                difficulty = Difficulty.objects.get(name=difficulty_value, is_active=True)
+                validated_data["difficulty"] = difficulty
+            except Difficulty.DoesNotExist as e:
+                valid_difficulties = list(
+                    Difficulty.objects.filter(is_active=True).values_list("name", flat=True)
+                )
+                raise ValidationError(
+                    {"difficulty": f"Debe ser uno de: {', '.join(valid_difficulties)}"}
+                ) from e
+        # Si ya es un objeto Difficulty, no hacer nada
+        elif not isinstance(difficulty_value, Difficulty):
+            raise ValidationError({"difficulty": "Debe ser un slug (str) o un objeto Difficulty"})
 
     # Validar secondaryMuscleGroups si se proporciona
     if "secondaryMuscleGroups" in validated_data:

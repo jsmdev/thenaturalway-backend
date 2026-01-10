@@ -3,7 +3,7 @@ from __future__ import annotations
 from django import forms
 from django.core.exceptions import ValidationError
 
-from apps.exercises.models import Equipment, Exercise, MovementType, MuscleGroup
+from apps.exercises.models import Difficulty, Equipment, MovementType, MuscleGroup
 
 
 class ExerciseForm(forms.Form):
@@ -48,11 +48,13 @@ class ExerciseForm(forms.Form):
         widget=forms.Select(attrs={"class": "form-control"}),
         to_field_name="name",
     )
-    difficulty = forms.ChoiceField(
-        choices=[("", "---------"), *Exercise.DIFFICULTY_CHOICES],
+    difficulty = forms.ModelChoiceField(
+        queryset=Difficulty.objects.filter(is_active=True).order_by("order", "name"),
         required=False,
+        empty_label="---------",
         label="Dificultad",
         widget=forms.Select(attrs={"class": "form-control"}),
+        to_field_name="name",
     )
     instructions = forms.CharField(
         required=False,
@@ -113,9 +115,9 @@ class ExerciseForm(forms.Form):
     def clean_difficulty(self) -> str | None:
         """Valida que la dificultad sea válida si se proporciona."""
         difficulty = self.cleaned_data.get("difficulty")
-        if difficulty == "":
-            return None
-        return difficulty
+        if difficulty:
+            return difficulty.name
+        return None
 
 
 class ExerciseCreateForm(ExerciseForm):

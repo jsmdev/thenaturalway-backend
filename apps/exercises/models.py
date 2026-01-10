@@ -122,14 +122,34 @@ class Equipment(models.Model):
         return self.display_name
 
 
+class Difficulty(models.Model):
+    """Modelo para niveles de dificultad configurables."""
+
+    name = models.CharField(max_length=50, unique=True, db_index=True)
+    display_name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    order = models.IntegerField(default=0, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "difficulties"
+        verbose_name = "Difficulty"
+        verbose_name_plural = "Difficulties"
+        ordering: ClassVar[list[str]] = ["order", "name"]
+        indexes: ClassVar[list] = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["order"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.display_name
+
+
 class Exercise(models.Model):
     """Modelo de ejercicio según el dominio."""
-
-    DIFFICULTY_CHOICES: ClassVar[list[tuple[str, str]]] = [
-        ("beginner", "Beginner"),
-        ("intermediate", "Intermediate"),
-        ("advanced", "Advanced"),
-    ]
 
     name = models.CharField(max_length=255, db_index=True)
     description = models.TextField(blank=True, null=True)
@@ -153,8 +173,13 @@ class Exercise(models.Model):
         related_name="exercises",
         db_index=True,
     )
-    difficulty = models.CharField(
-        max_length=20, choices=DIFFICULTY_CHOICES, blank=True, null=True, db_index=True
+    difficulty = models.ForeignKey(
+        Difficulty,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="exercises",
+        db_index=True,
     )
     instructions = models.TextField(blank=True, null=True)
     image_url = models.URLField(blank=True, null=True)

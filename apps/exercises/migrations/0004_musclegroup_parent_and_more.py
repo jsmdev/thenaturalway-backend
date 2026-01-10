@@ -5,19 +5,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('exercises', '0003_rename_equipment_name_idx_equipment_name_a9c4c0_idx_and_more'),
+        ("exercises", "0003_rename_equipment_name_idx_equipment_name_a9c4c0_idx_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='musclegroup',
-            name='parent',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subgroups', to='exercises.musclegroup'),
+            model_name="musclegroup",
+            name="parent",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="subgroups",
+                to="exercises.musclegroup",
+            ),
         ),
         migrations.AddIndex(
-            model_name='musclegroup',
-            index=models.Index(fields=['parent'], name='muscle_grou_parent__ab93c6_idx'),
+            model_name="musclegroup",
+            index=models.Index(fields=["parent"], name="muscle_grou_parent__ab93c6_idx"),
         ),
     ]
