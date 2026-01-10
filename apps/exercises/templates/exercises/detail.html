@@ -118,19 +118,19 @@
             {% if exercise.primaryMuscleGroup %}
                 <div class="meta-item">
                     <strong>Grupo Muscular:</strong>
-                    <span>{{ exercise.primaryMuscleGroup|title }}</span>
+                    <span>{{ exercise.primaryMuscleGroup.displayName }}</span>
                 </div>
             {% endif %}
             {% if exercise.movementType %}
                 <div class="meta-item">
                     <strong>Tipo de Movimiento:</strong>
-                    <span>{{ exercise.movementType|title }}</span>
+                    <span>{{ exercise.movementType.displayName }}</span>
                 </div>
             {% endif %}
             {% if exercise.equipment %}
                 <div class="meta-item">
                     <strong>Equipamiento:</strong>
-                    <span>{{ exercise.equipment|title }}</span>
+                    <span>{{ exercise.equipment.displayName }}</span>
                 </div>
             {% endif %}
             {% if exercise.difficulty %}

@@ -130,22 +130,31 @@ class ExerciseSerializer(serializers.ModelSerializer):
             return obj.created_by.username
         return None
 
-    def get_movementType(self, obj: Exercise) -> str | None:
-        """Retorna el slug (name) del tipo de movimiento."""
+    def get_movementType(self, obj: Exercise) -> dict[str, Any] | None:
+        """Retorna el tipo de movimiento con name y displayName."""
         if obj.movement_type:
-            return obj.movement_type.name
+            return {
+                "name": obj.movement_type.name,
+                "displayName": obj.movement_type.display_name,
+            }
         return None
 
-    def get_primaryMuscleGroup(self, obj: Exercise) -> str | None:
-        """Retorna el slug (name) del grupo muscular principal."""
+    def get_primaryMuscleGroup(self, obj: Exercise) -> dict[str, Any] | None:
+        """Retorna el grupo muscular principal con name y displayName."""
         if obj.primary_muscle_group:
-            return obj.primary_muscle_group.name
+            return {
+                "name": obj.primary_muscle_group.name,
+                "displayName": obj.primary_muscle_group.display_name,
+            }
         return None
 
-    def get_equipment(self, obj: Exercise) -> str | None:
-        """Retorna el slug (name) del equipamiento."""
+    def get_equipment(self, obj: Exercise) -> dict[str, Any] | None:
+        """Retorna el equipamiento con name y displayName."""
         if obj.equipment:
-            return obj.equipment.name
+            return {
+                "name": obj.equipment.name,
+                "displayName": obj.equipment.display_name,
+            }
         return None
 
 

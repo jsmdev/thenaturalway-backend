@@ -200,10 +200,10 @@
             <h3>{{ exercise.name }}</h3>
             <div class="meta">
                 {% if exercise.primaryMuscleGroup %}
-                    <span><strong>Grupo:</strong> {{ exercise.primaryMuscleGroup|title }}</span>
+                    <span><strong>Grupo:</strong> {{ exercise.primaryMuscleGroup.displayName }}</span>
                 {% endif %}
                 {% if exercise.equipment %}
-                    <span><strong>Equipo:</strong> {{ exercise.equipment|title }}</span>
+                    <span><strong>Equipo:</strong> {{ exercise.equipment.displayName }}</span>
                 {% endif %}
                 {% if exercise.difficulty %}
                     <span class="badge badge-{{ exercise.difficulty }}">{{ exercise.difficulty|title }}</span>
