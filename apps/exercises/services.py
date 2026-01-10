@@ -140,7 +140,7 @@ def create_exercise_service(validated_data: dict[str, Any], user: User | None = 
         raise ValidationError({"name": "El nombre es requerido"})
 
     # Convertir slugs a objetos ForeignKey si se proporcionan
-    if "movementType" in validated_data and validated_data["movementType"]:
+    if validated_data.get("movementType"):
         movement_type_slug = validated_data["movementType"]
         try:
             movement_type = MovementType.objects.get(name=movement_type_slug, is_active=True)
@@ -153,7 +153,7 @@ def create_exercise_service(validated_data: dict[str, Any], user: User | None = 
                 {"movementType": f"Debe ser uno de los tipos activos: {', '.join(valid_types)}"}
             ) from e
 
-    if "primaryMuscleGroup" in validated_data and validated_data["primaryMuscleGroup"]:
+    if validated_data.get("primaryMuscleGroup"):
         muscle_group_slug = validated_data["primaryMuscleGroup"]
         try:
             muscle_group = MuscleGroup.objects.get(name=muscle_group_slug, is_active=True)
@@ -168,7 +168,7 @@ def create_exercise_service(validated_data: dict[str, Any], user: User | None = 
                 }
             ) from e
 
-    if "equipment" in validated_data and validated_data["equipment"]:
+    if validated_data.get("equipment"):
         equipment_slug = validated_data["equipment"]
         try:
             equipment = Equipment.objects.get(name=equipment_slug, is_active=True)
@@ -243,7 +243,7 @@ def update_exercise_service(
         raise PermissionDenied("Solo el creador puede actualizar este ejercicio")
 
     # Convertir slugs a objetos ForeignKey si se proporcionan
-    if "movementType" in validated_data and validated_data["movementType"]:
+    if validated_data.get("movementType"):
         movement_type_slug = validated_data["movementType"]
         try:
             movement_type = MovementType.objects.get(name=movement_type_slug, is_active=True)
@@ -256,7 +256,7 @@ def update_exercise_service(
                 {"movementType": f"Debe ser uno de los tipos activos: {', '.join(valid_types)}"}
             ) from e
 
-    if "primaryMuscleGroup" in validated_data and validated_data["primaryMuscleGroup"]:
+    if validated_data.get("primaryMuscleGroup"):
         muscle_group_slug = validated_data["primaryMuscleGroup"]
         try:
             muscle_group = MuscleGroup.objects.get(name=muscle_group_slug, is_active=True)
@@ -271,7 +271,7 @@ def update_exercise_service(
                 }
             ) from e
 
-    if "equipment" in validated_data and validated_data["equipment"]:
+    if validated_data.get("equipment"):
         equipment_slug = validated_data["equipment"]
         try:
             equipment = Equipment.objects.get(name=equipment_slug, is_active=True)

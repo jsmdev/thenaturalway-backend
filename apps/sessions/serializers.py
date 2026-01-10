@@ -163,13 +163,15 @@ class SessionExerciseSerializer(serializers.ModelSerializer):
             "updatedAt",
         ]
 
-    def get_exercise(self, obj: SessionExercise) -> dict[str, Any]:
+    def get_exercise(self, obj: SessionExercise) -> dict[str, Any] | None:
         """Retorna información básica del ejercicio."""
         if obj.exercise:
             return {
                 "id": obj.exercise.id,
                 "name": obj.exercise.name,
-                "primaryMuscleGroup": obj.exercise.primary_muscle_group,
+                "primaryMuscleGroup": obj.exercise.primary_muscle_group.name
+                if obj.exercise.primary_muscle_group
+                else None,
             }
         return None
 

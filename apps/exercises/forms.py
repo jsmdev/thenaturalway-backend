@@ -33,40 +33,13 @@ class ExerciseForm(forms.Form):
         to_field_name="name",
     )
     primary_muscle_group = forms.ModelChoiceField(
-        queryset=MuscleGroup.objects.filter(is_active=True, parent=None).order_by("order", "name"),
-        required=True,
+        queryset=MuscleGroup.objects.filter(is_active=True).order_by("order", "name"),
+        required=False,
         empty_label="---------",
         label="Grupo muscular principal",
         widget=forms.Select(attrs={"class": "form-control"}),
         to_field_name="name",
     )
-    secondary_muscle_groups = forms.ModelMultipleChoiceField(
-        queryset=MuscleGroup.objects.none(),
-        required=False,
-        label="Grupos musculares secundarios",
-        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
-        help_text="Selecciona uno o más grupos secundarios (opcional)",
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Actualizar queryset de grupos secundarios si hay datos
-        if self.data:
-            primary_group_name = self.data.get("primary_muscle_group")
-            if primary_group_name:
-                try:
-                    primary_group = MuscleGroup.objects.get(name=primary_group_name, is_active=True)
-                    self.fields["secondary_muscle_groups"].queryset = MuscleGroup.objects.filter(
-                        is_active=True, parent=primary_group
-                    ).order_by("order", "name")
-                except MuscleGroup.DoesNotExist:
-                    pass
-        elif self.initial.get("secondary_muscle_groups"):
-            # Para formularios de edición con valores iniciales
-            self.fields["secondary_muscle_groups"].queryset = MuscleGroup.objects.filter(
-                is_active=True, parent__isnull=False
-            ).order_by("order", "name")
-
     equipment = forms.ModelChoiceField(
         queryset=Equipment.objects.filter(is_active=True).order_by("order", "name"),
         required=False,
@@ -116,48 +89,26 @@ class ExerciseForm(forms.Form):
             raise ValidationError("El nombre no puede estar vacío.")
         return name.strip() if name else name
 
-    def clean_movement_type(self) -> MovementType | None:
+    def clean_movement_type(self) -> str | None:
         """Valida que el tipo de movimiento sea válido si se proporciona."""
-        return self.cleaned_data.get("movement_type")
+        movement_type = self.cleaned_data.get("movement_type")
+        if movement_type:
+            return movement_type.name
+        return None
 
-    def clean_primary_muscle_group(self) -> MuscleGroup | None:
-        """Valida que el grupo muscular principal sea válido y sea un grupo principal."""
+    def clean_primary_muscle_group(self) -> str | None:
+        """Valida que el grupo muscular principal sea válido si se proporciona."""
         primary_muscle_group = self.cleaned_data.get("primary_muscle_group")
-        if primary_muscle_group and primary_muscle_group.parent is not None:
-            raise ValidationError(
-                "El grupo muscular principal debe ser un grupo principal (sin padre)."
-            )
-        return primary_muscle_group
+        if primary_muscle_group:
+            return primary_muscle_group.name
+        return None
 
-    def clean_secondary_muscle_groups(self) -> list[MuscleGroup]:
-        """Valida que los grupos secundarios sean válidos y sean hijos del principal."""
-        secondary_muscle_groups = self.cleaned_data.get("secondary_muscle_groups") or []
-        primary_muscle_group = self.cleaned_data.get("primary_muscle_group")
-
-        if not secondary_muscle_groups:
-            return []
-
-        if not primary_muscle_group:
-            raise ValidationError(
-                "No se pueden seleccionar grupos secundarios sin un grupo principal."
-            )
-
-        # Validar que todos los secundarios sean hijos directos del principal
-        invalid_groups = [
-            sg for sg in secondary_muscle_groups if sg.parent_id != primary_muscle_group.id
-        ]
-
-        if invalid_groups:
-            group_names = ", ".join([g.display_name for g in invalid_groups])
-            raise ValidationError(
-                f"Los siguientes grupos no son subgrupos de '{primary_muscle_group.display_name}': {group_names}"
-            )
-
-        return list(secondary_muscle_groups)
-
-    def clean_equipment(self) -> Equipment | None:
+    def clean_equipment(self) -> str | None:
         """Valida que el equipamiento sea válido si se proporciona."""
-        return self.cleaned_data.get("equipment")
+        equipment = self.cleaned_data.get("equipment")
+        if equipment:
+            return equipment.name
+        return None
 
     def clean_difficulty(self) -> str | None:
         """Valida que la dificultad sea válida si se proporciona."""
@@ -183,12 +134,4 @@ class ExerciseUpdateForm(ExerciseForm):
         widget=forms.TextInput(
             attrs={"class": "form-control", "placeholder": "Nombre del ejercicio"}
         ),
-    )
-    primary_muscle_group = forms.ModelChoiceField(
-        queryset=MuscleGroup.objects.filter(is_active=True, parent=None).order_by("order", "name"),
-        required=False,
-        empty_label="---------",
-        label="Grupo muscular principal",
-        widget=forms.Select(attrs={"class": "form-control"}),
-        to_field_name="name",
     )

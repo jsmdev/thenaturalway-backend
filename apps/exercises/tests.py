@@ -14,7 +14,7 @@ from apps.exercises.factories import (
     MuscleGroupFactory,
 )
 from apps.exercises.forms import ExerciseCreateForm, ExerciseUpdateForm
-from apps.exercises.models import Exercise, MuscleGroup
+from apps.exercises.models import Exercise, MovementType, MuscleGroup
 from apps.exercises.repositories import (
     create_exercise_repository,
     delete_exercise_repository,
@@ -564,12 +564,17 @@ class ExerciseServiceTestCase(TestCase):
 
         mock_repository.assert_called_once_with(exercise_id=999)
 
+    @patch("apps.exercises.services.MuscleGroup.objects.get")
     @patch("apps.exercises.services.create_exercise_repository")
-    def test_create_exercise_service_success(self, mock_repository):
+    def test_create_exercise_service_success(self, mock_repository, mock_muscle_group_get):
         """Test: Crear ejercicio exitosamente."""
         # Arrange
-        mock_exercise = Exercise.objects.create(name="Test Exercise")
+        mock_exercise = Exercise(name="Test Exercise")
+        mock_exercise.id = 1  # Simular ID sin guardar en BD
         mock_repository.return_value = mock_exercise
+        mock_muscle_group = MuscleGroup(name="chest", display_name="Chest")
+        mock_muscle_group.id = 1
+        mock_muscle_group_get.return_value = mock_muscle_group
         validated_data = {"name": "Test Exercise", "primaryMuscleGroup": "chest"}
 
         # Act
@@ -578,6 +583,7 @@ class ExerciseServiceTestCase(TestCase):
         # Assert
         self.assertEqual(result.name, "Test Exercise")
         mock_repository.assert_called_once()
+        mock_muscle_group_get.assert_called_once_with(name="chest", is_active=True)
 
     @patch("apps.exercises.services.create_exercise_repository")
     def test_create_exercise_service_without_name(self, mock_repository):
@@ -591,17 +597,26 @@ class ExerciseServiceTestCase(TestCase):
 
         mock_repository.assert_not_called()
 
+    @patch("apps.exercises.services.MovementType.objects.get")
+    @patch("apps.exercises.services.MovementType.objects.filter")
     @patch("apps.exercises.services.create_exercise_repository")
-    def test_create_exercise_service_with_invalid_movement_type(self, mock_repository):
+    def test_create_exercise_service_with_invalid_movement_type(
+        self, mock_repository, mock_filter, mock_get
+    ):
         """Test: Crear ejercicio con movementType inválido."""
         # Arrange
         validated_data = {"name": "Test", "movementType": "invalid"}
+        mock_get.side_effect = MovementType.DoesNotExist()
+        mock_filter_chain = MagicMock()
+        mock_filter_chain.values_list.return_value = ["push", "pull", "legs"]
+        mock_filter.return_value = mock_filter_chain
 
         # Act & Assert
         with self.assertRaises(ValidationError):
             create_exercise_service(validated_data=validated_data, user=self.user)
 
         mock_repository.assert_not_called()
+        mock_get.assert_called_once_with(name="invalid", is_active=True)
 
     @patch("apps.exercises.services.create_exercise_repository")
     def test_create_exercise_service_with_invalid_secondary_muscle_groups(self, mock_repository):
@@ -623,9 +638,12 @@ class ExerciseServiceTestCase(TestCase):
     def test_update_exercise_service_success(self, mock_update, mock_get):
         """Test: Actualizar ejercicio exitosamente."""
         # Arrange
-        exercise = Exercise.objects.create(name="Original", created_by=self.user)
+        exercise = Exercise(name="Original", created_by=self.user)
+        exercise.id = 1  # Simular ID sin guardar en BD
         mock_get.return_value = exercise
-        mock_update.return_value = exercise
+        updated_exercise = Exercise(name="Updated", created_by=self.user)
+        updated_exercise.id = exercise.id
+        mock_update.return_value = updated_exercise
         validated_data = {"name": "Updated"}
 
         # Act
@@ -655,10 +673,10 @@ class ExerciseServiceTestCase(TestCase):
     def test_update_exercise_service_permission_denied(self, mock_repository):
         """Test: Actualizar ejercicio sin permisos."""
         # Arrange
-        other_user = User.objects.create_user(
-            username="otheruser", email="other@example.com", password="testpass123"
-        )
-        exercise = Exercise.objects.create(name="Original", created_by=other_user)
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        exercise = Exercise(name="Original", created_by=other_user)
+        exercise.id = 1  # Simular ID sin guardar en BD
         mock_repository.return_value = exercise
         validated_data = {"name": "Updated"}
 
@@ -673,7 +691,8 @@ class ExerciseServiceTestCase(TestCase):
     def test_delete_exercise_service_success(self, mock_delete, mock_get):
         """Test: Eliminar ejercicio exitosamente."""
         # Arrange
-        exercise = Exercise.objects.create(name="To Delete", created_by=self.user)
+        exercise = Exercise(name="To Delete", created_by=self.user)
+        exercise.id = 1  # Simular ID sin guardar en BD
         exercise.is_active = False
         mock_get.return_value = exercise
         mock_delete.return_value = exercise
@@ -702,10 +721,10 @@ class ExerciseServiceTestCase(TestCase):
     def test_delete_exercise_service_permission_denied(self, mock_repository):
         """Test: Eliminar ejercicio sin permisos."""
         # Arrange
-        other_user = User.objects.create_user(
-            username="otheruser", email="other@example.com", password="testpass123"
-        )
-        exercise = Exercise.objects.create(name="To Delete", created_by=other_user)
+        other_user = User(username="otheruser", email="other@example.com")
+        other_user.id = 2  # Simular ID sin guardar en BD
+        exercise = Exercise(name="To Delete", created_by=other_user)
+        exercise.id = 1  # Simular ID sin guardar en BD
         mock_repository.return_value = exercise
 
         # Act & Assert
@@ -727,16 +746,10 @@ class ExerciseSerializerTestCase(TestCase):
             username="testuser", email="test@example.com", password="testpass123"
         )
         self.movement_type = MovementTypeFactory(name="push", display_name="Push")
-        self.muscle_group = MuscleGroupFactory(
-            name="chest", display_name="Chest", parent=None
-        )  # Grupo principal
+        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
-        self.shoulders = MuscleGroupFactory(
-            name="shoulders", display_name="Shoulders", parent=None
-        )  # Grupo principal
-        self.arms = MuscleGroupFactory(
-            name="arms", display_name="Arms", parent=None
-        )  # Grupo principal
+        self.shoulders = MuscleGroupFactory(name="shoulders", display_name="Shoulders")
+        self.arms = MuscleGroupFactory(name="arms", display_name="Arms")
 
         self.exercise = Exercise.objects.create(
             name="Test Exercise",
@@ -896,29 +909,14 @@ class ExerciseSerializerTestCase(TestCase):
 class ExerciseFormTestCase(TestCase):
     """Tests unitarios para los formularios de Exercise."""
 
-    @classmethod
-    def setUpTestData(cls) -> None:
-        """Configura datos de prueba que no cambian."""
-        cls.main_muscle_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
-        cls.sub_muscle_group1 = MuscleGroupFactory(
-            name="upper_chest", display_name="Upper Chest", parent=cls.main_muscle_group
-        )
-        cls.sub_muscle_group2 = MuscleGroupFactory(
-            name="lower_chest", display_name="Lower Chest", parent=cls.main_muscle_group
-        )
-        cls.other_main_group = MuscleGroupFactory(name="back", display_name="Back", parent=None)
-        cls.other_sub_group = MuscleGroupFactory(
-            name="lats", display_name="Lats", parent=cls.other_main_group
-        )
-
-    def test_exercise_create_form_valid_data(self) -> None:
+    def test_exercise_create_form_valid_data(self):
         """Test: Formulario de creación con datos válidos."""
         # Arrange
         form_data = {
             "name": "Test Exercise",
             "description": "Test description",
             "movement_type": "push",
-            "primary_muscle_group": "chest",  # Obligatorio ahora
+            "primary_muscle_group": "chest",
             "equipment": "barbell",
             "difficulty": "intermediate",
         }
@@ -929,107 +927,6 @@ class ExerciseFormTestCase(TestCase):
         # Assert
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data["name"], "Test Exercise")
-        self.assertEqual(form.cleaned_data["primary_muscle_group"].name, "chest")
-
-    def test_exercise_create_form_primary_muscle_group_required(self) -> None:
-        """Test: Formulario de creación requiere grupo muscular principal."""
-        # Arrange
-        form_data = {"name": "Test Exercise"}  # Sin primary_muscle_group
-
-        # Act
-        form = ExerciseCreateForm(data=form_data)
-
-        # Assert
-        self.assertFalse(form.is_valid())
-        self.assertIn("primary_muscle_group", form.errors)
-
-    def test_exercise_create_form_primary_muscle_group_only_main_groups(self) -> None:
-        """Test: Formulario solo muestra grupos principales en primary_muscle_group."""
-        # Arrange
-        form = ExerciseCreateForm()
-
-        # Act
-        queryset = form.fields["primary_muscle_group"].queryset
-
-        # Assert
-        # Solo debe incluir grupos principales (sin parent)
-        for group in queryset:
-            self.assertIsNone(group.parent, f"{group.name} no debería tener parent")
-
-    def test_exercise_create_form_secondary_muscle_groups_optional(self) -> None:
-        """Test: Formulario permite crear ejercicio sin grupos secundarios."""
-        # Arrange
-        form_data = {
-            "name": "Test Exercise",
-            "primary_muscle_group": "chest",
-        }
-
-        # Act
-        form = ExerciseCreateForm(data=form_data)
-
-        # Assert
-        self.assertTrue(form.is_valid())
-        self.assertEqual(form.cleaned_data.get("secondary_muscle_groups"), [])
-
-    def test_exercise_create_form_secondary_muscle_groups_multiple(self) -> None:
-        """Test: Formulario permite seleccionar múltiples grupos secundarios."""
-        # Arrange
-        form_data = {
-            "name": "Test Exercise",
-            "primary_muscle_group": "chest",
-            "secondary_muscle_groups": [self.sub_muscle_group1.id, self.sub_muscle_group2.id],
-        }
-
-        # Act
-        form = ExerciseCreateForm(data=form_data)
-
-        # Assert
-        self.assertTrue(form.is_valid())
-        secondary_groups = form.cleaned_data.get("secondary_muscle_groups")
-        self.assertIsNotNone(secondary_groups)
-        self.assertEqual(len(secondary_groups), 2)
-        # Ahora devuelve objetos MuscleGroup
-        secondary_names = [sg.name for sg in secondary_groups]
-        self.assertIn("upper_chest", secondary_names)
-        self.assertIn("lower_chest", secondary_names)
-
-    def test_exercise_create_form_secondary_muscle_groups_validation(self) -> None:
-        """Test: Formulario valida que grupos secundarios sean hijos del principal."""
-        # Arrange
-        form_data = {
-            "name": "Test Exercise",
-            "primary_muscle_group": "chest",
-            "secondary_muscle_groups": [
-                self.other_sub_group.id
-            ],  # Grupo secundario de otro grupo principal
-        }
-
-        # Act
-        form = ExerciseCreateForm(data=form_data)
-
-        # Assert
-        self.assertFalse(form.is_valid())
-        self.assertIn("secondary_muscle_groups", form.errors)
-
-    def test_exercise_create_form_secondary_without_primary(self) -> None:
-        """Test: Formulario no permite grupos secundarios sin grupo principal."""
-        # Arrange
-        form_data = {
-            "name": "Test Exercise",
-            "secondary_muscle_groups": [self.sub_muscle_group1.id],
-        }
-
-        # Act
-        form = ExerciseCreateForm(data=form_data)
-
-        # Assert
-        self.assertFalse(form.is_valid())
-        # Debe tener error en clean() (non_field_errors) o en secondary_muscle_groups
-        self.assertTrue(
-            "secondary_muscle_groups" in form.errors
-            or "__all__" in form.errors
-            or "primary_muscle_group" in form.errors
-        )
 
     def test_exercise_create_form_name_required(self):
         """Test: Formulario de creación requiere nombre."""
@@ -1081,7 +978,7 @@ class ExerciseFormTestCase(TestCase):
     def test_exercise_form_clean_movement_type_empty_string(self):
         """Test: Formulario limpia movement_type vacío."""
         # Arrange
-        form_data = {"name": "Test", "movement_type": "", "primary_muscle_group": "chest"}
+        form_data = {"name": "Test", "movement_type": ""}
 
         # Act
         form = ExerciseCreateForm(data=form_data)
@@ -1105,9 +1002,7 @@ class ExerciseAPITestCase(TestCase):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="testpass123"
         )
-        self.muscle_group = MuscleGroupFactory(
-            name="chest", display_name="Chest", parent=None
-        )  # Grupo principal
+        self.muscle_group = MuscleGroupFactory(name="chest", display_name="Chest")
         self.equipment = EquipmentFactory(name="barbell", display_name="Barbell")
 
         self.exercise = Exercise.objects.create(
@@ -1383,14 +1278,10 @@ class ExerciseWebViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 302)  # Redirect to login
 
-    def test_exercise_create_view_post_success(self) -> None:
+    def test_exercise_create_view_post_success(self):
         """Test: Vista de creación POST exitoso."""
         # Arrange
         self.client.force_login(self.user)
-        # Asegurar que chest es un grupo principal
-        main_group = MuscleGroup.objects.filter(name="chest", parent=None).first()
-        if not main_group:
-            main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
         data = {
             "name": "New Exercise",
             "primary_muscle_group": "chest",
@@ -1404,79 +1295,6 @@ class ExerciseWebViewTestCase(TestCase):
         # Assert
         self.assertEqual(response.status_code, 302)  # Redirect
         self.assertTrue(Exercise.objects.filter(name="New Exercise").exists())
-
-    def test_exercise_create_view_get_with_muscle_groups_data(self) -> None:
-        """Test: Vista de creación GET incluye datos de grupos musculares en contexto."""
-        # Arrange
-        self.client.force_login(self.user)
-        main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
-        MuscleGroupFactory(name="upper_chest", display_name="Upper Chest", parent=main_group)
-
-        # Act
-        response = self.client.get("/exercises/create/")
-
-        # Assert
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("muscle_groups_data", response.context)
-        muscle_groups_data = response.context["muscle_groups_data"]
-        # Ahora es un diccionario indexado por name
-        self.assertIsInstance(muscle_groups_data, dict)
-        self.assertIn(main_group.name, muscle_groups_data)
-        self.assertEqual(len(muscle_groups_data[main_group.name]["subgroups"]), 1)
-        self.assertEqual(muscle_groups_data[main_group.name]["subgroups"][0]["name"], "upper_chest")
-
-    def test_exercise_create_view_post_with_secondary_groups(self) -> None:
-        """Test: Vista de creación POST con grupos secundarios."""
-        # Arrange
-        self.client.force_login(self.user)
-        main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
-        sub_group1 = MuscleGroupFactory(
-            name="upper_chest", display_name="Upper Chest", parent=main_group
-        )
-        sub_group2 = MuscleGroupFactory(
-            name="lower_chest", display_name="Lower Chest", parent=main_group
-        )
-        data = {
-            "name": "New Exercise",
-            "primary_muscle_group": "chest",
-            "secondary_muscle_groups": [sub_group1.id, sub_group2.id],
-            "equipment": "barbell",
-            "difficulty": "beginner",
-        }
-
-        # Act
-        response = self.client.post("/exercises/create/", data)
-
-        # Assert
-        self.assertEqual(response.status_code, 302)  # Redirect
-        exercise = Exercise.objects.get(name="New Exercise")
-        self.assertEqual(exercise.primary_muscle_group.name, "chest")
-        self.assertIn("upper_chest", exercise.secondary_muscle_groups)
-        self.assertIn("lower_chest", exercise.secondary_muscle_groups)
-
-    def test_exercise_update_view_post_with_secondary_groups(self) -> None:
-        """Test: Vista de actualización POST con grupos secundarios."""
-        # Arrange
-        self.client.force_login(self.user)
-        main_group = MuscleGroupFactory(name="chest", display_name="Chest", parent=None)
-        sub_group = MuscleGroupFactory(
-            name="upper_chest", display_name="Upper Chest", parent=main_group
-        )
-        self.exercise.primary_muscle_group = main_group
-        self.exercise.save()
-        data = {
-            "name": "Updated Exercise",
-            "primary_muscle_group": "chest",
-            "secondary_muscle_groups": [sub_group.id],
-        }
-
-        # Act
-        response = self.client.post(f"/exercises/{self.exercise.id}/update/", data)
-
-        # Assert
-        self.assertEqual(response.status_code, 302)  # Redirect
-        self.exercise.refresh_from_db()
-        self.assertIn("upper_chest", self.exercise.secondary_muscle_groups)
 
     def test_exercise_update_view_get_authenticated_owner(self):
         """Test: Vista de actualización GET como propietario."""

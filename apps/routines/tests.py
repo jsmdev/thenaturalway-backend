@@ -3484,9 +3484,7 @@ class RoutineIntegrationE2ETestCase(TestCase):
 
         week2 = weeks[1]
         days_week2 = Day.objects.filter(week=week2)
-        self.assertEqual(days_week2.count(), 2)
-
-        # Step 6: Verificar GET detalle
+        self.assertEqual(days_week2.count(), 2)  # Step 6: Verificar GET detalle
         detail_response = self.client.get(
             reverse("routines_api:routine-detail", kwargs={"pk": routine_id}) + "?full=true"
         )

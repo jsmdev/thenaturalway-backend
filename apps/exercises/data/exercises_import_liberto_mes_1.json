@@ -1,0 +1,309 @@
+[
+  {
+    "name": "Bird Dog",
+    "description": "Ejercicio de estabilidad lumbo-pélvica que mejora el control del tronco mientras se extienden brazo y pierna opuestos.",
+    "movement_type": "core",
+    "primary_muscle_group": "core",
+    "secondary_muscle_groups": [
+      "glutes",
+      "lower_back",
+      "shoulders"
+    ],
+    "equipment": "bodyweight",
+    "difficulty": "beginner",
+    "instructions": "1. Colócate a cuatro apoyos con manos bajo hombros y rodillas bajo caderas.\n2. Activa el abdomen y mantén la columna neutra.\n3. Extiende a la vez el brazo derecho y la pierna izquierda sin rotar la cadera.\n4. Pausa 1–2 segundos y vuelve controlando.\n5. Alterna lados.",
+    "image_url": "https://img.youtube.com/vi/RHJcUPPLCbw/hqdefault.jpg",
+    "video_url": "https://youtu.be/RHJcUPPLCbw",
+    "is_active": true
+  },
+  {
+    "name": "McGill Curl Up",
+    "description": "Variación de abdominal isométrico/dinámico suave orientada a la estabilidad del core con mínima carga en la columna.",
+    "movement_type": "core",
+    "primary_muscle_group": "core",
+    "secondary_muscle_groups": [],
+    "equipment": "bodyweight",
+    "difficulty": "beginner",
+    "instructions": "1. Túmbate boca arriba con una rodilla flexionada y la otra pierna extendida.\n2. Coloca las manos bajo la zona lumbar para mantener la curvatura natural.\n3. Eleva ligeramente cabeza y hombros sin flexionar excesivamente la columna.\n4. Mantén 1–2 segundos y desciende controlando.\n5. Cambia la pierna flexionada periódicamente.",
+    "image_url": "https://img.youtube.com/vi/_33zKAwiAN0/hqdefault.jpg",
+    "video_url": "https://youtu.be/_33zKAwiAN0",
+    "is_active": true
+  },
+  {
+    "name": "Elevación de gemelos sentado",
+    "description": "Trabajo específico de gemelos (énfasis en sóleo) en máquina de elevación de talones sentado.",
+    "movement_type": "hinge",
+    "primary_muscle_group": "calves",
+    "secondary_muscle_groups": [],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta la máquina con las rodillas bajo la almohadilla y los pies en la plataforma.\n2. Baja los talones lentamente para estirar.\n3. Empuja elevando los talones al máximo sin rebotar.\n4. Pausa breve arriba.\n5. Desciende controlando.",
+    "image_url": "https://img.youtube.com/vi/xYHtjjElCJk/hqdefault.jpg",
+    "video_url": "https://youtu.be/xYHtjjElCJk?si=vkpNQJd3Mg_IBCe8",
+    "is_active": true
+  },
+  {
+    "name": "Curl femoral sentado",
+    "description": "Ejercicio de flexión de rodilla en máquina para aislar isquiotibiales.",
+    "movement_type": "hinge",
+    "primary_muscle_group": "hamstrings",
+    "secondary_muscle_groups": [
+      "calves",
+      "glutes"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta el asiento para alinear la rodilla con el eje de la máquina.\n2. Coloca el rodillo sobre los tobillos.\n3. Flexiona las rodillas llevando el rodillo hacia abajo/atrás.\n4. Pausa breve en la contracción.\n5. Vuelve lentamente a la posición inicial.",
+    "image_url": "https://img.youtube.com/vi/V9WEcctoOWg/hqdefault.jpg",
+    "video_url": "https://youtu.be/V9WEcctoOWg?si=HXVki5R0DAxBNFfE",
+    "is_active": true
+  },
+  {
+    "name": "Extensión de piernas",
+    "description": "Ejercicio en máquina para aislar cuádriceps mediante extensión de rodilla.",
+    "movement_type": "squat",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta el respaldo y alinea la rodilla con el eje.\n2. Coloca el rodillo sobre el empeine.\n3. Extiende las piernas hasta casi bloquear sin golpear la articulación.\n4. Pausa arriba.\n5. Baja controlando.",
+    "image_url": "https://img.youtube.com/vi/lFoV_7UKJaI/hqdefault.jpg",
+    "video_url": "https://youtu.be/lFoV_7UKJaI",
+    "is_active": true
+  },
+  {
+    "name": "Chest Press en máquina",
+    "description": "Empuje horizontal en máquina para pectoral con asistencia de hombros y tríceps.",
+    "movement_type": "push",
+    "primary_muscle_group": "chest",
+    "secondary_muscle_groups": [
+      "shoulders",
+      "triceps"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta el asiento para que las asas queden a la altura media del pecho.\n2. Apoya escápulas y mantén el pecho alto.\n3. Empuja extendiendo los codos sin bloquear.\n4. Regresa hasta sentir estiramiento controlado.\n5. Repite sin perder el control del tronco.",
+    "image_url": "https://img.youtube.com/vi/vODrC_CUuhE/hqdefault.jpg",
+    "video_url": "https://youtu.be/vODrC_CUuhE?si=oXfAfheD9IjN23wi",
+    "is_active": true
+  },
+  {
+    "name": "Tracción vertical (jalón al pecho)",
+    "description": "Tirón vertical en polea para dorsales y espalda alta.",
+    "movement_type": "pull",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "biceps",
+      "traps"
+    ],
+    "equipment": "cable",
+    "difficulty": "beginner",
+    "instructions": "1. Sujeta la barra con agarre cómodo y siéntate con muslos fijados.\n2. Inicia con escápulas: baja y retrae ligeramente.\n3. Tira llevando la barra hacia la parte alta del pecho.\n4. Controla el retorno extendiendo brazos sin encoger hombros.\n5. Mantén el tronco estable.",
+    "image_url": "https://img.youtube.com/vi/HzBZp_H_xXk/hqdefault.jpg",
+    "video_url": "https://youtu.be/HzBZp_H_xXk?si=AfruqaS0egbXvlQj",
+    "is_active": true
+  },
+  {
+    "name": "Press de hombro en máquina",
+    "description": "Empuje vertical en máquina centrado en deltoides con asistencia de tríceps.",
+    "movement_type": "push",
+    "primary_muscle_group": "shoulders",
+    "secondary_muscle_groups": [
+      "triceps",
+      "chest"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta el asiento para que las asas queden a la altura de los hombros.\n2. Mantén abdomen activo y espalda apoyada.\n3. Empuja hacia arriba hasta extender sin bloquear.\n4. Baja lentamente hasta el rango cómodo.\n5. Repite sin arquear la zona lumbar.",
+    "image_url": "https://img.youtube.com/vi/oa-9EF0mIDs/hqdefault.jpg",
+    "video_url": "https://youtu.be/oa-9EF0mIDs?si=KPNVotF4gOtBdAvV",
+    "is_active": true
+  },
+  {
+    "name": "Curl de bíceps sentado",
+    "description": "Flexión de codo en posición sentada para trabajar bíceps con control y sin balanceos.",
+    "movement_type": "pull",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "difficulty": "beginner",
+    "instructions": "1. Siéntate erguido con mancuernas a los lados.\n2. Mantén codos pegados al cuerpo.\n3. Flexiona elevando las mancuernas.\n4. Pausa arriba sin elevar hombros.\n5. Desciende controlando.",
+    "image_url": "https://img.youtube.com/vi/6gnbiURMxmA/hqdefault.jpg",
+    "video_url": "https://youtu.be/6gnbiURMxmA",
+    "is_active": true
+  },
+  {
+    "name": "Extensión de tríceps en polea (pushdown)",
+    "description": "Extensión de codo en polea para aislar tríceps.",
+    "movement_type": "push",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [
+      "forearms"
+    ],
+    "equipment": "cable",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta la polea alta y sujeta la barra/cuerda.\n2. Mantén codos fijos junto al torso.\n3. Empuja hacia abajo hasta extender completamente.\n4. Pausa breve en la contracción.\n5. Sube controlando sin mover los codos.",
+    "image_url": "https://img.youtube.com/vi/YmLEEk_XHpQ/hqdefault.jpg",
+    "video_url": "https://youtu.be/YmLEEk_XHpQ",
+    "is_active": true
+  },
+  {
+    "name": "Hiperextensión 45º",
+    "description": "Ejercicio de cadena posterior centrado en la extensión de cadera, fortaleciendo zona lumbar, glúteos e isquiotibiales.",
+    "movement_type": "hinge",
+    "primary_muscle_group": "lower_back",
+    "secondary_muscle_groups": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "machine",
+    "difficulty": "intermediate",
+    "instructions": "1. Ajusta el banco para que la almohadilla quede justo por debajo de la cadera.\n2. Activa abdomen y mantén columna neutra.\n3. Flexiona desde la cadera bajando controlado.\n4. Sube extendiendo la cadera y contrayendo glúteos.\n5. Evita hiperextender la zona lumbar al final.",
+    "image_url": "https://img.youtube.com/vi/oDV0cS1T_qY/hqdefault.jpg",
+    "video_url": "https://youtu.be/oDV0cS1T_qY?si=2Jv7hFkaR-w6H3Jk",
+    "is_active": true
+  },
+  {
+    "name": "Plancha",
+    "description": "Isométrico de estabilidad del core manteniendo el cuerpo alineado.",
+    "movement_type": "core",
+    "primary_muscle_group": "core",
+    "secondary_muscle_groups": [
+      "shoulders",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "difficulty": "beginner",
+    "instructions": "1. Apoya antebrazos (o manos) y puntas de pies.\n2. Alinea cabeza-hombros-cadera-tobillos.\n3. Activa abdomen y glúteos.\n4. Mantén respiración controlada.\n5. Finaliza si pierdes la alineación.",
+    "image_url": "https://img.youtube.com/vi/tZ1LCmRcWO8/hqdefault.jpg",
+    "video_url": "https://youtu.be/tZ1LCmRcWO8",
+    "is_active": true
+  },
+  {
+    "name": "Elevación de gemelo unilateral",
+    "description": "Elevación de talón a una pierna para fortalecer gemelos y mejorar equilibrio.",
+    "movement_type": "hinge",
+    "primary_muscle_group": "calves",
+    "secondary_muscle_groups": [],
+    "equipment": "bodyweight",
+    "difficulty": "beginner",
+    "instructions": "1. Colócate de pie con un apoyo ligero si lo necesitas.\n2. Eleva un pie y apóyate sobre la otra pierna.\n3. Sube el talón lo máximo posible.\n4. Pausa arriba.\n5. Baja lentamente hasta el estiramiento.",
+    "image_url": "https://img.youtube.com/vi/hdHeDdfD8fc/hqdefault.jpg",
+    "video_url": "https://youtu.be/hdHeDdfD8fc",
+    "is_active": true
+  },
+  {
+    "name": "Curl femoral tumbado",
+    "description": "Flexión de rodilla en máquina tumbado para trabajar isquiotibiales.",
+    "movement_type": "hinge",
+    "primary_muscle_group": "hamstrings",
+    "secondary_muscle_groups": [
+      "glutes",
+      "calves"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Túmbate boca abajo y alinea rodillas con el eje.\n2. Coloca el rodillo sobre los tobillos.\n3. Flexiona llevando los talones hacia los glúteos.\n4. Pausa arriba.\n5. Baja controlando.",
+    "image_url": "https://img.youtube.com/vi/X8Y-Tvy4Ejk/hqdefault.jpg",
+    "video_url": "https://youtu.be/X8Y-Tvy4Ejk",
+    "is_active": true
+  },
+  {
+    "name": "Air Box Squat o Goblet Squat",
+    "description": "Sentadilla a cajón (sin carga) o sentadilla goblet (con mancuerna) para aprender el patrón de sentadilla con control.",
+    "movement_type": "squat",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "glutes",
+      "hamstrings",
+      "core"
+    ],
+    "equipment": "dumbbell",
+    "difficulty": "beginner",
+    "instructions": "1. Coloca un cajón/banco detrás a una altura cómoda.\n2. Pies al ancho de hombros y tronco estable.\n3. Desciende llevando la cadera atrás y abajo hasta tocar el cajón.\n4. Mantén rodillas alineadas con pies.\n5. Sube empujando con los talones. (En goblet, sujeta la mancuerna frente al pecho).",
+    "image_url": "https://img.youtube.com/vi/_ZYTwgplI8M/hqdefault.jpg",
+    "video_url": "https://youtu.be/_ZYTwgplI8M",
+    "is_active": true
+  },
+  {
+    "name": "Máquina pectoral (Pec Deck)",
+    "description": "Aducción horizontal en máquina para focalizar el pectoral.",
+    "movement_type": "push",
+    "primary_muscle_group": "chest",
+    "secondary_muscle_groups": [
+      "shoulders"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta el asiento para que codos/antebrazos queden a la altura del pecho.\n2. Retracción suave de escápulas y pecho alto.\n3. Cierra los brazos juntando las asas/pads delante.\n4. Pausa en la contracción.\n5. Abre controlando hasta el estiramiento.",
+    "image_url": "https://img.youtube.com/vi/hWEhATl8-fY/hqdefault.jpg",
+    "video_url": "https://youtu.be/hWEhATl8-fY?si=V2WW38uzdMWOrce6",
+    "is_active": true
+  },
+  {
+    "name": "Remo sentado",
+    "description": "Tracción horizontal en polea para espalda media/alta.",
+    "movement_type": "pull",
+    "primary_muscle_group": "back",
+    "secondary_muscle_groups": [
+      "lats",
+      "biceps",
+      "rear_delt"
+    ],
+    "equipment": "cable",
+    "difficulty": "beginner",
+    "instructions": "1. Siéntate con espalda neutra y sujeta el agarre.\n2. Inicia retrayendo escápulas.\n3. Tira llevando el agarre hacia el abdomen/ombligo.\n4. Mantén codos cerca del cuerpo.\n5. Extiende brazos controlando sin redondear la espalda.",
+    "image_url": "https://img.youtube.com/vi/q6Et7ozX4lQ/hqdefault.jpg",
+    "video_url": "https://youtu.be/q6Et7ozX4lQ?si=RXQNu-z5RUzZwjIB",
+    "is_active": true
+  },
+  {
+    "name": "Elevación lateral en máquina",
+    "description": "Abducción de hombro para trabajar deltoides medio en máquina.",
+    "movement_type": "push",
+    "primary_muscle_group": "shoulders",
+    "secondary_muscle_groups": [
+      "traps"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta el asiento para alinear el eje con el hombro.\n2. Apoya antebrazos/codos en las almohadillas.\n3. Eleva lateralmente hasta la altura de los hombros.\n4. Pausa breve.\n5. Baja controlando.",
+    "image_url": "https://img.youtube.com/vi/JxgEjcUraRI/hqdefault.jpg",
+    "video_url": "https://youtu.be/JxgEjcUraRI",
+    "is_active": true
+  },
+  {
+    "name": "Curl de bíceps en máquina",
+    "description": "Flexión de codo guiada para aislar bíceps con estabilidad.",
+    "movement_type": "pull",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "forearms"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Ajusta asiento y apoya brazos en el pad.\n2. Mantén muñecas neutras.\n3. Flexiona elevando el agarre.\n4. Pausa arriba.\n5. Desciende lentamente.",
+    "image_url": "https://img.youtube.com/vi/bnjqnAYRh58/hqdefault.jpg",
+    "video_url": "https://youtu.be/bnjqnAYRh58",
+    "is_active": true
+  },
+  {
+    "name": "Flexiones en multipower (Smith)",
+    "description": "Variación de flexión con manos apoyadas en la barra de multipower para regular la dificultad según la altura.",
+    "movement_type": "push",
+    "primary_muscle_group": "chest",
+    "secondary_muscle_groups": [
+      "shoulders",
+      "triceps",
+      "core"
+    ],
+    "equipment": "machine",
+    "difficulty": "beginner",
+    "instructions": "1. Coloca la barra a una altura que permita mantener el cuerpo alineado.\n2. Apoya manos en la barra, separadas al ancho de hombros.\n3. Desciende llevando el pecho hacia la barra.\n4. Empuja extendiendo codos.\n5. Mantén abdomen y glúteos activos para no hundir la cadera.",
+    "image_url": "https://img.youtube.com/vi/L3GcKh0uHFc/hqdefault.jpg",
+    "video_url": "https://youtu.be/L3GcKh0uHFc",
+    "is_active": true
+  }
+]
